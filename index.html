@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مراقب الأبراج - ISP Monitor</title>
+    <style>
+        body { background-color: #0d1526; color: #fff; font-family: Tahoma, sans-serif; margin: 0; padding: 0; }
+        
+        /* الهيدر العلوي */
+        .header { background: #131d31; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; }
+        .top-btns { display: flex; gap: 6px; }
+        .btn-mini { background: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 5px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; }
+        
+        /* شريط الإحصائيات */
+        .stats-bar { background: #131d31; padding: 8px 15px; display: flex; justify-content: space-between; font-size: 12px; border-bottom: 1px solid #1e293b; color: #94a3b8; }
+        .stats-bar span { color: #fff; font-weight: bold; }
+
+        /* الأزرار التفاعلية (الصف الأول والثاني) */
+        .action-toolbar { background: #0d1526; padding: 10px 12px; display: flex; gap: 6px; overflow-x: auto; white-space: nowrap; border-bottom: 1px solid #1e293b; }
+        .btn-action { background: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 7px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+        .btn-action.highlight { background: #0284c7; color: #fff; border-color: #0369a1; }
+        
+        /* شريط الأبراج والفلترة */
+        .tower-selector { padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; background: #131d31; margin: 8px 12px; border-radius: 10px; }
+        .filter-toolbar { padding: 5px 12px; display: flex; gap: 6px; overflow-x: auto; background: #0d1526; }
+        .btn-filter { background: #131d31; color: #94a3b8; border: 1px solid #1e293b; padding: 6px 14px; border-radius: 20px; font-size: 12px; cursor: pointer; }
+        .btn-filter.active { background: #1e293b; color: #fff; border-color: #3b82f6; }
+
+        /* الجدول */
+        .table-container { padding: 10px 12px; }
+        .device-card { background: #131d31; border-radius: 10px; padding: 10px 14px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border-right: 4px solid #10b981; }
+        .device-card.offline { border-right-color: #ef4444; }
+        
+        /* النافذة المنسدلة (Modal) */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; z-index: 1000; }
+        .modal-content { background: #131d31; padding: 20px; border-radius: 12px; width: 85%; max-width: 350px; border: 1px solid #334155; }
+        input, select { width: 100%; padding: 9px; margin: 6px 0 12px 0; background: #0d1526; border: 1px solid #334155; color: white; border-radius: 6px; box-sizing: border-box; }
+        .submit-btn { width: 100%; padding: 10px; background: #2563eb; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<!-- الهيدر العلوي -->
+<div class="header">
+    <div style="display: flex; gap: 5px;">
+        <button class="btn-mini" onclick="alert('جارٍ إيقاف التشغيل...')">⏻</button>
+        <button class="btn-mini">الدعم</button>
+        <button class="btn-mini">English</button>
+    </div>
+    <div style="text-align: left;">
+        <div style="font-size: 15px; font-weight: bold;">مراقب الأبراج</div>
+        <div style="font-size: 10px; color: #94a3b8;">7 جهاز على 1 برج</div>
+    </div>
+</div>
+
+<!-- شريط الإحصائيات -->
+<div class="stats-bar">
+    <div><span id="txtOnline" style="color:#10b981">7</span> يعمل</div>
+    <div><span id="txtSlow" style="color:#f59e0b">0</span> بطيء</div>
+    <div><span id="txtOffline" style="color:#ef4444">0</span> لا يعمل</div>
+    <div>متوسط <span id="txtPingAvg">90.8ms</span></div>
+</div>
+
+<!-- أزرار التحكم السريعة -->
+<div class="action-toolbar">
+    <button class="btn-action" onclick="fetchDevices()">تحديث الكل</button>
+    <button class="btn-action">ابحث عن أجهزة</button>
+    <button class="btn-action highlight" onclick="openModal()">أضف أجهزة</button>
+    <button class="btn-action">بيانات الدخول</button>
+    <button class="btn-action highlight">🟢 Ping لحظي</button>
+    <button class="btn-action" onclick="testAlarmSound()">🔔 التنبيهات</button>
+    <button class="btn-action">🔌 VPN</button>
+</div>
+
+<!-- اختيار البرج -->
+<div class="tower-selector">
+    <span style="font-size: 13px; font-weight: bold;">Hilla ح</span>
+    <span style="font-size: 12px; color: #10b981; background: #064e3b; padding: 3px 10px; border-radius: 12px;">7/7 الأبراج</span>
+</div>
+
+<!-- شريط الفلاتر لأنواع الأجهزة -->
+<div class="filter-toolbar">
+    <button class="btn-filter active" onclick="filterDevices('all', this)">الكل</button>
+    <button class="btn-filter" onclick="filterDevices('offline', this)">لا يعمل</button>
+    <button class="btn-filter" onclick="filterDevices('slow', this)">بطيء</button>
+    <button class="btn-filter" onclick="filterDevices('online', this)">يعمل</button>
+    <button class="btn-filter" onclick="filterDevices('MikroTik', this)">MikroTik</button>
+    <button class="btn-filter" onclick="filterDevices('Ubiquiti', this)">Ubiquiti</button>
+    <button class="btn-filter" onclick="filterDevices('Mimosa', this)">Mimosa</button>
+</div>
+
+<!-- جدول عرض الأجهزة -->
+<div class="table-container" id="devicesList">
+    <p style="text-align: center; color: #64748b; margin-top: 20px;">جاري تحميل الأجهزة...</p>
+</div>
+
+<!-- نافذة إضافة جهاز جديد -->
+<div id="addModal" class="modal">
+    <div class="modal-content">
+        <h3 style="margin-top: 0; font-size: 16px;">إضافة جهاز جديد</h3>
+        <label style="font-size: 12px; color: #94a3b8;">اسم الجهاز أو نقطة البث:</label>
+        <input type="text" id="devName" placeholder="مثال: نقطة بث (AP)">
+        
+        <label style="font-size: 12px; color: #94a3b8;">عنوان الـ IP:</label>
+        <input type="text" id="devIp" placeholder="10.200.122.x">
+
+        <label style="font-size: 12px; color: #94a3b8;">نوع الجهاز:</label>
+        <select id="devType">
+            <option value="MikroTik">MikroTik</option>
+            <option value="Ubiquiti">Ubiquiti</option>
+            <option value="Mimosa">Mimosa</option>
+        </select>
+
+        <button class="submit-btn" onclick="saveDevice()">حفظ الجهاز</button>
+        <button class="submit-btn" style="background: #475569; margin-top: 6px;" onclick="closeModal()">إلغاء</button>
+    </div>
+</div>
+
+<!-- صوت الإنذار للتنبيه عند الانقطاع -->
+<audio id="alertSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
+
+<script>
+const SERVER_URL = "http://100.x.x.x:5000"; // استبدل بـ Tailscale IP الخاص بسيرفرك
+let allDevices = [];
+let currentFilter = 'all';
+
+async function fetchDevices() {
+    try {
+        let res = await fetch(`${SERVER_URL}/api/devices`);
+        allDevices = await res.json();
+        updateUI();
+    } catch(err) {
+        document.getElementById('devicesList').innerHTML = "<p style='color:#ef4444; text-align:center;'>تعذر الاتصال بالسيرفر عبر Tailscale. تحقق من الـ IP وسيرفر البايثون.</p>";
+    }
+}
+
+function updateUI() {
+    let onlineCount = 0;
+    let offlineCount = 0;
+    let html = '';
+    let hasOffline = false;
+
+    let filtered = allDevices.filter(d => {
+        if(currentFilter === 'all') return true;
+        if(currentFilter === 'online') return d.status === 'online';
+        if(currentFilter === 'offline') return d.status === 'offline';
+        return d.type === currentFilter;
+    });
+
+    filtered.forEach(d => {
+        if(d.status === 'online') onlineCount++;
+        else {
+            offlineCount++;
+            hasOffline = true;
+        }
+
+        html += `
+            <div class="device-card ${d.status === 'offline' ? 'offline' : ''}">
+                <div>
+                    <div style="font-size: 14px; font-weight: bold; color: #fff;">${d.ip}</div>
+                    <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">نقطة بث (AP)</div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="font-size: 11px; background: #1e293b; padding: 3px 8px; border-radius: 4px; color: #cbd5e1; border: 1px solid #334155;">${d.type}</span>
+                    <div style="text-align: left;">
+                        <div style="font-size: 12px; color: ${d.status === 'online' ? '#10b981' : '#ef4444'}; font-weight: bold;">Ping: ${d.ping}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+
+    document.getElementById('devicesList').innerHTML = html || "<p style='text-align:center; color:#64748b;'>لا توجد أجهزة مطابقة</p>";
+    document.getElementById('txtOnline').innerText = onlineCount;
+    document.getElementById('txtOffline').innerText = offlineCount;
+    document.getElementById('txtTotal').innerText = allDevices.length;
+
+    if(hasOffline) {
+        testAlarmSound();
+    }
+}
+
+function filterDevices(type, btn) {
+    currentFilter = type;
+    document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    updateUI();
+}
+
+function testAlarmSound() {
+    let sound = document.getElementById('alertSound');
+    sound.play().catch(e => console.log("تفاعل المستخدم مطلوب لتشغيل الصوت"));
+}
+
+function openModal() { document.getElementById('addModal').style.display = 'flex'; }
+function closeModal() { document.getElementById('addModal').style.display = 'none'; }
+
+async function saveDevice() {
+    let name = document.getElementById('devName').value.trim() || "نقطة بث (AP)";
+    let ip = document.getElementById('devIp').value.trim();
+    let type = document.getElementById('devType').value;
+
+    if(!ip) return alert("يرجى إدخال عنوان الـ IP على الأقل");
+
+    try {
+        let res = await fetch(`${SERVER_URL}/api/devices/add`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({name, ip, type})
+        });
+        if(res.ok) {
+            closeModal();
+            fetchDevices();
+        } else {
+            alert("حدث خطأ أثناء الحفظ");
+        }
+    } catch(err) {
+        alert("فشل الاتصال بالسيرفر");
+    }
+}
+
+// تحديث تلقائي كل 10 ثوانٍ
+setInterval(fetchDevices, 10000);
+fetchDevices();
+</script>
+
+</body>
+</html>
