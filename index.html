@@ -29,13 +29,13 @@
 </head>
 <body>
 
-<!-- شاشة تسجيل الدخول لأصحاب الأبراج -->
+<!-- شاشة تسجيل الدخول -->
 <div id="loginModal" style="position:fixed; top:0; left:0; width:100%; height:100%; background:#0d1526; z-index:3000; display:flex; align-items:center; justify-content:center;">
     <div style="background:#131d31; padding:25px; border-radius:12px; width:85%; max-width:350px; border:1px solid #334155; text-align:center;">
         <h2 style="color:#fff; margin-bottom:5px;">مراقب الأبراج التجاري</h2>
         <p style="color:#94a3b8; font-size:12px; margin-bottom:20px;">تسجيل دخول صاحب الشبكة</p>
-        <input type="text" id="loginUser" placeholder="اسم المستخدم (مثال: tower_owner_1)">
-        <input type="password" id="loginPass" placeholder="كلمة المرور">
+        <input type="text" id="loginUser" placeholder="اسم المستخدم (اكتب: tower_owner_1)" value="tower_owner_1">
+        <input type="password" id="loginPass" placeholder="كلمة المرور (اكتب: 123)" value="123">
         <button onclick="performLogin()" class="submit-btn">دخول للنظام</button>
     </div>
 </div>
@@ -103,44 +103,53 @@
     </div>
 </div>
 
-<!-- نافذة إعداد الـ VPN الخاصة بالمشغل -->
+<!-- نافذة إعداد الـ VPN -->
 <div id="vpnModal" class="modal">
     <div class="modal-content">
         <h3>🔌 ربط شبكة الـ VPN</h3>
-        <p style="font-size:11px; color:#94a3b8;">أدخل بيانات الـ VPN الخاصة بشركة إيرثلنك لكي يتصل السيرفر بأبراجك.</p>
+        <p style="font-size:11px; color:#94a3b8;">إعدادات الـ VPN الخاصة بشركة إيرثلنك.</p>
         <input type="text" id="vpnHost" placeholder="Server Hostname (obpvpn.earthlink.iq)">
         <input type="text" id="vpnUser" placeholder="Username (admin@hilla51)">
         <input type="password" id="vpnPass" placeholder="Password">
-        <button class="submit-btn" onclick="saveVpnSettings()">حفظ واعتماد الـ VPN</button>
+        <button class="submit-btn" onclick="saveVpnSettings()">حفظ الاعتماد</button>
         <button class="cancel-btn" onclick="closeModal('vpnModal')">إغلاق</button>
     </div>
 </div>
 
 <script>
-const SERVER_URL = "http://YOUR_SERVER_IP:5000"; // استبدل بـ IP السيرفر السحابي الثابت
+// ضع هنا رابط السيرفر الخاص بك أو Tailscale IP مع البورت 5000
+const SERVER_URL = "http://100.x.x.x:5000"; 
+
 let token = localStorage.getItem('jwt_token');
 let dataCache = {};
 let selectedTower = 'all';
 
-if(token) { document.getElementById('loginModal').style.display = 'none'; fetchData(); }
+if(token) { 
+    document.getElementById('loginModal').style.display = 'none'; 
+    fetchData(); 
+}
 
 async function performLogin() {
     let username = document.getElementById('loginUser').value.trim();
     let password = document.getElementById('loginPass').value.trim();
     
-    let res = await fetch(`${SERVER_URL}/api/login`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({username, password})
-    });
-    let data = await res.json();
-    if(res.ok) {
-        localStorage.setItem('jwt_token', data.token);
-        token = data.token;
-        document.getElementById('loginModal').style.display = 'none';
-        fetchData();
-    } else {
-        alert(data.error);
+    try {
+        let res = await fetch(`${SERVER_URL}/api/login`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({username, password})
+        });
+        let data = await res.json();
+        if(res.ok) {
+            localStorage.setItem('jwt_token', data.token);
+            token = data.token;
+            document.getElementById('loginModal').style.display = 'none';
+            fetchData();
+        } else {
+            alert(data.error || "خطأ في بيانات الدخول");
+        }
+    } catch(err) {
+        alert("تعذر الاتصال بالسيرفر. تأكد من تشغيل سيرفر بايثون وعنوان الـ IP.");
     }
 }
 
@@ -196,7 +205,7 @@ function renderUI() {
         });
     });
 
-    document.getElementById('devicesList').innerHTML = html || "<p style='text-align:center; color:#64748b;'>لا توجد أجهزة مضافة.</p>";
+    document.getElementById('devicesList').innerHTML = html || "<p style='text-align:center; color:#64748b; margin-top:20px;'>لا توجد أجهزة مضافة بعد.</p>";
     document.getElementById('txtOnline').innerText = onlineCount;
     document.getElementById('txtOffline').innerText = offlineCount;
 }
@@ -221,7 +230,7 @@ async function saveNewDevice() {
     let tower = document.getElementById('targetTowerSelect').value;
     let name = document.getElementById('devNameInput').value.trim() || "AP";
     let ip = document.getElementById('devIpInput').value.trim();
-    let type = document.getElementById('devTypeInput').value;
+    let type = document.getElementById('devTypeInput.value') || "MikroTik";
     if(!tower || !ip) return;
     
     await fetch(`${SERVER_URL}/api/device/add`, {
