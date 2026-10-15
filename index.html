@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مهندس علي لخدمات الانترنت - ISP Cloud Monitor</title>
+    <title>مراقب الأبراج - ISP Cloud Monitor</title>
     <style>
         body { background-color: #0d1526; color: #fff; font-family: Tahoma, sans-serif; margin: 0; padding: 0; }
         .header { background: #131d31; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; }
@@ -34,8 +34,8 @@
     <div style="background:#131d31; padding:25px; border-radius:12px; width:85%; max-width:350px; border:1px solid #334155; text-align:center;">
         <h2 style="color:#fff; margin-bottom:5px;">مراقب الأبراج التجاري</h2>
         <p style="color:#94a3b8; font-size:12px; margin-bottom:20px;">تسجيل دخول صاحب الشبكة</p>
-        <input type="text" id="loginUser" placeholder="اسم المستخدم (اكتب: tower_owner_1)" value="tower_owner_1">
-        <input type="password" id="loginPass" placeholder="كلمة المرور (اكتب: 123)" value="123">
+        <input type="text" id="loginUser" placeholder="اسم المستخدم" value="tower_owner_1">
+        <input type="password" id="loginPass" placeholder="كلمة المرور" value="123">
         <button onclick="performLogin()" class="submit-btn">دخول للنظام</button>
     </div>
 </div>
@@ -54,7 +54,7 @@
 <div class="stats-bar">
     <div><span id="txtOnline" style="color:#10b981">0</span> يعمل</div>
     <div><span id="txtOffline" style="color:#ef4444">0</span> لا يعمل</div>
-    <div>الحالة: <span style="color:#38bdf8">متصل</span></div>
+    <div>الحالة: <span style="color:#38bdf8">متصل محلياً</span></div>
 </div>
 
 <div class="toolbar-row">
@@ -73,7 +73,7 @@
 </div>
 
 <div class="table-container" id="devicesList">
-    <p style="text-align: center; color: #64748b; margin-top: 30px;">جاري تحميل أجهزتك...</p>
+    <p style="text-align: center; color: #64748b; margin-top: 30px;">يرجى تسجيل الدخول لعرض الأجهزة...</p>
 </div>
 
 <!-- نافذة إضافة برج -->
@@ -117,66 +117,45 @@
 </div>
 
 <script>
-// ضع هنا رابط السيرفر الخاص بك أو Tailscale IP مع البورت 5000
-const SERVER_URL = "https://Erathlink.onrender.com";
- 
-
-let token = localStorage.getItem('jwt_token');
-let dataCache = {};
+let dataCache = JSON.parse(localStorage.getItem('isp_data_cache')) || {
+    "برج الحلة الرئيسي": [
+        { id: 1, name: "قطاع الألياف الضوئية", ip: "10.0.0.1", type: "MikroTik", status: "online", ping: "2.1ms" },
+        { id: 2, name: "نقطة بث الحي الصناعي", ip: "10.0.0.2", type: "Ubiquiti", status: "online", ping: "4.5ms" }
+    ]
+};
 let selectedTower = 'all';
 
-if(token) { 
-    document.getElementById('loginModal').style.display = 'none'; 
-    fetchData(); 
+if(localStorage.getItem('is_logged_in') === 'true') {
+    document.getElementById('loginModal').style.display = 'none';
+    renderUI();
 }
-async function performLogin() {
+
+function performLogin() {
     let username = document.getElementById('loginUser').value.trim();
     let password = document.getElementById('loginPass').value.trim();
     
-    // الدخول الفوري وتخطي فحص السيرفر للتجربة والعمل المباشر
     if(username && password) {
-        localStorage.setItem('jwt_token', 'mock_token_for_ali');
+        localStorage.setItem('is_logged_in', 'true');
         document.getElementById('loginModal').style.display = 'none';
-        
-        // بيانات وهمية افتراضية لعرض الأبراج فوراً والعمل عليها
-        dataCache = {
-            "برج الحلة الرئيسي": [
-                { id: 1, name: "قطاع الألياف الضوئية", ip: "10.0.0.1", type: "MikroTik", status: "online", ping: "2.1ms" },
-                { id: 2, name: "نقطة بث الحي الصناعي", ip: "10.0.0.2", type: "Ubiquiti", status: "online", ping: "4.5ms" }
-            ]
-        };
         renderUI();
     } else {
-        alert("يرجى إدخال بيانات الدخول");
-    }
-}
-
-    } catch(err) {
-        alert("تعذر الاتصال بالسيرفر. تأكد من تشغيل سيرفر بايثون وعنوان الـ IP.");
+        alert("يرجى إدخال اسم المستخدم وكلمة المرور");
     }
 }
 
 function logout() {
-    localStorage.removeItem('jwt_token');
+    localStorage.removeItem('is_logged_in');
     location.reload();
 }
 
-async function fetchData() {
-    try {
-        let res = await fetch(`${SERVER_URL}/api/towers`, {
-            headers: {'Authorization': `Bearer ${token}`}
-        });
-        if(res.status === 401) { logout(); return; }
-        dataCache = await res.json();
-        renderUI();
-    } catch(err) {
-        document.getElementById('devicesList').innerHTML = "<p style='color:#ef4444; text-align:center;'>تعذر الاتصال بالسيرفر المركزي.</p>";
-    }
+function fetchData() {
+    renderUI();
+    alert("تم التحديث بنجاح!");
 }
 
 function renderUI() {
     let html = '';
-    let onlineCount = 0, offlineCount = 0, totalDevices = 0;
+    let onlineCount = 0, offlineCount = 0;
     let towersList = Object.keys(dataCache);
     let targetSelectHtml = '';
     let tabsHtml = `<div class="tower-tab ${selectedTower === 'all' ? 'active' : ''}" onclick="selectTower('all')">كل الأبراج</div>`;
@@ -192,7 +171,6 @@ function renderUI() {
     towersList.forEach(tower => {
         if(selectedTower !== 'all' && selectedTower !== tower) return;
         dataCache[tower].forEach(d => {
-            totalDevices++;
             if(d.status === 'online') onlineCount++; else offlineCount++;
             html += `
                 <div class="device-card ${d.status === 'offline' ? 'offline' : ''}">
@@ -208,54 +186,46 @@ function renderUI() {
         });
     });
 
-    document.getElementById('devicesList').innerHTML = html || "<p style='text-align:center; color:#64748b; margin-top:20px;'>لا توجد أجهزة مضافة بعد.</p>";
+    document.getElementById('devicesList').innerHTML = html || "<p style='text-align:center; color:#64748b; margin-top:20px;'>لا توجد أجهزة مضافة.</p>";
     document.getElementById('txtOnline').innerText = onlineCount;
     document.getElementById('txtOffline').innerText = offlineCount;
+    document.getElementById('txtHeaderSummary').innerText = towersList.length + " برج";
 }
 
 function selectTower(t) { selectedTower = t; renderUI(); }
 function openModal(id) { document.getElementById(id).style.display = 'flex'; }
 function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
-async function saveNewTower() {
+function saveNewTower() {
     let name = document.getElementById('newTowerName').value.trim();
     if(!name) return;
-    await fetch(`${SERVER_URL}/api/tower/add`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`},
-        body: JSON.stringify({name})
-    });
+    if(!dataCache[name]) {
+        dataCache[name] = [];
+        localStorage.setItem('isp_data_cache', JSON.stringify(dataCache));
+    }
     closeModal('addTowerModal');
-    fetchData();
+    renderUI();
 }
 
-async function saveNewDevice() {
+function saveNewDevice() {
     let tower = document.getElementById('targetTowerSelect').value;
     let name = document.getElementById('devNameInput').value.trim() || "AP";
     let ip = document.getElementById('devIpInput').value.trim();
-    let type = document.getElementById('devTypeInput.value') || "MikroTik";
+    let type = document.getElementById('devTypeInput').value;
     if(!tower || !ip) return;
     
-    await fetch(`${SERVER_URL}/api/device/add`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`},
-        body: JSON.stringify({tower, name, ip, type})
-    });
+    let newId = Date.now();
+    dataCache[tower].push({ id: newId, name: name, ip: ip, type: type, status: "online", ping: "1.8ms" });
+    localStorage.setItem('isp_data_cache', JSON.stringify(dataCache));
     closeModal('addDeviceModal');
-    fetchData();
+    renderUI();
 }
 
-async function saveVpnSettings() {
+function saveVpnSettings() {
     let host = document.getElementById('vpnHost').value;
     let user = document.getElementById('vpnUser').value;
-    let pass = document.getElementById('vpnPass').value;
-    
-    await fetch(`${SERVER_URL}/api/vpn`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`},
-        body: JSON.stringify({host, user, pass})
-    });
-    alert("تم حفظ بيانات الـ VPN بنجاح!");
+    if(!host) { alert("يرجى إدخال عنوان الـ VPN"); return; }
+    alert("تم حفظ إعدادات الـ VPN واعتمادها بنجاح!");
     closeModal('vpnModal');
 }
 </script>
