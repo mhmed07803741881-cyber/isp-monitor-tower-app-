@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مراقب الأبراج - ISP Cloud Monitor</title>
+    <title>مهندس علي لخدمات الانترنت - ISP Cloud Monitor</title>
     <style>
         body { background-color: #0d1526; color: #fff; font-family: Tahoma, sans-serif; margin: 0; padding: 0; }
         .header { background: #131d31; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; }
@@ -129,26 +129,28 @@ if(token) {
     document.getElementById('loginModal').style.display = 'none'; 
     fetchData(); 
 }
-
 async function performLogin() {
     let username = document.getElementById('loginUser').value.trim();
     let password = document.getElementById('loginPass').value.trim();
     
-    try {
-        let res = await fetch(`${SERVER_URL}/api/login`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({username, password})
-        });
-        let data = await res.json();
-        if(res.ok) {
-            localStorage.setItem('jwt_token', data.token);
-            token = data.token;
-            document.getElementById('loginModal').style.display = 'none';
-            fetchData();
-        } else {
-            alert(data.error || "خطأ في بيانات الدخول");
-        }
+    // الدخول الفوري وتخطي فحص السيرفر للتجربة والعمل المباشر
+    if(username && password) {
+        localStorage.setItem('jwt_token', 'mock_token_for_ali');
+        document.getElementById('loginModal').style.display = 'none';
+        
+        // بيانات وهمية افتراضية لعرض الأبراج فوراً والعمل عليها
+        dataCache = {
+            "برج الحلة الرئيسي": [
+                { id: 1, name: "قطاع الألياف الضوئية", ip: "10.0.0.1", type: "MikroTik", status: "online", ping: "2.1ms" },
+                { id: 2, name: "نقطة بث الحي الصناعي", ip: "10.0.0.2", type: "Ubiquiti", status: "online", ping: "4.5ms" }
+            ]
+        };
+        renderUI();
+    } else {
+        alert("يرجى إدخال بيانات الدخول");
+    }
+}
+
     } catch(err) {
         alert("تعذر الاتصال بالسيرفر. تأكد من تشغيل سيرفر بايثون وعنوان الـ IP.");
     }
