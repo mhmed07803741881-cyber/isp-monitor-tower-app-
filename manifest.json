@@ -1,0 +1,23 @@
+{
+  "name": "ISP Tower Monitor",
+  "short_name": "ISP Monitor",
+  "description": "A mobile application to monitor and control MikroTik-based internet towers",
+  "start_url": "/isp-monitor-tower-app-/",
+  "scope": "/isp-monitor-tower-app-/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://img.icons8.com/color/192/router.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://img.icons8.com/color/512/router.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
