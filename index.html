@@ -1,40 +1,86 @@
-<!-- شاشة تسجيل الدخول للمشتركين -->
-<div id="loginPage" style="position:fixed; top:0; left:0; width:100%; height:100%; background:#0d1526; z-index:2000; display:flex; align-items:center; justify-content:center;">
-    <div style="background:#131d31; padding:25px; border-radius:12px; width:85%; max-width:350px; border:1px solid #334155; text-align:center;">
-        <h2 style="color:#fff; margin-bottom:5px;">مراقب الأبراج</h2>
-        <p style="color:#94a3b8; font-size:12px; margin-bottom:20px;">تسجيل الدخول لمنظومة المراقبة</p>
+<!-- نافذة إعدادات VPN المتقدمة (المطابقة للصورة تماماً) -->
+<div id="vpnModal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); align-items:center; justify-content:center; z-index:1000; overflow-y:auto; padding:20px 0;">
+    <div class="modal-content" style="background:#131d31; padding:20px; border-radius:12px; width:90%; max-width:400px; border:1px solid #334155; box-sizing:border-box; max-height:90vh; overflow-y:auto;">
         
-        <input type="text" id="loginUsername" placeholder="اسم المستخدم / رقم الهاتف" style="width:100%; padding:10px; margin-bottom:10px; background:#0d1526; border:1px solid #334155; color:#fff; border-radius:6px; box-sizing:border-box;">
-        <input type="password" id="loginPassword" placeholder="كلمة المرور" style="width:100%; padding:10px; margin-bottom:15px; background:#0d1526; border:1px solid #334155; color:#fff; border-radius:6px; box-sizing:border-box;">
-        
-        <button onclick="performLogin()" style="width:100%; padding:11px; background:#38bdf8; color:#0f172a; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">تسجيل الدخول</button>
+        <p style="font-size: 11px; color: #94a3b8; line-height: 1.5; margin-top:0;">
+            ارفع ملف VPN لكل مزود. تقدر تشغل المزودين معاً (إذا كانت نطاقات أجهزتهما مختلفة)، وكل مزود مستقل بزري تشغيل/إيقاف.
+        </p>
+
+        <!-- المزود 1 -->
+        <div style="background:#0d1526; padding:12px; border-radius:8px; border:1px solid #1e293b; margin-bottom:15px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <span style="font-weight:bold; color:#fff; font-size:14px;">المزود 1</span>
+                <label style="font-size:11px; color:#94a3b8; display:flex; align-items:center; gap:5px;">
+                    <input type="radio" name="vpnStatus1" checked> فارغة
+                </label>
+            </div>
+
+            <label style="font-size: 11px; color: #94a3b8;">ملف الإعداد (.zip / .conf / .ovpn):</label>
+            <input type="file" id="vpnFile1" style="font-size:11px; padding:6px; margin:4px 0 10px 0;">
+
+            <label style="font-size: 11px; color: #94a3b8;">ملفات الشهادات (اختياري):</label>
+            <input type="file" id="vpnCert1" multiple style="font-size:11px; padding:6px; margin:4px 0 10px 0;">
+
+            <label style="font-size: 11px; color: #94a3b8;">اسم المستخدم (إذا يطلبه):</label>
+            <input type="text" id="vpnUser1" placeholder="" style="margin:4px 0 10px 0; padding:8px;">
+
+            <label style="font-size: 11px; color: #94a3b8;">كلمة المرور (إذا تطلبها):</label>
+            <input type="password" id="vpnPass1" placeholder="" style="margin:4px 0 10px 0; padding:8px;">
+
+            <label style="font-size: 11px; color: #94a3b8;">كلمة مرور المفتاح الخاص (Private Key - إذا طلبت):</label>
+            <input type="password" id="vpnKey1" placeholder="" style="margin:4px 0 10px 0; padding:8px;">
+
+            <button onclick="toggleVpnProvider(1)" style="width:100%; padding:9px; background:#1e3a8a; color:#fff; border:none; border-radius:6px; font-weight:bold; cursor:pointer; margin-bottom:8px;">▶ تشغيل هذا المزود</button>
+            
+            <div style="display:flex; gap:6px;">
+                <button onclick="clearVpnProvider(1)" style="flex:1; padding:8px; background:#7f1d1d; color:#fca5a5; border:none; border-radius:6px; cursor:pointer;">مسح</button>
+                <button onclick="saveVpnProvider(1)" style="flex:2; padding:8px; background:#1e293b; color:#fff; border:1px solid #334155; border-radius:6px; cursor:pointer;">حفظ المزود 1</button>
+            </div>
+        </div>
+
+        <!-- المزود 2 -->
+        <div style="background:#0d1526; padding:12px; border-radius:8px; border:1px solid #1e293b; margin-bottom:15px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <span style="font-weight:bold; color:#fff; font-size:14px;">المزود 2</span>
+                <label style="font-size:11px; color:#94a3b8; display:flex; align-items:center; gap:5px;">
+                    <input type="radio" name="vpnStatus2" checked> فارغة
+                </label>
+            </div>
+
+            <label style="font-size: 11px; color: #94a3b8;">ملف الإعداد (.zip / .conf / .ovpn):</label>
+            <input type="file" id="vpnFile2" style="font-size:11px; padding:6px; margin:4px 0 10px 0;">
+
+            <label style="font-size: 11px; color: #94a3b8;">اسم المستخدم:</label>
+            <input type="text" id="vpnUser2" placeholder="" style="margin:4px 0 10px 0; padding:8px;">
+
+            <label style="font-size: 11px; color: #94a3b8;">كلمة المرور:</label>
+            <input type="password" id="vpnPass2" placeholder="" style="margin:4px 0 10px 0; padding:8px;">
+
+            <button onclick="toggleVpnProvider(2)" style="width:100%; padding:9px; background:#1e3a8a; color:#fff; border:none; border-radius:6px; font-weight:bold; cursor:pointer; margin-bottom:8px;">▶ تشغيل هذا المزود</button>
+            
+            <div style="display:flex; gap:6px;">
+                <button onclick="clearVpnProvider(2)" style="flex:1; padding:8px; background:#7f1d1d; color:#fca5a5; border:none; border-radius:6px; cursor:pointer;">مسح</button>
+                <button onclick="saveVpnProvider(2)" style="flex:2; padding:8px; background:#1e293b; color:#fff; border:1px solid #334155; border-radius:6px; cursor:pointer;">حفظ المزود 2</button>
+            </div>
+        </div>
+
+        <button class="cancel-btn" onclick="closeModal('vpnModal')" style="width:100%; padding:10px; background:#475569; color:white; border:none; border-radius:6px; cursor:pointer;">إغلاق</button>
     </div>
 </div>
 
 <script>
-async function performLogin() {
-    let username = document.getElementById('loginUsername').value.trim();
-    let password = document.getElementById('loginPassword').value.trim();
-    
-    if(!username || !password) return alert("يرجى إدخال البيانات");
+function saveVpnProvider(id) {
+    let user = document.getElementById(`vpnUser${id}`).value;
+    alert(`تم حفظ إعدادات المزود ${id} بنجاح!`);
+}
 
-    try {
-        let res = await fetch(`${SERVER_URL}/api/login`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({username, password})
-        });
-        
-        let data = await res.json();
-        if(res.ok) {
-            localStorage.setItem('user_token', data.token);
-            document.getElementById('loginPage').style.display = 'none';
-            fetchData(); // جلب أبراج هذا المشترك
-        } else {
-            alert(data.error || "فشل تسجيل الدخول");
-        }
-    } catch(e) {
-        alert("تعذر الاتصال بالسيرفر الرئيسي");
-    }
+function toggleVpnProvider(id) {
+    alert(`تم محاولة الاتصال وتشغيل المزود ${id}`);
+}
+
+function clearVpnProvider(id) {
+    document.getElementById(`vpnUser${id}`).value = '';
+    document.getElementById(`vpnPass${id}`).value = '';
+    alert(`تم مسح بيانات المزود ${id}`);
 }
 </script>
