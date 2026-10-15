@@ -11,7 +11,7 @@ def load_data():
     if os.path.exists(DATA_FILE):
         with open(DATA_FILE, 'r', encoding='utf-8') as f:
             return json.load(f)
-    return {} # يبدأ فارغاً تماماً بناءً على طلبك
+    return {}
 
 def save_data(data):
     with open(DATA_FILE, 'w', encoding='utf-8') as f:
@@ -40,16 +40,29 @@ def get_towers():
             })
     return jsonify(result)
 
+@app.route('/api/tower/add', methods=['POST'])
+def add_tower():
+    req = request.json
+    name = req.get('name')
+    if not name:
+        return jsonify({'error': 'Tower name required'}), 400
+
+    data = load_data()
+    if name not in data:
+        data[name] = []
+        save_data(data)
+    return jsonify({'message': 'Tower added successfully'}), 200
+
 @app.route('/api/device/add', methods=['POST'])
 def add_device():
     req = request.json
-    tower_name = req.get('tower', 'MainTower')
+    tower_name = req.get('tower')
     name = req.get('name', 'نقطة بث')
     ip = req.get('ip')
     dev_type = req.get('type', 'MikroTik')
 
-    if not ip:
-        return jsonify({'error': 'IP required'}), 400
+    if not tower_name or not ip:
+        return jsonify({'error': 'Tower and IP required'}), 400
 
     data = load_data()
     if tower_name not in data:
@@ -58,7 +71,7 @@ def add_device():
     new_id = max([d.get('id', 0) for devices in data.values() for d in devices], default=0) + 1
     data[tower_name].append({"id": new_id, "name": name, "ip": ip, "type": dev_type})
     save_data(data)
-    return jsonify({'message': 'Added successfully'}), 200
+    return jsonify({'message': 'Device added successfully'}), 200
 
 @app.route('/api/data/export', methods=['GET'])
 def export_data():
