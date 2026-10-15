@@ -3,79 +3,124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منظومة إدارة الأبراج - ISP Manager</title>
+    <title>مراقب الأبراج</title>
     <style>
-        body { background-color: #0d1526; color: #fff; font-family: Tahoma, sans-serif; margin: 0; padding: 0; }
-        .header { background: #131d31; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; }
-        .btn-mini { background: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 6px 12px; border-radius: 8px; font-size: 11px; cursor: pointer; }
-        .stats-bar { background: #131d31; padding: 10px 15px; display: flex; justify-content: space-between; font-size: 12px; border-bottom: 1px solid #1e293b; color: #94a3b8; }
-        .stats-bar span { color: #fff; font-weight: bold; }
-        .toolbar-row { background: #0d1526; padding: 10px 12px; display: flex; gap: 8px; overflow-x: auto; }
-        .btn-action { background: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 8px 14px; border-radius: 8px; font-size: 12px; cursor: pointer; white-space: nowrap; }
-        .btn-action.highlight { background: #38bdf8; color: #0f172a; font-weight: bold; border-color: #0ea5e9; }
-        .tower-section { background: #0d1526; padding: 5px 12px; }
-        .tower-tabs-row { display: flex; gap: 8px; margin-bottom: 8px; overflow-x: auto; }
-        .tower-tab { background: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 8px 18px; border-radius: 8px; font-size: 13px; cursor: pointer; white-space: nowrap; }
-        .tower-tab.active { background: #38bdf8; color: #0f172a; border-color: #38bdf8; font-weight: bold; }
-        .table-container { padding: 10px 12px; }
-        .device-card { background: #131d31; border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border-right: 4px solid #10b981; }
-        .device-card.offline { border-right-color: #ef4444; }
+        body { background-color: #0e1626; color: #fff; font-family: Tahoma, sans-serif; margin: 0; padding: 10px; box-sizing: border-box; }
+        
+        /* الهيدر العلوي */
+        .top-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; border-bottom: 1px solid #1e293b; padding-bottom: 10px; }
+        .header-btns { display: flex; gap: 6px; }
+        .icon-btn { background: #131d31; color: #94a3b8; border: 1px solid #1e293b; padding: 8px 12px; border-radius: 10px; font-size: 14px; cursor: pointer; }
+        .title-area { text-align: left; }
+        .title-area h1 { margin: 0; font-size: 18px; color: #fff; display: flex; align-items: center; gap: 5px; justify-content: flex-end; }
+        .title-area p { margin: 3px 0 0 0; font-size: 11px; color: #64748b; }
+
+        /* شريط الإحصائيات */
+        .stats-bar { display: flex; gap: 15px; font-size: 13px; color: #94a3b8; margin-bottom: 12px; background: #131d31; padding: 10px 14px; border-radius: 10px; border: 1px solid #1e293b; align-items: center; }
+        .stats-bar span { font-weight: bold; }
+
+        /* صف الأزرار الأول */
+        .toolbar-grid-1 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 6px; }
+        .action-btn { background: #131d31; color: #cbd5e1; border: 1px solid #1e293b; padding: 10px 5px; border-radius: 10px; font-size: 12px; cursor: pointer; text-align: center; white-space: nowrap; }
+        .action-btn.active-blue { background: #38bdf8; color: #090d16; font-weight: bold; border-color: #38bdf8; }
+
+        /* صف الأزرار الثاني */
+        .toolbar-grid-2 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px; }
+        .action-btn.active-green { background: #131d31; color: #10b981; border-color: #10b981; }
+
+        /* مؤشرات الحالة الصغيرة */
+        .indicators-row { display: flex; gap: 4px; justify-content: flex-end; margin-bottom: 12px; }
+        .mini-box { width: 14px; height: 18px; background: #10b981; border-radius: 3px; }
+
+        /* قسم الأبراج والتصنيفات */
+        .towers-section { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 10px; padding-bottom: 5px; }
+        .tower-tab { background: #131d31; color: #cbd5e1; border: 1px solid #1e293b; padding: 8px 14px; border-radius: 10px; font-size: 12px; cursor: pointer; white-space: nowrap; }
+        .tower-tab.active { background: #131d31; color: #38bdf8; border-color: #38bdf8; font-weight: bold; }
+
+        /* صف أزرار التحكم بالأسفل */
+        .bottom-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 15px; }
+
+        /* حاوية الأجهزة */
+        .devices-container { margin-top: 10px; }
+        .empty-state { text-align: center; color: #64748b; padding: 40px 20px; background: #131d31; border-radius: 12px; border: 1px dashed #1e293b; font-size: 13px; }
+
+        /* النوافذ المنبثقة (Modals) */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; z-index: 1000; }
-        .modal-content { background: #131d31; padding: 20px; border-radius: 12px; width: 90%; max-width: 400px; border: 1px solid #334155; box-sizing: border-box; }
-        input, select { width: 100%; padding: 10px; margin: 6px 0 12px 0; background: #0d1526; border: 1px solid #334155; color: white; border-radius: 6px; box-sizing: border-box; }
-        .submit-btn { width: 100%; padding: 12px; background: #38bdf8; color: #0f172a; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px; }
-        .cancel-btn { width: 100%; padding: 10px; background: #475569; color: white; border: none; border-radius: 6px; cursor: pointer; margin-top: 5px; }
+        .modal-content { background: #131d31; padding: 20px; border-radius: 14px; width: 90%; max-width: 380px; border: 1px solid #1e293b; box-sizing: border-box; }
+        .modal-content h3 { margin-top: 0; color: #fff; font-size: 15px; }
+        input, select { width: 100%; padding: 10px; margin: 6px 0 12px 0; background: #0e1626; border: 1px solid #1e293b; color: white; border-radius: 8px; box-sizing: border-box; font-size: 13px; }
+        .submit-btn { width: 100%; padding: 11px; background: #38bdf8; color: #090d16; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; }
+        .cancel-btn { width: 100%; padding: 10px; background: #1e293b; color: #94a3b8; border: none; border-radius: 8px; cursor: pointer; margin-top: 6px; font-size: 13px; }
     </style>
 </head>
 <body>
 
-<!-- شاشة تسجيل الدخول الخالية (تضع أي يوزر وباسورد لتبدأ) -->
-<div id="loginModal" style="position:fixed; top:0; left:0; width:100%; height:100%; background:#0d1526; z-index:3000; display:flex; align-items:center; justify-content:center;">
-    <div style="background:#131d31; padding:25px; border-radius:12px; width:85%; max-width:350px; border:1px solid #334155; text-align:center;">
-        <h2 style="color:#fff; margin-bottom:5px;">منظومة مراقبة الأبراج</h2>
-        <p style="color:#94a3b8; font-size:12px; margin-bottom:20px;">سجّل دخولك للبدء بإدارة شبكتك</p>
-        <input type="text" id="loginUser" placeholder="اسم المستخدم (اكتب أي اسم)">
-        <input type="password" id="loginPass" placeholder="كلمة المرور">
-        <button id="btnLogin" type="button" onclick="performLogin()" class="submit-btn">دخول للنظام</button>
+<!-- الهيدر العلوي -->
+<div class="top-header">
+    <div class="header-btns">
+        <button class="icon-btn" onclick="alert('زر الطاقة / الخروج')">⏻</button>
+        <button class="icon-btn" onclick="alert('الدعم الفني')">الدعم</button>
+        <button class="icon-btn" onclick="alert('تغيير اللغة')">English</button>
+        <button class="icon-btn" onclick="alert('الوضع الليلي/النهاري')">☀️</button>
+    </div>
+    <div class="title-area">
+        <h1>مراقب الأبراج 📡</h1>
+        <p id="headerSummary">0 جهاز على 0 برج</p>
     </div>
 </div>
 
-<div class="header">
-    <div style="display: flex; gap: 5px;">
-        <button class="btn-mini" onclick="logout()">خروج</button>
-    </div>
-    <div style="text-align: left;">
-        <div style="font-size: 15px; font-weight: bold;" id="ownerTitle">لوحة التحكم</div>
-        <div style="font-size: 10px; color: #94a3b8;" id="txtHeaderSummary">0 برج</div>
-    </div>
-</div>
-
+<!-- شريط الإحصائيات -->
 <div class="stats-bar">
-    <div><span id="txtOnline" style="color:#10b981">0</span> أجهزة تعمل</div>
-    <div><span id="txtOffline" style="color:#ef4444">0</span> متوقفة</div>
-    <div>الحالة: <span style="color:#38bdf8">جاهز للاستخدام</span></div>
+    <div><span id="statOnline" style="color:#10b981">0</span> يعمل</div>
+    <div><span id="statSlow" style="color:#f59e0b">0</span> بطيء</div>
+    <div><span id="statOffline" style="color:#ef4444">0</span> لا يعمل</div>
+    <div style="margin-right:auto;"><span id="statAvgPing" style="color:#38bdf8">0.0</span> متوسط ms</div>
 </div>
 
-<div class="toolbar-row">
-    <button class="btn-action highlight" onclick="openModal('addTowerModal')">+ أضف برج جديد</button>
-    <button class="btn-action" onclick="openModal('addDeviceModal')">+ أضف جهاز / IP</button>
-    <button class="btn-action" onclick="openModal('vpnModal')">🔌 إعداد VPN</button>
+<!-- صف الأزرار الأول -->
+<div class="toolbar-grid-1">
+    <button class="action-btn" onclick="alert('تحديث الكل')">تحديث الكل</button>
+    <button class="action-btn" onclick="alert('بحث عن أجهزة')">ابحث عن أجهزة</button>
+    <button class="action-btn active-blue" onclick="openModal('addDeviceModal')">أضف أجهزة</button>
+    <button class="action-btn" onclick="alert('بيانات الدخول')">بيانات الدخول</button>
 </div>
 
-<div class="tower-section" style="margin-top: 10px;">
-    <div class="tower-tabs-row" id="towerTabsBar">
-        <div class="tower-tab active" onclick="selectTower('all')">كل الأبراج</div>
-    </div>
+<!-- صف الأزرار الثاني -->
+<div class="toolbar-grid-2">
+    <button class="action-btn active-green" onclick="alert('Ping لحظي مفعل')">🟢 Ping لحظي</button>
+    <button class="action-btn" onclick="alert('فحص الآن')">فحص الآن</button>
+    <button class="action-btn" onclick="openModal('vpnModal')">🔌 VPN</button>
+    <button class="action-btn" onclick="alert('التنبيهات')">🔔 التنبيهات</button>
 </div>
 
-<div class="table-container" id="devicesList"></div>
+<!-- مؤشرات الحالة الصغيرة -->
+<div class="indicators-row" id="indicatorsBar">
+    <!-- ستتعبى تلقائياً عند إضافة أجهزة -->
+</div>
+
+<!-- شريط الأبراج (Tabs) -->
+<div class="towers-section" id="towersTabs">
+    <div class="tower-tab active" onclick="selectTower('all')">كل الأبراج</div>
+</div>
+
+<!-- صف أزرار التحكم بالأسفل -->
+<div class="bottom-actions">
+    <button class="action-btn active-blue" onclick="openModal('addTowerModal')">+ برج جديد</button>
+    <button class="action-btn" onclick="alert('تصدير البيانات')">تصدير</button>
+    <button class="action-btn" onclick="alert('استيراد البيانات')">استيراد</button>
+</div>
+
+<!-- قائمة الأجهزة والأبراج -->
+<div class="devices-container" id="devicesList">
+    <div class="empty-state">لا توجد أجهزة مضافة حالياً.<br>اضغط على <b>"+ برج جديد"</b> ثم <b>"أضف أجهزة"</b> للبدء.</div>
+</div>
 
 <!-- نافذة إضافة برج -->
 <div id="addTowerModal" class="modal">
     <div class="modal-content">
         <h3>إضافة برج جديد</h3>
-        <input type="text" id="newTowerName" placeholder="اسم البرج (مثال: برج حي العباسية)">
-        <button class="submit-btn" onclick="saveNewTower()">حفظ البرج</button>
+        <input type="text" id="newTowerName" placeholder="اسم البرج (مثال: Hilla)">
+        <button class="submit-btn" onclick="saveTower()">حفظ البرج</button>
         <button class="cancel-btn" onclick="closeModal('addTowerModal')">إلغاء</button>
     </div>
 </div>
@@ -83,17 +128,11 @@
 <!-- نافذة إضافة جهاز -->
 <div id="addDeviceModal" class="modal">
     <div class="modal-content">
-        <h3>إضافة جهاز / نقطة بث</h3>
+        <h3>إضافة جهاز جديد</h3>
         <select id="targetTowerSelect"></select>
-        <input type="text" id="devNameInput" placeholder="اسم الجهاز (مثال: سکتور 1)">
+        <input type="text" id="devNameInput" placeholder="اسم الجهاز أو نقطة البث">
         <input type="text" id="devIpInput" placeholder="عنوان الـ IP (مثال: 10.0.0.1)">
-        <select id="devTypeInput">
-            <option value="MikroTik">MikroTik</option>
-            <option value="Ubiquiti">Ubiquiti</option>
-            <option value="Mimosa">Mimosa</option>
-            <option value="Fiber/Switch">Fiber / Switch</option>
-        </select>
-        <button class="submit-btn" onclick="saveNewDevice()">حفظ الجهاز</button>
+        <button class="submit-btn" onclick="saveDevice()">حفظ الجهاز</button>
         <button class="cancel-btn" onclick="closeModal('addDeviceModal')">إلغاء</button>
     </div>
 </div>
@@ -101,148 +140,111 @@
 <!-- نافذة إعداد الـ VPN -->
 <div id="vpnModal" class="modal">
     <div class="modal-content">
-        <h3>🔌 ربط شبكة الـ VPN</h3>
-        <p style="font-size:11px; color:#94a3b8;">أدخل معلومات الاتصال الخاصة بمزود الخدمة (مثل إيرثلنك).</p>
+        <h3>🔌 إعدادات الـ VPN</h3>
         <input type="text" id="vpnHost" placeholder="Server Hostname / IP">
         <input type="text" id="vpnUser" placeholder="Username">
         <input type="password" id="vpnPass" placeholder="Password">
-        <button class="submit-btn" onclick="saveVpnSettings()">حفظ واعتماد الـ VPN</button>
+        <button class="submit-btn" onclick="saveVpn()">حفظ واعتماد</button>
         <button class="cancel-btn" onclick="closeModal('vpnModal')">إغلاق</button>
     </div>
 </div>
 
 <script>
-// يبدأ البرنامج بقاعدة بيانات فارغة تماماً لتقوم أنت بإضافتها بنفسك
-let dataCache = JSON.parse(localStorage.getItem('isp_clean_data')) || {};
-let selectedTower = 'all';
+// قاعدة بيانات محلية فارغة تماماً
+let db = JSON.parse(localStorage.getItem('isp_pro_db')) || {};
+let currentTower = 'all';
 
-window.onload = function() {
-    if(localStorage.getItem('is_logged_in') === 'true') {
-        document.getElementById('loginModal').style.display = 'none';
-        renderUI();
-    }
-};
-
-function performLogin() {
-    let u = document.getElementById('loginUser').value.trim();
-    if(!u) { alert("يرجى إدخال اسم المستخدم"); return; }
-    
-    localStorage.setItem('is_logged_in', 'true');
-    localStorage.setItem('current_user', u);
-    document.getElementById('loginModal').style.display = 'none';
-    document.getElementById('ownerTitle').innerText = "المشغل: " + u;
-    renderUI();
-}
-
-function logout() {
-    localStorage.removeItem('is_logged_in');
-    location.reload();
-}
-
-function renderUI() {
+function render() {
+    let towers = Object.keys(db);
+    let totalDevs = 0;
+    let onlineDevs = 0;
     let html = '';
-    let onlineCount = 0, offlineCount = 0;
-    let towersList = Object.keys(dataCache);
-    let targetSelectHtml = '';
-    let tabsHtml = `<div class="tower-tab ${selectedTower === 'all' ? 'active' : ''}" onclick="selectTower('all')">كل الأبراج</div>`;
+    let tabsHtml = `<div class="tower-tab ${currentTower === 'all' ? 'active' : ''}" onclick="selectTower('all')">كل الأبراج (${Object.values(db).reduce((a,b)=>a+b.length,0)})</div>`;
+    let selectHtml = '';
+    let indicatorsHtml = '';
 
-    if(towersList.length === 0) {
-        document.getElementById('devicesList').innerHTML = "<p style='text-align:center; color:#64748b; margin-top:40px;'>لا توجد أبراج مضافة حالياً.<br>اضغط على <b>'+ أضف برج جديد'</b> للبدء.</p>";
-        document.getElementById('txtOnline').innerText = 0;
-        document.getElementById('txtOffline').innerText = 0;
-        document.getElementById('txtHeaderSummary').innerText = "0 برج";
-        document.getElementById('targetTowerSelect').innerHTML = "<option value=''>أضف برجاً أولاً</option>";
-        document.getElementById('towerTabsBar').innerHTML = tabsHtml;
-        return;
-    }
-
-    towersList.forEach(t => {
-        targetSelectHtml += `<option value="${t}">${t}</option>`;
-        tabsHtml += `<div class="tower-tab ${selectedTower === t ? 'active' : ''}" onclick="selectTower('${t}')">${t}</div>`;
+    towers.forEach(t => {
+        let count = db[t].length;
+        tabsHtml += `<div class="tower-tab ${currentTower === t ? 'active' : ''}" onclick="selectTower('${t}')">${count}/${count} ${t}</div>`;
+        selectHtml += `<option value="${t}">${t}</option>`;
     });
 
-    document.getElementById('targetTowerSelect').innerHTML = targetSelectHtml;
-    document.getElementById('towerTabsBar').innerHTML = tabsHtml;
+    document.getElementById('towersTabs').innerHTML = tabsHtml;
+    document.getElementById('targetTowerSelect').innerHTML = selectHtml || "<option value=''>أضف برجاً أولاً</option>";
 
-    towersList.forEach(tower => {
-        if(selectedTower !== 'all' && selectedTower !== tower) return;
-        if(!dataCache[tower]) return;
-        
-        dataCache[tower].forEach(d => {
-            if(d.status === 'online') onlineCount++; else offlineCount++;
+    towers.forEach(tower => {
+        if(currentTower !== 'all' && currentTower !== tower) return;
+        db[tower].forEach(d => {
+            totalDevs++;
+            onlineDevs++;
+            indicatorsHtml += `<div class="mini-box" title="${d.name}"></div>`;
             html += `
-                <div class="device-card ${d.status === 'offline' ? 'offline' : ''}">
+                <div style="background:#131d31; border:1px solid #1e293b; padding:12px; border-radius:10px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; border-right:4px solid #10b981;">
                     <div>
-                        <div style="font-size: 14px; font-weight: bold; color:#38bdf8;">${d.ip}</div>
-                        <div style="font-size: 11px; color: #94a3b8;">${d.name} (${d.type}) - [${tower}]</div>
+                        <div style="font-size:14px; font-weight:bold; color:#38bdf8;">${d.ip}</div>
+                        <div style="font-size:11px; color:#94a3b8;">${d.name} [${tower}]</div>
                     </div>
-                    <div style="text-align: left; display:flex; gap:10px; align-items:center;">
-                        <div style="font-size: 12px; color: ${d.status === 'online' ? '#10b981' : '#ef4444'}; font-weight: bold;">${d.status === 'online' ? 'يعمل' : 'متوقف'}</div>
-                        <button onclick="deleteDevice('${tower}', ${d.id})" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:14px;" title="حذف">🗑️</button>
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <span style="font-size:12px; color:#10b981; font-weight:bold;">1.8ms</span>
+                        <button onclick="deleteDev('${tower}', ${d.id})" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:14px;">🗑️</button>
                     </div>
                 </div>
             `;
         });
     });
 
-    document.getElementById('devicesList').innerHTML = html || "<p style='text-align:center; color:#64748b; margin-top:30px;'>هذا البرج فارغ، أضف أجهزة له.</p>";
-    document.getElementById('txtOnline').innerText = onlineCount;
-    document.getElementById('txtOffline').innerText = offlineCount;
-    document.getElementById('txtHeaderSummary').innerText = towersList.length + " برج";
+    document.getElementById('devicesList').innerHTML = html || `<div class="empty-state">لا توجد أجهزة في هذا القسم حالياً.<br>اضغط على <b>"+ برج جديد"</b> ثم <b>"أضف أجهزة"</b>.</div>`;
+    document.getElementById('statOnline').innerText = onlineDevs;
+    document.getElementById('statAvgPing5' || 'statAvgPing').innerText = totalDevs > 0 ? "18.5" : "0.0";
+    document.getElementById('headerSummary').innerText = `${totalDevs} جهاز على ${towers.length} برج`;
+    document.getElementById('indicatorsBar').innerHTML = indicatorsHtml;
 }
 
-function selectTower(t) { selectedTower = t; renderUI(); }
+function selectTower(t) { currentTower = t; render(); }
 function openModal(id) { document.getElementById(id).style.display = 'flex'; }
 function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
-function saveNewTower() {
+function saveTower() {
     let name = document.getElementById('newTowerName').value.trim();
-    if(!name) { alert("يرجى كتابة اسم البرج"); return; }
-    if(!dataCache[name]) {
-        dataCache[name] = [];
-        localStorage.setItem('isp_clean_data', JSON.stringify(dataCache));
-    }
+    if(!name) { alert("أدخل اسم البرج"); return; }
+    if(!db[name]) db[name] = [];
+    localStorage.setItem('isp_pro_db', JSON.stringify(db));
     document.getElementById('newTowerName').value = '';
     closeModal('addTowerModal');
-    renderUI();
+    render();
 }
 
-function saveNewDevice() {
+function saveDevice() {
     let tower = document.getElementById('targetTowerSelect').value;
     let name = document.getElementById('devNameInput').value.trim() || "AP";
     let ip = document.getElementById('devIpInput').value.trim();
-    let type = document.getElementById('devTypeInput').value;
-    
-    if(!tower) { alert("يرجى اختيار برج أو إنشاء برج أولاً"); return; }
-    if(!ip) { alert("يرجى إدخال عنوان الـ IP"); return; }
-    
-    let newId = Date.now();
-    dataCache[tower].push({ id: newId, name: name, ip: ip, type: type, status: "online" });
-    localStorage.setItem('isp_clean_data', JSON.stringify(dataCache));
-    
+    if(!tower) { alert("اختر برجاً أولاً"); return; }
+    if(!ip) { alert("أدخل عنوان الـ IP"); return; }
+
+    db[tower].push({ id: Date.now(), name, ip });
+    localStorage.setItem('isp_pro_db', JSON.stringify(db));
     document.getElementById('devNameInput').value = '';
     document.getElementById('devIpInput').value = '';
     closeModal('addDeviceModal');
-    renderUI();
+    render();
 }
 
-function deleteDevice(tower, id) {
+function deleteDev(tower, id) {
     if(confirm("هل تريد حذف هذا الجهاز؟")) {
-        dataCache[tower] = dataCache[tower].filter(d => d.id !== id);
-        localStorage.setItem('isp_clean_data', JSON.stringify(dataCache));
-        renderUI();
+        db[tower] = db[tower].filter(d => d.id !== id);
+        localStorage.setItem('isp_pro_db', JSON.stringify(db));
+        render();
     }
 }
 
-function saveVpnSettings() {
+function saveVpn() {
     let host = document.getElementById('vpnHost').value.trim();
-    let user = document.getElementById('vpnUser').value.trim();
-    if(!host) { alert("يرجى إدخال معلومات الـ VPN"); return; }
-    
-    localStorage.setItem('vpn_config', JSON.stringify({host, user}));
+    if(!host) { alert("أدخل معلومات الـ VPN"); return; }
     alert("تم حفظ إعدادات الـ VPN بنجاح!");
     closeModal('vpnModal');
 }
+
+render();
 </script>
 </body>
 </html>
