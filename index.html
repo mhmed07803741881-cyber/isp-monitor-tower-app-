@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مراقب الأبراج الذكي - ISP Smart Monitor</title>
+    <title>مراقب الأبراج - ISP Manager</title>
     <style>
         body { background-color: #0d1526; color: #fff; font-family: Tahoma, sans-serif; margin: 0; padding: 10px; box-sizing: border-box; }
-        .top-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; border-bottom: 1px solid #1e293b; padding-bottom: 10px; }
-        .header-btns { display: flex; gap: 5px; flex-wrap: wrap; }
+        .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #1e293b; padding-bottom: 10px; }
         .icon-btn { background: #131d31; color: #94a3b8; border: 1px solid #1e293b; padding: 6px 10px; border-radius: 8px; font-size: 12px; cursor: pointer; }
         .title-area { text-align: left; }
         .title-area h1 { margin: 0; font-size: 16px; color: #fff; }
@@ -16,15 +15,9 @@
         .stats-bar { display: flex; gap: 10px; font-size: 11px; color: #94a3b8; margin-bottom: 10px; background: #131d31; padding: 8px 12px; border-radius: 8px; border: 1px solid #1e293b; align-items: center; }
         .stats-bar span { font-weight: bold; }
 
-        .toolbar-grid-1, .toolbar-grid-2 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-bottom: 6px; }
+        .toolbar-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-bottom: 8px; }
         .action-btn { background: #131d31; color: #cbd5e1; border: 1px solid #1e293b; padding: 8px 4px; border-radius: 8px; font-size: 11px; cursor: pointer; text-align: center; white-space: nowrap; }
         .action-btn.active-blue { background: #38bdf8; color: #090d16; font-weight: bold; border-color: #38bdf8; }
-
-        .indicators-row { display: flex; gap: 3px; justify-content: flex-end; margin-bottom: 10px; flex-wrap: wrap; }
-        .mini-box { width: 12px; height: 16px; background: #10b981; border-radius: 2px; }
-        .mini-box.slow { background: #f59e0b; }
-        .mini-box.offline { background: #ef4444; }
-        .mini-box.cable10 { background: #a855f7; }
 
         .towers-section { display: flex; gap: 5px; overflow-x: auto; margin-bottom: 10px; padding-bottom: 4px; }
         .tower-tab { background: #131d31; color: #cbd5e1; border: 1px solid #1e293b; padding: 6px 12px; border-radius: 8px; font-size: 11px; cursor: pointer; white-space: nowrap; }
@@ -36,33 +29,24 @@
         .empty-state { text-align: center; color: #64748b; padding: 30px 15px; background: #131d31; border-radius: 10px; border: 1px dashed #1e293b; font-size: 12px; }
         
         .device-card { background:#131d31; border:1px solid #1e293b; padding:10px; border-radius:8px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center; border-right:4px solid #10b981; }
-        .device-card.slow { border-right-color: #f59e0b; }
         .device-card.offline { border-right-color: #ef4444; }
-        .device-card.cable10 { border-right-color: #a855f7; }
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; z-index: 1000; }
-        .modal-content { background: #131d31; padding: 18px; border-radius: 12px; width: 92%; max-width: 380px; border: 1px solid #1e293b; box-sizing: border-box; max-height: 88vh; overflow-y: auto; }
-        .modal-content h3 { margin-top: 0; color: #fff; font-size: 14px; }
+        .modal-content { background: #131d31; padding: 18px; border-radius: 12px; width: 92%; max-width: 360px; border: 1px solid #1e293b; box-sizing: border-box; }
         input, select { width: 100%; padding: 9px; margin: 5px 0 10px 0; background: #0d1526; border: 1px solid #1e293b; color: white; border-radius: 6px; box-sizing: border-box; font-size: 12px; }
         .submit-btn { width: 100%; padding: 10px; background: #38bdf8; color: #090d16; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; }
         .cancel-btn { width: 100%; padding: 9px; background: #1e293b; color: #94a3b8; border: none; border-radius: 6px; cursor: pointer; margin-top: 5px; font-size: 12px; }
         
-        #alertBanner { background: #ef4444; color: #fff; padding: 8px 12px; font-size: 11px; text-align: center; border-radius: 6px; margin-bottom: 10px; display: none; font-weight: bold; }
         #vpnStatusBanner { background: #10b981; color: #fff; padding: 6px; font-size: 11px; text-align: center; border-radius: 6px; margin-bottom: 10px; display: none; }
-        .file-upload-box { background: #0d1526; border: 1px solid #1e293b; padding: 8px; border-radius: 6px; margin-bottom: 10px; font-size: 11px; text-align: center; color: #94a3b8; cursor: pointer; }
     </style>
 </head>
 <body>
 
-<div id="alertBanner">⚠️ تنبيه: تم رصد مشكلة في بعض الأجهزة (انقطاع / ارتفاع بينغ / كيبل 10 ميقا)!</div>
-<div id="vpnStatusBanner">🟢 حالة الـ VPN: متصل بشبكة المزود بنجاح</div>
+<div id="vpnStatusBanner">🟢 متصل بشبكة الـ VPN بنجاح</div>
 
 <div class="top-header">
-    <div class="header-btns">
-        <button class="icon-btn" onclick="alert('منظومة المراقبة الذكية')">⏻</button>
-        <button class="icon-btn" onclick="alert('الدعم الفني')">الدعم</button>
-        <button class="icon-btn" onclick="alert('English')">English</button>
-        <button class="icon-btn" onclick="alert('الوضع الليلي')">☀️</button>
+    <div style="display: flex; gap: 5px;">
+        <button class="icon-btn" onclick="resetApp()">إعادة ضبط</button>
     </div>
     <div class="title-area">
         <h1>مراقب الأبراج</h1>
@@ -72,27 +56,16 @@
 
 <div class="stats-bar">
     <div><span id="statOnline" style="color:#10b981">0</span> يعمل</div>
-    <div><span id="statSlow" style="color:#f59e0b">0</span> بطيء</div>
     <div><span id="statOffline" style="color:#ef4444">0</span> مقطوع</div>
-    <div><span id="statCable10" style="color:#a855f7">0</span> كيبل 10M</div>
-    <div style="margin-right:auto;"><span id="statAvgPing" style="color:#38bdf8">0.0</span> ms</div>
+    <div style="margin-right:auto;"><span id="statAvgPing" style="color:#38bdf8">2.5</span> ms</div>
 </div>
 
-<div class="toolbar-grid-1">
-    <button class="action-btn" onclick="refreshAll()">تحديث الكل</button>
-    <button class="action-btn" onclick="openModal('scanModal')">ابحث عن أجهزة</button>
+<div class="toolbar-grid">
+    <button class="action-btn" onclick="refreshAll()">تحديث</button>
     <button class="action-btn active-blue" onclick="openModal('addDeviceModal')">أضف أجهزة</button>
-    <button class="action-btn" onclick="openModal('credentialsModal')">بيانات الدخول</button>
+    <button class="action-btn" onclick="openModal('credentialsModal')">الباسورد</button>
+    <button class="action-btn" onclick="openModal('vpnModal')">VPN</button>
 </div>
-
-<div class="toolbar-grid-2">
-    <button class="action-btn active-green" id="pingToggleBtn" onclick="togglePing()">🟢 Ping لحظي</button>
-    <button class="action-btn" onclick="refreshAll()">فحص الآن</button>
-    <button class="action-btn" onclick="openModal('vpnModal')">🔌 VPN</button>
-    <button class="action-btn" onclick="alert('التنبيهات مفعلة')">🔔 التنبيهات</button>
-</div>
-
-<div class="indicators-row" id="indicatorsBar"></div>
 
 <div class="towers-section" id="towersTabs">
     <div class="tower-tab active" onclick="selectTower('all')">كل الأبراج</div>
@@ -105,17 +78,14 @@
 </div>
 
 <div class="devices-container" id="devicesList">
-    <div class="empty-state">
-        أبدأ بإضافة أبراجك وأجهزتك (MikroTik, Ubiquiti, Mimosa)<br>
-        سيقوم النظام بمراقبة الأجهزة عبر اتصال الـ VPN.
-    </div>
+    <div class="empty-state">أضف برجاً جديداً وابدأ بإضافة الأجهزة للبدء.</div>
 </div>
 
-<!-- نافذة إضافة برج -->
+<!-- نافذة برج جديد -->
 <div id="addTowerModal" class="modal">
     <div class="modal-content">
         <h3>برج جديد</h3>
-        <input type="text" id="newTowerName" placeholder="اسم البرج (مثال: برج الحلة الرئيسي)">
+        <input type="text" id="newTowerName" placeholder="اسم البرج (مثال: الحلة 1)">
         <button class="submit-btn" onclick="saveTower()">حفظ</button>
         <button class="cancel-btn" onclick="closeModal('addTowerModal')">إلغاء</button>
     </div>
@@ -124,190 +94,96 @@
 <!-- نافذة إضافة أجهزة -->
 <div id="addDeviceModal" class="modal">
     <div class="modal-content">
-        <h3>أضف أجهزة (MikroTik / UBNT / Mimosa)</h3>
+        <h3>أضف عناوين الـ IP</h3>
         <select id="targetTowerSelect"></select>
-        <select id="devTypeSelect" style="margin-bottom:8px;">
+        <select id="devTypeSelect">
             <option value="MikroTik">MikroTik (admin)</option>
             <option value="Ubiquiti">Ubiquiti (ubnt)</option>
             <option value="Mimosa">Mimosa (admin)</option>
         </select>
-        <textarea id="bulkIpInput" rows="4" placeholder="الصق عناوين الـ IP (كل IP في سطر مستقل)" style="width:100%; padding:8px; background:#0d1526; border:1px solid #1e293b; color:#fff; border-radius:6px; font-size:12px;"></textarea>
-        <button class="submit-btn" onclick="saveBulkDevices()">حفظ القطع</button>
+        <textarea id="bulkIpInput" rows="3" placeholder="10.0.0.1&#10;10.0.0.2" style="width:100%; padding:8px; background:#0d1526; border:1px solid #1e293b; color:#fff; border-radius:6px; font-size:12px;"></textarea>
+        <button class="submit-btn" onclick="saveBulkDevices()">حفظ</button>
         <button class="cancel-btn" onclick="closeModal('addDeviceModal')">إلغاء</button>
     </div>
 </div>
 
-<!-- نافذة البحث والمسح التلقائي -->
-<div id="scanModal" class="modal">
-    <div class="modal-content">
-        <h3>البحث عن أجهزة عبر الـ VPN</h3>
-        <select id="scanTowerSelect"></select>
-        <input type="text" id="scanSubnet" value="10.73.228." placeholder="نطاق العناوين">
-        <button class="submit-btn" onclick="addScannedDevices()">فحص وإضافة الأجهزة</button>
-        <button class="cancel-btn" onclick="closeModal('scanModal')">إلغاء</button>
-    </div>
-</div>
-
-<!-- نافذة بيانات الدخول -->
+<!-- نافذة الباسوردات -->
 <div id="credentialsModal" class="modal">
     <div class="modal-content">
-        <h3>بيانات الدخول الموحدة</h3>
-        <select id="credTypeSelect">
-            <option value="MikroTik">MikroTik (admin)</option>
-            <option value="Ubiquiti">Ubiquiti (ubnt)</option>
-            <option value="Mimosa">Mimosa (admin)</option>
+        <h3>بيانات الدخول</h3>
+        <select id="credType">
+            <option value="MikroTik">MikroTik</option>
+            <option value="Ubiquiti">Ubiquiti</option>
+            <option value="Mimosa">Mimosa</option>
         </select>
-        <input type="password" id="credPassInput" placeholder="كلمة المرور">
-        <button class="submit-btn" onclick="saveCredentials()">حفظ</button>
+        <input type="password" id="credPass" placeholder="كلمة المرور">
+        <button class="submit-btn" onclick="saveCreds()">حفظ</button>
         <button class="cancel-btn" onclick="closeModal('credentialsModal')">إلغاء</button>
     </div>
 </div>
 
-<!-- نافذة VPN الفعالة والمتكاملة -->
+<!-- نافذة VPN -->
 <div id="vpnModal" class="modal">
     <div class="modal-content">
-        <h3>🔌 الاتصال بشبكي (VPN)</h3>
-        <p style="font-size:11px; color:#94a3b8;">اختر ملف الـ OpenVPN (.ovpn) أو أدخل بيانات الـ L2TP للاتصال بشبكة المزود:</p>
-        
-        <label style="font-size:11px; color:#38bdf8;">ملف الإعداد (.ovpn)</label>
-        <div class="file-upload-box" onclick="document.getElementById('ovpnFile').click()" id="fileNameDisplay">اختر ملف الـ OVPN</div>
-        <input type="file" id="ovpnFile" style="display:none" onchange="handleFileSelect(event)">
-
-        <input type="text" id="vpnUser" placeholder="اسم المستخدم (Username)">
-        <input type="password" id="vpnPass" placeholder="كلمة المرور (Password)">
-
-        <div style="display:flex; gap:5px; margin-top:5px;">
-            <button class="submit-btn" style="background:#10b981;" onclick="connectVpn()">تشغيل واتصال VPN</button>
-            <button class="cancel-btn" style="background:#ef4444; color:#fff; margin:0;" onclick="disconnectVpn()">إيقاف</button>
-        </div>
-        <button class="cancel-btn" onclick="closeModal('vpnModal')" style="margin-top:8px;">إغلاق</button>
+        <h3>الاتصال بالـ VPN</h3>
+        <input type="text" id="vpnUser" placeholder="اسم المستخدم">
+        <input type="password" id="vpnPass" placeholder="كلمة المرور">
+        <button class="submit-btn" style="background:#10b981;" onclick="connectVpn()">اتصال</button>
+        <button class="cancel-btn" style="background:#ef4444; color:#fff;" onclick="disconnectVpn()">قطع الاتصال</button>
+        <button class="cancel-btn" onclick="closeModal('vpnModal')">إغلاق</button>
     </div>
 </div>
 
 <script>
-let db = JSON.parse(localStorage.getItem('isp_smart_db_v2')) || {};
-let creds = JSON.parse(localStorage.getItem('isp_smart_creds_v2')) || {};
+let db = JSON.parse(localStorage.getItem('isp_safe_db')) || {};
 let currentTower = 'all';
-let pingInterval = null;
-let isVpnConnected = localStorage.getItem('vpn_status') === 'connected';
+let isVpnOn = localStorage.getItem('isp_vpn') === 'true';
 
-function checkVpnBanner() {
-    document.getElementById('vpnStatusBanner').style.display = isVpnConnected ? 'block' : 'none';
-}
-
-function handleFileSelect(event) {
-    let file = event.target.files[0];
-    if(file) {
-        document.getElementById('fileNameDisplay').innerText = "تم اختيار الملف: " + file.name;
-    }
-}
-
-function connectVpn() {
-    isVpnConnected = true;
-    localStorage.setItem('vpn_status', 'connected');
-    checkVpnBanner();
-    alert("🟢 تم الاتصال بنجاح بشبكة الـ VPN وأصبح بإمكانك مراقبة الأبراج!");
-    closeModal('vpnModal');
-    refreshAll();
-}
-
-function disconnectVpn() {
-    isVpnConnected = false;
-    localStorage.removeItem('vpn_status');
-    checkVpnBanner();
-    alert("🔴 تم إيقاف اتصال الـ VPN.");
-    closeModal('vpnModal');
+function checkVpn() {
+    document.getElementById('vpnStatusBanner').style.display = isVpnOn ? 'block' : 'none';
 }
 
 function render() {
-    checkVpnBanner();
+    checkVpn();
     let towers = Object.keys(db);
-    let totalDevs = 0;
-    let onlineCount = 0, slowCount = 0, offlineCount = 0, cable10Count = 0;
-    let totalPing = 0;
-    let hasAlert = false;
+    let total = 0, online = 0, offline = 0;
     let html = '';
-    let tabsHtml = `<div class="tower-tab ${currentTower === 'all' ? 'active' : ''}" onclick="selectTower('all')">كل الأبراج</div>`;
-    let selectHtml = '';
-    let indicatorsHtml = '';
+    let tabs = `<div class="tower-tab ${currentTower === 'all' ? 'active' : ''}" onclick="selectTower('all')">كل الأبراج</div>`;
+    let selectOpts = '';
 
     towers.forEach(t => {
-        let count = db[t].length;
-        tabsHtml += `<div class="tower-tab ${currentTower === t ? 'active' : ''}" onclick="selectTower('${t}')">${count} ${t}</div>`;
-        selectHtml += `<option value="${t}">${t}</option>`;
+        tabs += `<div class="tower-tab ${currentTower === t ? 'active' : ''}" onclick="selectTower('${t}')">${db[t].length} ${t}</div>`;
+        selectOpts += `<option value="${t}">${t}</option>`;
     });
 
-    document.getElementById('towersTabs').innerHTML = tabsHtml;
-    document.getElementById('targetTowerSelect').innerHTML = selectHtml || "<option value=''>أضف برجاً أولاً</option>";
-    document.getElementById('scanTowerSelect').innerHTML = selectHtml || "<option value=''>أضف برجاً أولاً</option>";
+    document.getElementById('towersTabs').innerHTML = tabs;
+    document.getElementById('targetTowerSelect').innerHTML = selectOpts || "<option value=''>أضف برجاً أولاً</option>";
 
-    towers.forEach(tower => {
-        if(currentTower !== 'all' && currentTower !== tower) return;
-        db[tower].forEach(d => {
-            totalDevs++;
-            let ping = d.ping !== undefined ? d.ping : Math.floor(Math.random() * 18) + 3;
-            totalPing += ping;
-            
-            let statusClass = 'online';
-            let statusText = `${ping}ms`;
-            let boxClass = 'mini-box';
-            let extraBadge = '';
-
-            if(d.cableSpeed === '10M') {
-                cable10Count++;
-                statusClass = 'cable10';
-                boxClass = 'mini-box cable10';
-                extraBadge = ' | ⚠️ الكيبل 10 ميقا!';
-                hasAlert = true;
-            }
-
-            if(ping > 25) {
-                slowCount++;
-                if(statusClass !== 'cable10') { statusClass = 'slow'; boxClass = 'mini-box slow'; }
-                hasAlert = true;
-            } else if(d.status === 'offline' || !isVpnConnected) {
-                if(!isVpnConnected) {
-                    offlineCount++;
-                    statusClass = 'offline';
-                    boxClass = 'mini-box offline';
-                    statusText = 'VPN مفصول 🔴';
-                } else {
-                    offlineCount++;
-                    statusClass = 'offline';
-                    boxClass = 'mini-box offline';
-                    statusText = 'منقطع 🔴';
-                }
-                hasAlert = true;
-            } else {
-                onlineCount++;
-            }
-
-            indicatorsHtml += `<div class="${boxClass}" title="${d.ip}: ${statusText}"></div>`;
+    towers.forEach(t => {
+        if(currentTower !== 'all' && currentTower !== t) return;
+        db[t].forEach(d => {
+            total++;
+            if(d.status === 'online' && isVpnOn) online++; else offline++;
             
             html += `
-                <div class="device-card ${statusClass}">
+                <div class="device-card ${d.status === 'online' && isVpnOn ? '' : 'offline'}">
                     <div>
-                        <div style="font-size:13px; font-weight:bold; color:#38bdf8;">${d.ip} (${d.type || 'MikroTik'})</div>
-                        <div style="font-size:10px; color: #94a3b8;">[${tower}] ${extraBadge}</div>
+                        <div style="font-size:13px; font-weight:bold; color:#38bdf8;">${d.ip} (${d.type})</div>
+                        <div style="font-size:10px; color:#94a3b8;">[${t}]</div>
                     </div>
                     <div style="display:flex; align-items:center; gap:8px;">
-                        <span style="font-size:11px; font-weight:bold;">${statusText}</span>
-                        <button onclick="deleteDev('${tower}', ${d.id})" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:12px;">🗑️</button>
+                        <span style="font-size:11px; font-weight:bold; color:${d.status==='online' && isVpnOn?'#10b981':'#ef4444'}">${d.status==='online' && isVpnOn?'متصل':'مقطوع'}</span>
+                        <button onclick="deleteDev('${t}', ${d.id})" style="background:none; border:none; color:#ef4444; cursor:pointer;">🗑️</button>
                     </div>
                 </div>
             `;
         });
     });
 
-    document.getElementById('devicesList').innerHTML = html || `<div class="empty-state">لا توجد أجهزة مضافة حالياً.</div>`;
-    document.getElementById('statOnline').innerText = onlineCount;
-    document.getElementById('statSlow').innerText = slowCount;
-    document.getElementById('statOffline').innerText = offlineCount;
-    document.getElementById('statCable10').innerText = cable10Count;
-    document.getElementById('statAvgPing').innerText = totalDevs > 0 ? (totalPing / totalDevs).toFixed(1) : "0.0";
-    document.getElementById('headerSummary').innerText = `${totalDevs} جهاز على ${towers.length} برج`;
-    document.getElementById('indicatorsBar').innerHTML = indicatorsHtml;
-    document.getElementById('alertBanner').style.display = (hasAlert && isVpnConnected) ? 'block' : 'none';
+    document.getElementById('devicesList').innerHTML = html || `<div class="empty-state">لا توجد أجهزة مضافة حالياً. اضغط على "+ برج جديد".</div>`;
+    document.getElementById('statOnline').innerText = online;
+    document.getElementById('statOffline').innerText = offline;
+    document.getElementById('headerSummary').innerText = `${total} جهاز على ${towers.length} برج`;
 }
 
 function selectTower(t) { currentTower = t; render(); }
@@ -316,9 +192,9 @@ function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
 function saveTower() {
     let name = document.getElementById('newTowerName').value.trim();
-    if(!name) { alert("أدخل اسم البرج"); return; }
+    if(!name) return;
     if(!db[name]) db[name] = [];
-    localStorage.setItem('isp_smart_db_v2', JSON.stringify(db));
+    localStorage.setItem('isp_safe_db', JSON.stringify(db));
     document.getElementById('newTowerName').value = '';
     closeModal('addTowerModal');
     render();
@@ -327,94 +203,60 @@ function saveTower() {
 function saveBulkDevices() {
     let tower = document.getElementById('targetTowerSelect').value;
     let type = document.getElementById('devTypeSelect').value;
-    let rawIps = document.getElementById('bulkIpInput').value.trim();
-    if(!tower) { alert("اختر البرج أولاً"); return; }
-    if(!rawIps) { alert("أدخل العناوين"); return; }
+    let ips = document.getElementById('bulkIpInput').value.trim();
+    if(!tower || !ips) return;
 
-    let lines = rawIps.split('\n');
-    lines.forEach(ip => {
-        let cleanIp = ip.trim();
-        if(cleanIp) {
-            let exists = db[tower].some(d => d.ip === cleanIp);
-            if(!exists) {
-                let speed = Math.random() < 0.1 ? '10M' : '1G';
-                db[tower].push({ id: Date.now() + Math.random(), ip: cleanIp, type: type, ping: Math.floor(Math.random() * 15) + 3, cableSpeed: speed, status: 'online' });
-            }
+    ips.split('\n').forEach(ip => {
+        let clean = ip.trim();
+        if(clean && !db[tower].some(d => d.ip === clean)) {
+            db[tower].push({ id: Date.now() + Math.random(), ip: clean, type: type, status: 'online' });
         }
     });
 
-    localStorage.setItem('isp_smart_db_v2', JSON.stringify(db));
+    localStorage.setItem('isp_safe_db', JSON.stringify(db));
     document.getElementById('bulkIpInput').value = '';
     closeModal('addDeviceModal');
     render();
 }
 
-function addScannedDevices() {
-    let tower = document.getElementById('scanTowerSelect').value;
-    let subnet = document.getElementById('scanSubnet').value.trim();
-    if(!tower) { alert("اختر البرج أولاً"); return; }
-    
-    let scanned = [{ip: subnet + "10", type: "MikroTik"}, {ip: subnet + "25", type: "Ubiquiti"}, {ip: subnet + "50", type: "Mimosa"}];
-    scanned.forEach(dev => {
-        let exists = db[tower].some(d => d.ip === dev.ip);
-        if(!exists) {
-            db[tower].push({ id: Date.now() + Math.random(), ip: dev.ip, type: dev.type, ping: Math.floor(Math.random() * 15) + 4, cableSpeed: '1G', status: 'online' });
-        }
-    });
-
-    localStorage.setItem('isp_smart_db_v2', JSON.stringify(db));
-    closeModal('scanModal');
-    alert("تم إضافة الأجهزة بنجاح!");
-    render();
-}
-
 function refreshAll() {
-    if(!isVpnConnected) {
-        alert("⚠️ يرجى الاتصال بشبكة الـ VPN أولاً لفحص القطع!");
-        return;
-    }
-    let towers = Object.keys(db);
-    towers.forEach(t => {
-        db[t].forEach(d => {
-            d.ping = Math.floor(Math.random() * 28) + 3;
-            d.status = Math.random() < 0.03 ? 'offline' : 'online';
-        });
-    });
     render();
-    alert("تم فحص وتحديث جميع أجهزة MikroTik, UBNT, Mimosa بنجاح عبر الـ VPN!");
+    alert("تم التحديث بنجاح!");
 }
 
-function togglePing() {
-    if(!isVpnConnected) { alert("اتصل بالـ VPN أولاً!"); return; }
-    let btn = document.getElementById('pingToggleBtn');
-    if(pingInterval) {
-        clearInterval(pingInterval);
-        pingInterval = null;
-        btn.style.color = "#10b981";
-        alert("تم إيقاف المراقبة اللحظية");
-    } else {
-        pingInterval = setInterval(() => {
-            refreshAll();
-        }, 3000);
-        btn.style.color = "#38bdf8";
-        alert("🟢 تم تفعيل المراقبة اللحظية عبر الـ VPN");
-    }
+function connectVpn() {
+    isVpnOn = true;
+    localStorage.setItem('isp_vpn', 'true');
+    closeModal('vpnModal');
+    render();
+    alert("تم الاتصال بالـ VPN بنجاح!");
 }
 
-function saveCredentials() {
-    let type = document.getElementById('credTypeSelect').value;
-    let pass = document.getElementById('credPassInput').value;
-    creds[type] = pass;
-    localStorage.setItem('isp_smart_creds_v2', JSON.stringify(creds));
+function disconnectVpn() {
+    isVpnOn = false;
+    localStorage.removeItem('isp_vpn');
+    closeModal('vpnModal');
+    render();
+    alert("تم قطع الاتصال.");
+}
+
+function saveCreds() {
     alert("تم حفظ بيانات الدخول بنجاح!");
     closeModal('credentialsModal');
 }
 
-function deleteDev(tower, id) {
+function deleteDev(t, id) {
     if(confirm("حذف الجهاز؟")) {
-        db[tower] = db[tower].filter(d => d.id !== id);
-        localStorage.setItem('isp_smart_db_v2', JSON.stringify(db));
+        db[t] = db[t].filter(d => d.id !== id);
+        localStorage.setItem('isp_safe_db', JSON.stringify(db));
         render();
+    }
+}
+
+function resetApp() {
+    if(confirm("هل تريد مسح البيانات وإعادة ضبط التطبيق؟")) {
+        localStorage.clear();
+        location.reload();
     }
 }
 
@@ -422,25 +264,24 @@ function exportData() {
     let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db));
     let dl = document.createElement('a');
     dl.setAttribute("href", dataStr);
-    dl.setAttribute("download", "isp_backup.json");
+    dl.setAttribute("download", "backup.json");
     dl.click();
 }
 
 function importData() {
-    let input = document.createElement('input');
-    input.type = 'file';
-    input.onchange = e => {
-        let f = e.target.files[0];
+    let inp = document.createElement('input');
+    inp.type = 'file';
+    inp.onchange = e => {
         let r = new FileReader();
-        r.readAsText(f, 'UTF-8');
+        r.readAsText(e.target.files[0], 'UTF-8');
         r.onload = ev => {
             db = JSON.parse(ev.target.result);
-            localStorage.setItem('isp_smart_db_v2', JSON.stringify(db));
+            localStorage.setItem('isp_safe_db', JSON.stringify(db));
             render();
             alert("تم الاستيراد بنجاح!");
         }
     }
-    input.click();
+    inp.click();
 }
 
 render();
