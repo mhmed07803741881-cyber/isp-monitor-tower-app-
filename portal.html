@@ -8,6 +8,7 @@
         body { background-color: #0d1526; color: #fff; font-family: Tahoma, sans-serif; margin: 0; padding: 15px; box-sizing: border-box; display: flex; justify-content: center; align-items: center; min-height: 100vh; flex-direction: column; }
         .top-nav { width: 100%; max-width: 380px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .notif-bell-btn { background: #131d31; color: #f59e0b; border: 1px solid #1e293b; padding: 6px 10px; border-radius: 8px; font-size: 12px; cursor: pointer; }
+        .broadcast-banner { background: #06b6d4; color: #090d16; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; width: 100%; max-width: 380px; font-size: 12px; font-weight: bold; text-align: center; display: none; box-sizing: border-box; }
         .portal-container { background: #131d31; border: 1px solid #1e293b; padding: 20px; border-radius: 12px; width: 100%; max-width: 380px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); box-sizing: border-box; }
         h2 { color: #38bdf8; text-align: center; margin-top: 0; font-size: 17px; }
         p { color: #94a3b8; font-size: 11px; text-align: center; margin-bottom: 15px; }
@@ -15,6 +16,11 @@
         textarea { text-align: right; }
         .btn { width: 100%; padding: 11px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; margin-top: 6px; text-align: center; text-decoration: none; display: block; box-sizing: border-box; }
         .btn-search { background: #38bdf8; color: #090d16; }
+        .btn-pay { background: #6366f1; color: #fff; }
+        .btn-wa { background: #25d366; color: #fff; }
+        .btn-agel { background: #f59e0b; color: #090d16; }
+        .btn-router { background: #0284c7; color: #fff; }
+        .btn-speed { background: #10b981; color: #fff; }
         .btn-ticket { background: #ec4899; color: #fff; }
         .info-box { background: #0d1526; border: 1px solid #1e293b; padding: 12px; border-radius: 8px; margin-top: 12px; display: none; }
         .info-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; }
@@ -25,6 +31,16 @@
     </style>
 </head>
 <body>
+
+<div class="top-nav">
+    <div style="font-size:12px; color:#38bdf8; font-weight:bold;">مكتب مهندس علي</div>
+    <button class="notif-bell-btn" onclick="openClientNotifModal()">🔔 الإشعارات</button>
+</div>
+
+<!-- شريط الإشعارات العام -->
+<div id="broadcastBanner" class="broadcast-banner">
+    📢 <span id="broadcastTextContent"></span>
+</div>
 
 <div class="portal-container">
     <h2>بوابة زبائن مهندس علي</h2>
@@ -37,21 +53,39 @@
         <div class="info-row"><span class="info-label">اسم المشترك:</span><span class="info-val" id="cName" style="color:#38bdf8"></span></div>
         <div class="info-row"><span class="info-label">حالة الاشتراك:</span><span class="info-val" id="cStatus"></span></div>
         <div class="info-row"><span class="info-label">تاريخ الانتهاء:</span><span class="info-val" id="cEnd"></span></div>
+        <div class="info-row"><span class="info-label">مبلغ الاشتراك:</span><span class="info-val" id="cPrice"></span></div>
+
+        <!-- أزرار الدفع والخدمات -->
+        <button class="btn btn-pay" onclick="copyMasterNumber()">💳 نسخ رقم التحويل (07724850876)</button>
+        <button class="btn btn-wa" onclick="sendWhatsAppReceipt()">💬 إرسال إشعار التحويل واتساب</button>
+        <button class="btn btn-agel" onclick="requestAgel()">⏳ طلب تفعيل مؤجل (أجل)</button>
         
-        <button class="btn btn-ticket" onclick="openTicketModal()">🎫 إرسال تكت ومتابعة الردود</button>
+        <!-- أزرار الإعدادات والسرعة والتكتات -->
+        <a href="http://192.168.0.1" target="_blank" class="btn btn-router">⚙️ تغيير رمز الراوتر (192.168.0.1)</a>
+        <a href="https://www.fast.com" target="_blank" class="btn btn-speed">🚀 فحص السرعة (Fast.com)</a>
+        <button class="btn btn-ticket" onclick="openTicketModal()">🎫 إرسال تكت دعم فني ومتابعة الردود</button>
+    </div>
+</div>
+
+<!-- نافذة إشعارات المشترك العامة -->
+<div id="clientNotifModal" class="modal">
+    <div class="modal-content" style="border-color: #f59e0b;">
+        <h3 style="margin-top:0; color:#f59e0b; text-align:center; font-size:15px;">🔔 إشعارات المكتب</h3>
+        <p id="clientNotifText" style="font-size:11px; color:#cbd5e1; text-align:center; background:#0d1526; padding:10px; border-radius:6px; margin-bottom:15px;">لا توجد إشعارات جديدة حالياً.</p>
+        <button class="btn btn-search" onclick="closeClientNotifModal()" style="background:#1e293b; color:#38bdf8;">إغلاق</button>
     </div>
 </div>
 
 <!-- نافذة المحادثة والتكتات للمشترك -->
 <div id="ticketModal" class="modal">
     <div class="modal-content">
-        <h3 style="margin-top:0; color:#ec4899; text-align:center; font-size:15px;">🎫 تكتات الدعم الفني</h3>
+        <h3 style="margin-top:0; color:#ec4899; text-align:center; font-size:15px;">🎫 تكتات الدعم الفني والمحادثة</h3>
         
         <textarea id="ticketMessageText" rows="3" placeholder="اكتب مشكلتك أو استفسارك هنا..."></textarea>
         <button class="btn btn-ticket" onclick="submitTicket()" style="margin-bottom:10px;">إرسال التكت للإدارة</button>
 
-        <div style="font-size:11px; color:#94a3b8; margin-bottom:4px;">سجل المحادثة وتحديثات الأقسام:</div>
-        <div id="ticketChatHistory" style="max-height: 140px; overflow-y: auto; background:#0d1526; padding:8px; border-radius:6px; font-size:11px; color:#cbd5e1; text-align:right; margin-bottom:10px;">
+        <div style="font-size:11px; color:#94a3b8; margin-bottom:4px; text-align:right;">سجل المحادثة وتحديثات الأقسام:</div>
+        <div id="ticketChatHistory" style="max-height: 150px; overflow-y: auto; background:#0d1526; padding:8px; border-radius:6px; font-size:11px; color:#cbd5e1; text-align:right; margin-bottom:10px;">
             لا توجد رسائل.
         </div>
 
@@ -60,7 +94,20 @@
 </div>
 
 <script>
+window.onload = function() {
+    let savedMsg = localStorage.getItem('ali_app_broadcast_msg');
+    if(savedMsg) {
+        document.getElementById('broadcastTextContent').innerText = savedMsg;
+        document.getElementById('broadcastBanner').style.display = 'block';
+        document.getElementById('clientNotifText').innerText = savedMsg;
+    }
+};
+
+function openClientNotifModal() { document.getElementById('clientNotifModal').style.display = 'flex'; }
+function closeClientNotifModal() { document.getElementById('clientNotifModal').style.display = 'none'; }
+
 let foundSubscriber = null;
+const adminPhone = "9647724850876";
 
 function searchClient() {
     let query = document.getElementById('clientQuery').value.trim().toLowerCase();
@@ -72,53 +119,4 @@ function searchClient() {
     if(foundSubscriber) {
         document.getElementById('cName').innerText = foundSubscriber.name;
         document.getElementById('cStatus').innerHTML = foundSubscriber.payStatus === 'واصل' ? '<span style="color:#10b981">واصل ✅</span>' : '<span style="color:#f59e0b">أجل ⏳</span>';
-        document.getElementById('cEnd').innerText = foundSubscriber.endDate;
-        document.getElementById('clientInfoBox').style.display = 'block';
-    } else {
-        alert("عذراً، لم يتم العثور على حساب.");
-        document.getElementById('clientInfoBox').style.display = 'none';
-    }
-}
-
-function openTicketModal() {
-    if(!foundSubscriber) return;
-    refreshChatHistory();
-    document.getElementById('ticketModal').style.display = 'flex';
-}
-function closeTicketModal() { document.getElementById('ticketModal').style.display = 'none'; }
-
-function refreshChatHistory() {
-    let chats = JSON.parse(localStorage.getItem(`ticket_chat_${foundSubscriber.name}`)) || [];
-    let chatHtml = chats.length === 0 ? "لا توجد ردود سابقة." : chats.map(c => `<div style="margin-bottom:6px; border-bottom:1px solid #1e293b; padding-bottom:4px;"><b>${c.sender}:</b> ${c.text}</div>`).join('');
-    document.getElementById('ticketChatHistory').innerHTML = chatHtml;
-}
-
-function submitTicket() {
-    let msg = document.getElementById('ticketMessageText').value.trim();
-    if(!msg) { alert("يرجى كتابة رسالة التكت"); return; }
-
-    let ticketNum = `#${Math.floor(1000 + Math.random() * 9000)}`;
-    
-    // حفظ التكت في قائمة التكتات العامة للإدارة
-    let allTickets = JSON.parse(localStorage.getItem('all_client_tickets')) || [];
-    allTickets.push({ subName: foundSubscriber.name, ticketNum: ticketNum, message: msg, status: 'جديد (بانتظار المراجعة)' });
-    localStorage.setItem('all_client_tickets', JSON.stringify(allTickets));
-
-    // إضافة الرسالة لسجل محادثة المشترك
-    let chatItem = { sender: foundSubscriber.name, text: `[${ticketNum}] ${msg}` };
-    let chats = JSON.parse(localStorage.getItem(`ticket_chat_${foundSubscriber.name}`)) || [];
-    chats.push(chatItem);
-    localStorage.setItem(`ticket_chat_${foundSubscriber.name}`, JSON.stringify(chats));
-
-    // إرسال إشعار لصوت الجرس في لوحة الإدارة
-    let notifs = JSON.parse(localStorage.getItem('ali_admin_notifications')) || [];
-    notifs.push(`${new Date().toLocaleTimeString()} - 🎫 تكت جديد من المشترك: ${foundSubscriber.name}`);
-    localStorage.setItem('ali_admin_notifications', JSON.stringify(notifs));
-
-    alert("✅ تم إرسال التكت بنجاح! سيتم مراجعته وتحويله للأقسام المختصة قريباً.");
-    document.getElementById('ticketMessageText').value = '';
-    refreshChatHistory();
-}
-</script>
-</body>
-</html>
+        document.getElementById('cEnd').innerText = found
