@@ -29,6 +29,9 @@
         .submit-btn { width: 100%; padding: 11px; background: #38bdf8; color: #090d16; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; }
         .cancel-btn { width: 100%; padding: 10px; background: #1e293b; color: #94a3b8; border: none; border-radius: 6px; cursor: pointer; margin-top: 6px; font-size: 13px; }
 
+        /* نافذة قفل البرنامج */
+        #lockScreen { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0d1526; justify-content: center; align-items: center; z-index: 999999; }
+
         #printArea { display: none; background: #fff; color: #000; padding: 15px; font-family: Tahoma, sans-serif; direction: rtl; width: 280px; }
         @media print {
             body * { visibility: hidden; }
@@ -39,12 +42,22 @@
 </head>
 <body>
 
+<!-- شاشة القفل الأمني للبرنامج -->
+<div id="lockScreen">
+    <div style="background:#131d31; padding:25px; border-radius:12px; width:85%; max-width:320px; text-align:center; border:1px solid #38bdf8;">
+        <h3 style="color:#38bdf8; margin-top:0;">🔐 قفل البرنامج</h3>
+        <p style="font-size:11px; color:#94a3b8;">يرجى إدخال رمز الدخول (الافتراضي 1234):</p>
+        <input type="password" id="passCodeInput" placeholder="رمز الدخول" style="text-align:center; font-size:16px; letter-spacing:3px;">
+        <button class="submit-btn" onclick="checkPin()">دخول</button>
+    </div>
+</div>
+
 <div class="top-header">
     <div class="title-area">
         <h1>مهندس علي لخدمات الإنترنت</h1>
         <p>هواتف المكتب: 07818627764 - 07724850876</p>
     </div>
-    <button class="action-btn" onclick="resetApp()" style="padding: 6px 10px; font-size:10px;">إعادة ضبط</button>
+    <button class="action-btn" onclick="openPinModal()" style="padding: 6px 10px; font-size:10px; background:#1e293b; color:#38bdf8;">⚙️ الرمز</button>
 </div>
 
 <div class="stats-bar">
@@ -84,12 +97,23 @@
         <label style="font-size:11px; color:#94a3b8;">تاريخ الانتهاء:</label>
         <input type="date" id="endDate">
         
-        <button class="submit-btn" onclick="saveSub()">حفظ وإرسال تفعيل واتساب</button>
+        <button class="submit-btn" onclick="saveSub()">حفظ وإرسال واتساب</button>
         <button class="cancel-btn" onclick="closeModal()">إلغاء</button>
     </div>
 </div>
 
-<!-- طباعة الوصل (تفعيل أو تسديد) -->
+<!-- نافذة تغيير رمز الدخول -->
+<div id="pinModal" class="modal">
+    <div class="modal-content">
+        <h3 style="margin-top:0; color:#38bdf8;">تغيير رمز الدخول</h3>
+        <input type="password" id="oldPin" placeholder="الرمز الحالي">
+        <input type="password" id="newPin" placeholder="الرمز الجديد">
+        <button class="submit-btn" onclick="updatePin()">حفظ الرمز الجديد</button>
+        <button class="cancel-btn" onclick="closePinModal()">إلغاء</button>
+    </div>
+</div>
+
+<!-- طباعة الوصل -->
 <div id="printArea">
     <div style="text-align: center; border-bottom: 2px dashed #000; padding-bottom: 8px; margin-bottom: 8px;">
         <h3 style="margin:0; font-size:13px;">مكتب مهندس علي لخدمات الإنترنت</h3>
@@ -111,9 +135,47 @@
 <script>
 let subs = [];
 try {
-    subs = JSON.parse(localStorage.getItem('ali_isp_final_v8')) || [];
+    subs = JSON.parse(localStorage.getItem('ali_isp_final_v9')) || [];
 } catch(e) {
     subs = [];
+}
+
+let currentPin = localStorage.getItem('app_pin') || '1234';
+
+function checkPin() {
+    let inputPin = document.getElementById('passCodeInput').value;
+    if(inputPin === currentPin) {
+        document.getElementById('lockScreen').style.display = 'none';
+    } else {
+        alert("رمز الدخول غير صحيح!");
+    }
+}
+
+function openPinModal() {
+    document.getElementById('pinModal').style.display = 'flex';
+}
+
+function closePinModal() {
+    document.getElementById('pinModal').style.display = 'none';
+}
+
+function updatePin() {
+    let oldP = document.getElementById('oldPin').value;
+    let newP = document.getElementById('newPin').value;
+    if(oldP !== currentPin) {
+        alert("الرمز الحالي غير صحيح");
+        return;
+    }
+    if(!newP || newP.length < 4) {
+        alert("يرجى إدخال رمز جديد مكون من 4 أرقام على الأقل");
+        return;
+    }
+    currentPin = newP;
+    localStorage.setItem('app_pin', currentPin);
+    alert("تم تغيير رمز الدخول بنجاح!");
+    closePinModal();
+    document.getElementById('oldPin').value = '';
+    document.getElementById('newPin').value = '';
 }
 
 window.onload = function() {
@@ -198,7 +260,7 @@ function saveSub() {
     }
 
     subs.push({ id: Date.now(), name, phone, price, payStatus, startDate, endDate });
-    localStorage.setItem('ali_isp_final_v8', JSON.stringify(subs));
+    localStorage.setItem('ali_isp_final_v9', JSON.stringify(subs));
     
     document.getElementById('subName').value = '';
     document.getElementById('subPhone').value = '';
@@ -214,15 +276,13 @@ function saveSub() {
     }
 }
 
-// دالة تسديد الدين للمشترك الأجل مع طباعة وصل تسديد
 function payDebt(id) {
     let s = subs.find(item => item.id === id);
     if(s) {
         if(confirm("هل تريد تثبيت تسديد المبلغ لهذا المشترك؟")) {
             s.payStatus = 'واصل';
-            localStorage.setItem('ali_isp_final_v8', JSON.stringify(subs));
+            localStorage.setItem('ali_isp_final_v9', JSON.stringify(subs));
             renderSubs();
-            // طباعة وصل التسديد مباشرة
             printReceipt(s.name, s.price || 0, s.startDate, s.endDate, 'واصل (تم التسديد)', 'وصل قبض تسديد دين');
         }
     }
@@ -234,13 +294,12 @@ function sendWhatsapp(phone, name, endDate, payStatus, startDate) {
     if(cleanPhone.startsWith('0')) cleanPhone = '964' + cleanPhone.substring(1);
     
     let msg = "";
-    // فحص إذا كان المشترك غير مسدد (أجل) ومضى على تفعيله 5 أيام أو أكثر
     let startD = new Date(startDate);
     let todayD = new Date();
     let diffDays = Math.floor((todayD - startD) / (1000 * 60 * 60 * 24));
 
     if(payStatus === 'أجل' && diffDays >= 5) {
-        msg = `عزيزي المشترك ${name} ⏳\nنود تذكيرك بوجود مبلغ اشتراك معلق (أجل) في (مكتب مهندس علي لخدمات الإنترنت).\nتلفونات المكتب: 07818627764 - 07724850876\nيرجى تسديد المبلغ لاستمرار الخدمة.`;
+        msg = `عزيزي المشترك ${name} ⏳\nنود تذكيرك بوجود مبلغ اشتراك معلق (أجل) مضى عليه أكثر من 5 أيام في (مكتب مهندس علي لخدمات الإنترنت).\nتلفونات المكتب: 07818627764 - 07724850876\nيرجى تسديد المبلغ لاستمرار الخدمة.`;
     } else {
         msg = `عزيزي المشترك ${name} 📡\nتذكير من (مكتب مهندس علي لخدمات الإنترنت):\nتلفونات المكتب: 07818627764 - 07724850876\nاشتراكك سينتهي بتاريخ ${endDate}.\nحالة الدفع: ${payStatus}.`;
     }
@@ -261,15 +320,7 @@ function printReceipt(name, price, start, end, payStatus, title = 'وصل قبض
 function deleteSub(id) {
     if(confirm("هل تريد حذف هذا المشترك؟")) {
         subs = subs.filter(s => s.id !== id);
-        localStorage.setItem('ali_isp_final_v8', JSON.stringify(subs));
-        renderSubs();
-    }
-}
-
-function resetApp() {
-    if(confirm("مسح كافة البيانات وإعادة الضبط؟")) {
-        localStorage.removeItem('ali_isp_final_v8');
-        subs = [];
+        localStorage.setItem('ali_isp_final_v9', JSON.stringify(subs));
         renderSubs();
     }
 }
