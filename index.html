@@ -21,7 +21,7 @@
 
         .sub-card { background:#131d31; border:1px solid #1e293b; padding:12px; border-radius:8px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; border-right:4px solid #10b981; }
         .sub-card.expired { border-right-color: #ef4444; }
-        .sub-card.agel { border-right-color: #f59e0b; } /* لون برتقالي للأجل */
+        .sub-card.agel { border-right-color: #f59e0b; }
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; z-index: 99999; }
         .modal-content { background: #131d31; padding: 20px; border-radius: 12px; width: 90%; max-width: 350px; border: 1px solid #38bdf8; }
@@ -42,7 +42,7 @@
 <div class="top-header">
     <div class="title-area">
         <h1>مهندس علي لخدمات الإنترنت</h1>
-        <p>نظام إدارة المشتركين والديون</p>
+        <p>هواتف المكتب: 07818627764 - 07724850876</p>
     </div>
     <button class="action-btn" onclick="resetApp()" style="padding: 6px 10px; font-size:10px;">إعادة ضبط</button>
 </div>
@@ -84,17 +84,17 @@
         <label style="font-size:11px; color:#94a3b8;">تاريخ الانتهاء:</label>
         <input type="date" id="endDate">
         
-        <button class="submit-btn" onclick="saveSub()">حفظ وإرسال واتساب</button>
+        <button class="submit-btn" onclick="saveSub()">حفظ وإرسال تفعيل واتساب</button>
         <button class="cancel-btn" onclick="closeModal()">إلغاء</button>
     </div>
 </div>
 
-<!-- طباعة الوصل -->
+<!-- طباعة الوصل (تفعيل أو تسديد) -->
 <div id="printArea">
     <div style="text-align: center; border-bottom: 2px dashed #000; padding-bottom: 8px; margin-bottom: 8px;">
-        <h3 style="margin:0; font-size:14px;">مهندس علي لخدمات الإنترنت</h3>
-        <p style="margin:2px 0; font-size:10px;">هاتف: 07803741881 - الحلة</p>
-        <p style="margin:2px 0; font-size:11px; font-weight:bold;">وصل قبض اشتراك</p>
+        <h3 style="margin:0; font-size:13px;">مكتب مهندس علي لخدمات الإنترنت</h3>
+        <p style="margin:2px 0; font-size:9px;">هواتف المكتب: 07818627764 - 07724850876</p>
+        <p style="margin:2px 0; font-size:11px; font-weight:bold;" id="receiptTitle">وصل قبض اشتراك</p>
     </div>
     <div style="font-size: 11px; line-height: 1.6;">
         <div><b>اسم المشترك:</b> <span id="pName"></span></div>
@@ -103,7 +103,7 @@
         <div><b>تاريخ التفعيل:</b> <span id="pStart"></span></div>
         <div><b>تاريخ الانتهاء:</b> <span id="pEnd"></span></div>
     </div>
-    <div style="text-align: center; margin-top: 15px; font-size: 10px; border-top: 1px solid #000; padding-top: 4px;">
+    <div style="text-align: center; margin-top: 15px; font-size: 9px; border-top: 1px solid #000; padding-top: 4px;">
         شكراً لاشتراككم معنا 📡
     </div>
 </div>
@@ -111,7 +111,7 @@
 <script>
 let subs = [];
 try {
-    subs = JSON.parse(localStorage.getItem('ali_isp_final_v7')) || [];
+    subs = JSON.parse(localStorage.getItem('ali_isp_final_v8')) || [];
 } catch(e) {
     subs = [];
 }
@@ -167,10 +167,11 @@ function renderSubs() {
                         تفعيل: <span style="color:#38bdf8;">${s.startDate}</span> | انتهاء: <span style="color:${isExp ? '#ef4444' : '#10b981'}; font-weight:bold;">${s.endDate}</span>
                     </div>
                 </div>
-                <div style="display:flex; flex-direction:column; gap:4px;">
-                    <button onclick="sendWhatsapp('${s.phone}', '${s.name}', '${s.endDate}', '${s.payStatus}')" style="background:#25d366; color:#fff; border:none; padding:4px 8px; border-radius:4px; font-size:10px; cursor:pointer;">💬 واتساب</button>
-                    <button onclick="printReceipt('${s.name}', '${s.price || 0}', '${s.startDate}', '${s.endDate}', '${s.payStatus}')" style="background:#475569; color:#fff; border:none; padding:4px 8px; border-radius:4px; font-size:10px; cursor:pointer;">🖨️ وصل</button>
-                    <button onclick="deleteSub(${s.id})" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:10px;">🗑️ حذف</button>
+                <div style="display:flex; flex-direction:column; gap:3px;">
+                    ${s.payStatus === 'أجل' ? `<button onclick="payDebt(${s.id})" style="background:#10b981; color:#fff; border:none; padding:4px 6px; border-radius:4px; font-size:10px; cursor:pointer;" title="تسديد الدين">💵 تسديد</button>` : ''}
+                    <button onclick="sendWhatsapp('${s.phone}', '${s.name}', '${s.endDate}', '${s.payStatus}', '${s.startDate}')" style="background:#25d366; color:#fff; border:none; padding:4px 6px; border-radius:4px; font-size:10px; cursor:pointer;" title="رسالة واتساب">💬 واتساب</button>
+                    <button onclick="printReceipt('${s.name}', '${s.price || 0}', '${s.startDate}', '${s.endDate}', '${s.payStatus}', 'وصل قبض اشتراك')" style="background:#475569; color:#fff; border:none; padding:4px 6px; border-radius:4px; font-size:10px; cursor:pointer;" title="طباعة وصل">🖨️ وصل</button>
+                    <button onclick="deleteSub(${s.id})" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:10px;" title="حذف">🗑️ حذف</button>
                 </div>
             </div>
         `;
@@ -197,7 +198,7 @@ function saveSub() {
     }
 
     subs.push({ id: Date.now(), name, phone, price, payStatus, startDate, endDate });
-    localStorage.setItem('ali_isp_final_v7', JSON.stringify(subs));
+    localStorage.setItem('ali_isp_final_v8', JSON.stringify(subs));
     
     document.getElementById('subName').value = '';
     document.getElementById('subPhone').value = '';
@@ -208,20 +209,47 @@ function saveSub() {
     if(phone) {
         let cleanPhone = phone.replace(/\D/g, '');
         if(cleanPhone.startsWith('0')) cleanPhone = '964' + cleanPhone.substring(1);
-        let msg = `مرحباً ${name} 📡\nتم تسجيل اشتراكك في (مكتب مهندس علي لخدمات الإنترنت).\nالحالة: ${payStatus}\nتاريخ التفعيل: ${startDate}\nتاريخ الانتهاء: ${endDate}\nشكراً لاشتراككم معنا!`;
+        let msg = `مرحباً ${name} 📡\nتم تفعيل اشتراكك في (مكتب مهندس علي لخدمات الإنترنت).\nتلفونات المكتب: 07818627764 - 07724850876\nالحالة: ${payStatus}\nتاريخ التفعيل: ${startDate}\nتاريخ الانتهاء: ${endDate}\nشكراً لاشتراككم معنا!`;
         window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`, '_blank');
     }
 }
 
-function sendWhatsapp(phone, name, endDate, payStatus) {
+// دالة تسديد الدين للمشترك الأجل مع طباعة وصل تسديد
+function payDebt(id) {
+    let s = subs.find(item => item.id === id);
+    if(s) {
+        if(confirm("هل تريد تثبيت تسديد المبلغ لهذا المشترك؟")) {
+            s.payStatus = 'واصل';
+            localStorage.setItem('ali_isp_final_v8', JSON.stringify(subs));
+            renderSubs();
+            // طباعة وصل التسديد مباشرة
+            printReceipt(s.name, s.price || 0, s.startDate, s.endDate, 'واصل (تم التسديد)', 'وصل قبض تسديد دين');
+        }
+    }
+}
+
+function sendWhatsapp(phone, name, endDate, payStatus, startDate) {
     if(!phone) { alert("رقم الهاتف غير متوفر"); return; }
     let cleanPhone = phone.replace(/\D/g, '');
     if(cleanPhone.startsWith('0')) cleanPhone = '964' + cleanPhone.substring(1);
-    let msg = `عزيزي المشترك ${name} 📡\nتذكير من (مكتب مهندس علي لخدمات الإنترنت):\nاشتراكك سينتهي بتاريخ ${endDate}.\nحالة الدفع الحالية: ${payStatus}.`;
+    
+    let msg = "";
+    // فحص إذا كان المشترك غير مسدد (أجل) ومضى على تفعيله 5 أيام أو أكثر
+    let startD = new Date(startDate);
+    let todayD = new Date();
+    let diffDays = Math.floor((todayD - startD) / (1000 * 60 * 60 * 24));
+
+    if(payStatus === 'أجل' && diffDays >= 5) {
+        msg = `عزيزي المشترك ${name} ⏳\nنود تذكيرك بوجود مبلغ اشتراك معلق (أجل) في (مكتب مهندس علي لخدمات الإنترنت).\nتلفونات المكتب: 07818627764 - 07724850876\nيرجى تسديد المبلغ لاستمرار الخدمة.`;
+    } else {
+        msg = `عزيزي المشترك ${name} 📡\nتذكير من (مكتب مهندس علي لخدمات الإنترنت):\nتلفونات المكتب: 07818627764 - 07724850876\nاشتراكك سينتهي بتاريخ ${endDate}.\nحالة الدفع: ${payStatus}.`;
+    }
+
     window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`, '_blank');
 }
 
-function printReceipt(name, price, start, end, payStatus) {
+function printReceipt(name, price, start, end, payStatus, title = 'وصل قبض اشتراك') {
+    document.getElementById('receiptTitle').innerText = title;
     document.getElementById('pName').innerText = name;
     document.getElementById('pPrice').innerText = price;
     document.getElementById('pPayStatus').innerText = payStatus;
@@ -233,14 +261,14 @@ function printReceipt(name, price, start, end, payStatus) {
 function deleteSub(id) {
     if(confirm("هل تريد حذف هذا المشترك؟")) {
         subs = subs.filter(s => s.id !== id);
-        localStorage.setItem('ali_isp_final_v7', JSON.stringify(subs));
+        localStorage.setItem('ali_isp_final_v8', JSON.stringify(subs));
         renderSubs();
     }
 }
 
 function resetApp() {
     if(confirm("مسح كافة البيانات وإعادة الضبط؟")) {
-        localStorage.removeItem('ali_isp_final_v7');
+        localStorage.removeItem('ali_isp_final_v8');
         subs = [];
         renderSubs();
     }
