@@ -8,7 +8,8 @@
         body { background-color: #0d1526; color: #fff; font-family: Tahoma, sans-serif; margin: 0; padding: 15px; box-sizing: border-box; display: flex; justify-content: center; align-items: center; min-height: 100vh; flex-direction: column; }
         .top-nav { width: 100%; max-width: 380px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .notif-bell-btn { background: #131d31; color: #f59e0b; border: 1px solid #1e293b; padding: 6px 10px; border-radius: 8px; font-size: 12px; cursor: pointer; }
-        .broadcast-banner { background: #06b6d4; color: #090d16; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; width: 100%; max-width: 380px; font-size: 12px; font-weight: bold; text-align: center; display: none; box-sizing: border-box; }
+        .broadcast-banner { background: #06b6d4; color: #090d16; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; width: 100%; max-width: 380px; font-size: 12px; font-weight: bold; text-align: center; display: none; box-sizing: border-box; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 0.8; } 50% { opacity: 1; } 100% { opacity: 0.8; } }
         .portal-container { background: #131d31; border: 1px solid #1e293b; padding: 20px; border-radius: 12px; width: 100%; max-width: 380px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); box-sizing: border-box; }
         h2 { color: #38bdf8; text-align: center; margin-top: 0; font-size: 17px; }
         p { color: #94a3b8; font-size: 11px; text-align: center; margin-bottom: 15px; }
@@ -22,6 +23,7 @@
         .btn-router { background: #0284c7; color: #fff; }
         .btn-speed { background: #10b981; color: #fff; }
         .btn-ticket { background: #ec4899; color: #fff; }
+        .btn-logout { background: #ef4444; color: #fff; }
         .info-box { background: #0d1526; border: 1px solid #1e293b; padding: 12px; border-radius: 8px; margin-top: 12px; display: none; }
         .info-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; }
         .info-label { color: #94a3b8; }
@@ -33,7 +35,7 @@
 </head>
 <body>
 
-<!-- صوت التنبيه للشعارات -->
+<!-- صوت التنبيه التفاعلي للإشعارات والتكتات -->
 <audio id="clientNotifSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
 
 <div class="top-nav">
@@ -48,13 +50,16 @@
 
 <div class="portal-container">
     <h2>بوابة زبائن مهندس علي</h2>
-    <p>سجل الدخول باستخدام اسم المستخدم وكلمة المرور (رقم الهاتف)</p>
 
-    <!-- حقول تسجيل الدخول المطلوبة -->
-    <input type="text" id="clientUsernameInput" placeholder="اسم المستخدم (اليوزر)">
-    <input type="password" id="clientPasswordInput" placeholder="كلمة المرور (رقم الهاتف)">
-    <button class="btn btn-search" onclick="loginClient()">تسجيل الدخول</button>
+    <!-- واجهة تسجيل الدخول -->
+    <div id="loginFormArea">
+        <p>سجل الدخول باستخدام اسم المستخدم وكلمة المرور (رقم الهاتف)</p>
+        <input type="text" id="clientUsernameInput" placeholder="اسم المستخدم (اليوزر)">
+        <input type="password" id="clientPasswordInput" placeholder="كلمة المرور (رقم الهاتف)">
+        <button class="btn btn-search" onclick="loginClient()">تسجيل الدخول</button>
+    </div>
 
+    <!-- واجهة بيانات المشترك بعد الدخول -->
     <div id="clientInfoBox" class="info-box">
         <div class="info-row"><span class="info-label">اسم المشترك:</span><span class="info-val" id="cName" style="color:#38bdf8"></span></div>
         <div class="info-row"><span class="info-label">حالة الاشتراك:</span><span class="info-val" id="cStatus"></span></div>
@@ -69,6 +74,9 @@
         <a href="http://192.168.0.1" target="_blank" class="btn btn-router">⚙️ تغيير رمز الراوتر (192.168.0.1)</a>
         <a href="https://www.fast.com" target="_blank" class="btn btn-speed">🚀 فحص السرعة (Fast.com)</a>
         <button class="btn btn-ticket" onclick="openTicketModal()">🎫 إرسال تكت دعم فني ومتابعة الردود</button>
+        
+        <!-- زر تسجيل الخروج -->
+        <button class="btn btn-logout" onclick="logoutClient()">🚪 تسجيل الخروج</button>
     </div>
 
     <!-- أرقام الصيانة الظاهرة في التطبيق -->
@@ -105,25 +113,45 @@
 </div>
 
 <script>
+let foundSubscriber = null;
+const adminPhone = "9647724850876";
+
+function playNotificationSound() {
+    let sound = document.getElementById('clientNotifSound');
+    if(sound) { sound.play().catch(e => console.log("Audio play allowed on user action")); }
+}
+
 window.onload = function() {
+    // 1. التحقق من الإشعار العام
     let savedMsg = localStorage.getItem('ali_app_broadcast_msg');
     if(savedMsg) {
         document.getElementById('broadcastTextContent').innerText = savedMsg;
         document.getElementById('broadcastBanner').style.display = 'block';
         document.getElementById('clientNotifText').innerText = savedMsg;
-        
-        let sound = document.getElementById('clientNotifSound');
-        if(sound) { sound.play().catch(e => console.log(e)); }
     }
+
+    // 2. التحقق من بقاء الدخول وحذف الاشتراك التلقائي من البرنامج الرئيسي
+    checkSavedSession();
 };
 
-function openClientNotifModal() { document.getElementById('clientNotifModal').style.display = 'flex'; }
-function closeClientNotifModal() { document.getElementById('clientNotifModal').style.display = 'none'; }
+function checkSavedSession() {
+    let savedUser = localStorage.getItem('ali_active_portal_user');
+    if(!savedUser) return;
 
-let foundSubscriber = null;
-const adminPhone = "9647724850876";
+    let subs = JSON.parse(localStorage.getItem('ali_isp_final_v23')) || [];
+    
+    // التحقق هل المشترك ما زال موجوداً في سجل البرنامج الرئيسي
+    foundSubscriber = subs.find(s => s.name.toLowerCase() === savedUser.toLowerCase());
 
-// دالة تسجيل الدخول المشترطة بالاسم وكلمة المرور (رقم الهاتف)
+    if(foundSubscriber) {
+        // المشترك موجود -> إبقاء تسجيل الدخول وعرض بياناته
+        showSubscriberDashboard();
+    } else {
+        // تم مسح المشترك من البرنامج الرئيسي -> تسجيل خروج تلقائي وفوري
+        logoutClient(true);
+    }
+}
+
 function loginClient() {
     let username = document.getElementById('clientUsernameInput').value.trim().toLowerCase();
     let password = document.getElementById('clientPasswordInput').value.trim();
@@ -135,7 +163,6 @@ function loginClient() {
 
     let subs = JSON.parse(localStorage.getItem('ali_isp_final_v23')) || [];
     
-    // التحقق من مطابقة اسم المشترك ورقم الهاتف مع البيانات المسجلة
     foundSubscriber = subs.find(s => {
         let matchName = s.name.toLowerCase() === username || s.name.toLowerCase().includes(username);
         let matchPhone = s.phone.trim() === password;
@@ -143,17 +170,46 @@ function loginClient() {
     });
 
     if(foundSubscriber) {
-        document.getElementById('cName').innerText = foundSubscriber.name;
-        document.getElementById('cStatus').innerHTML = foundSubscriber.payStatus === 'واصل' ? '<span style="color:#10b981">واصل ✅</span>' : '<span style="color:#f59e0b">أجل ⏳</span>';
-        document.getElementById('cEnd').innerText = foundSubscriber.endDate;
-        let priceVal = foundSubscriber.price || 30000;
-        document.getElementById('cPrice').innerText = priceVal + " د.ع";
-        document.getElementById('clientInfoBox').style.display = 'block';
+        // حفظ جلسة الدخول حتى لا يخرج عند إغلاق التطبيق
+        localStorage.setItem('ali_active_portal_user', foundSubscriber.name);
+        showSubscriberDashboard();
+        playNotificationSound();
     } else {
         alert("خطأ في تسجيل الدخول!\nاسم المستخدم أو كلمة المرور (رقم الهاتف) غير صحيحة.");
-        document.getElementById('clientInfoBox').style.display = 'none';
     }
 }
+
+function showSubscriberDashboard() {
+    document.getElementById('cName').innerText = foundSubscriber.name;
+    document.getElementById('cStatus').innerHTML = foundSubscriber.payStatus === 'واصل' ? '<span style="color:#10b981">واصل ✅</span>' : '<span style="color:#f59e0b">أجل ⏳</span>';
+    document.getElementById('cEnd').innerText = foundSubscriber.endDate;
+    let priceVal = foundSubscriber.price || 30000;
+    document.getElementById('cPrice').innerText = priceVal + " د.ع";
+    
+    document.getElementById('loginFormArea').style.display = 'none';
+    document.getElementById('clientInfoBox').style.display = 'block';
+}
+
+function logoutClient(isAuto = false) {
+    localStorage.removeItem('ali_active_portal_user');
+    foundSubscriber = null;
+    document.getElementById('clientInfoBox').style.display = 'none';
+    document.getElementById('loginFormArea').style.display = 'block';
+    document.getElementById('clientUsernameInput').value = '';
+    document.getElementById('clientPasswordInput').value = '';
+    
+    if(isAuto) {
+        alert("⚠️ تم إلغاء حساب الاشتراك الخاص بك من قبل الإدارة.");
+    } else {
+        alert("تم تسجيل الخروج بنجاح.");
+    }
+}
+
+function openClientNotifModal() { 
+    playNotificationSound();
+    document.getElementById('clientNotifModal').style.display = 'flex'; 
+}
+function closeClientNotifModal() { document.getElementById('clientNotifModal').style.display = 'none'; }
 
 function openTicketModal() {
     if(!foundSubscriber) return;
@@ -187,6 +243,7 @@ function submitTicket() {
     notifs.push(`${new Date().toLocaleTimeString()} - 🎫 تكت جديد (${ticketNum}) من المشترك: ${foundSubscriber.name}`);
     localStorage.setItem('ali_admin_notifications', JSON.stringify(notifs));
 
+    playNotificationSound();
     alert("✅ تم إرسال التكت بنجاح! سيتم مراجعته وتحويله للأقسام المختصة.");
     document.getElementById('ticketMessageText').value = '';
     refreshChatHistory();
