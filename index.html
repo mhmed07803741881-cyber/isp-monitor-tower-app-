@@ -194,7 +194,7 @@
 <script>
 let subs = [];
 try {
-    subs = JSON.parse(localStorage.getItem('ali_isp_final_v21')) || [];
+    subs = JSON.parse(localStorage.getItem('ali_isp_final_v22')) || [];
 } catch(e) {
     subs = [];
 }
@@ -245,7 +245,7 @@ function importExcelOrJson() {
                     let importedData = JSON.parse(event.target.result);
                     if(Array.isArray(importedData)) {
                         subs = importedData;
-                        localStorage.setItem('ali_isp_final_v21', JSON.stringify(subs));
+                        localStorage.setItem('ali_isp_final_v22', JSON.stringify(subs));
                         renderSubs();
                         alert("✅ تم استعادة البيانات بنجاح!");
                     }
@@ -295,7 +295,7 @@ function importExcelOrJson() {
                         }
                     });
 
-                    localStorage.setItem('ali_isp_final_v21', JSON.stringify(subs));
+                    localStorage.setItem('ali_isp_final_v22', JSON.stringify(subs));
                     renderSubs();
                     alert(`✅ تم استيراد (${countAdded}) مشترك بنجاح من ملف أيرثلنك!`);
 
@@ -329,7 +329,28 @@ function sendGroupDebtReminder() {
     }
 }
 
-// عرض نافذة تفاصيل المشترك عند النقر عليه
+// دالة إعادة تفعيل وتجديد الاشتراك لمدة 30 يوماً إضافية
+function renewSubscription(id) {
+    let s = subs.find(item => item.id === id);
+    if(s) {
+        if(confirm(`هل تريد إعادة تفعيل وتجديد اشتراك المشترك (${s.name}) لمدة 30 يوماً؟`)) {
+            let today = new Date();
+            let startStr = today.toISOString().split('T')[0];
+            
+            today.setDate(today.getDate() + 30);
+            let endStr = today.toISOString().split('T')[0];
+
+            s.startDate = startStr;
+            s.endDate = endStr;
+            s.payStatus = 'واصل'; // جعله واصل بعد إعادة التفعيل والتجديد
+
+            localStorage.setItem('ali_isp_final_v22', JSON.stringify(subs));
+            renderSubs();
+            printReceipt(s.name, s.price || 30000, s.startDate, s.endDate, 'واصل (تم تجديد التفعيل)', 'وصل قبض تجديد اشتراك');
+        }
+    }
+}
+
 function showSubDetails(id) {
     let s = subs.find(item => item.id === id);
     if(!s) return;
@@ -338,13 +359,11 @@ function showSubDetails(id) {
     let today = new Date();
     let endD = new Date(s.endDate);
     
-    // حساب الأشهر المفعلة والمطلوبة
     let monthsPaid = s.payStatus === 'واصل' ? 1 : 0;
     let monthsDue = 0;
 
     if(s.payStatus === 'أجل') {
         monthsDue = 1;
-        // إذا كان متأخراً لعدة أشهر بعد تاريخ الانتهاء
         if(today > endD) {
             let diffDays = Math.floor((today - endD) / (1000 * 60 * 60 * 24));
             monthsDue += Math.floor(diffDays / 30);
@@ -464,6 +483,7 @@ function renderSubs() {
                 </div>
                 <div style="display:flex; flex-direction:column; gap:3px;" onclick="event.stopPropagation()">
                     ${s.payStatus === 'أجل' ? `<button onclick="payDebt(${s.id})" style="background:#10b981; color:#fff; border:none; padding:4px 6px; border-radius:4px; font-size:10px; cursor:pointer;" title="تسديد الدين">💵 تسديد</button>` : ''}
+                    <button onclick="renewSubscription(${s.id})" style="background:#0284c7; color:#fff; border:none; padding:4px 6px; border-radius:4px; font-size:10px; cursor:pointer;" title="إعادة تفعيل لـ 30 يوم">🔄 تفعيل</button>
                     <button onclick="sendWhatsapp('${s.phone}', '${s.name}', '${s.endDate}', '${s.payStatus}', '${s.startDate}')" style="background:#25d366; color:#fff; border:none; padding:4px 6px; border-radius:4px; font-size:10px; cursor:pointer;" title="رسالة واتساب">💬 واتساب</button>
                     <button onclick="printReceipt('${s.name}', '${s.price || 0}', '${s.startDate}', '${s.endDate}', '${s.payStatus}', 'وصل قبض اشتراك')" style="background:#475569; color:#fff; border:none; padding:4px 6px; border-radius:4px; font-size:10px; cursor:pointer;" title="طباعة وصل">🖨️ وصل</button>
                     <button onclick="deleteSub(${s.id})" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:10px;" title="حذف">🗑️ حذف</button>
@@ -503,7 +523,7 @@ function deleteSelectedSubs() {
     if(confirm(`هل أنت تأكد من رغبتك في حذف (${selectedBoxes.length}) مشترك محدد؟`)) {
         let idsToDelete = Array.from(selectedBoxes).map(cb => parseFloat(cb.getAttribute('data-id')));
         subs = subs.filter(s => !idsToDelete.includes(s.id));
-        localStorage.setItem('ali_isp_final_v21', JSON.stringify(subs));
+        localStorage.setItem('ali_isp_final_v22', JSON.stringify(subs));
         isAllSelected = false;
         document.getElementById('selectAllBtn').innerText = "☑️ تحديد الكل";
         renderSubs();
@@ -525,7 +545,7 @@ function saveSub() {
     }
 
     subs.push({ id: Date.now(), name, phone, price, payStatus, startDate, endDate });
-    localStorage.setItem('ali_isp_final_v21', JSON.stringify(subs));
+    localStorage.setItem('ali_isp_final_v22', JSON.stringify(subs));
     
     document.getElementById('subName').value = '';
     document.getElementById('subPhone').value = '';
@@ -546,7 +566,7 @@ function payDebt(id) {
     if(s) {
         if(confirm(`هل تريد تثبيت تسديد المبلغ للمشترك (${s.name})؟`)) {
             s.payStatus = 'واصل';
-            localStorage.setItem('ali_isp_final_v21', JSON.stringify(subs));
+            localStorage.setItem('ali_isp_final_v22', JSON.stringify(subs));
             renderSubs();
             printReceipt(s.name, s.price || 0, s.startDate, s.endDate, 'واصل (تم التسديد)', 'وصل قبض تسديد دين');
         }
@@ -581,7 +601,7 @@ function printReceipt(name, price, start, end, payStatus, title = 'وصل قبض
 function deleteSub(id) {
     if(confirm("هل تريد حذف هذا المشترك؟")) {
         subs = subs.filter(s => s.id !== id);
-        localStorage.setItem('ali_isp_final_v21', JSON.stringify(subs));
+        localStorage.setItem('ali_isp_final_v22', JSON.stringify(subs));
         renderSubs();
     }
 }
