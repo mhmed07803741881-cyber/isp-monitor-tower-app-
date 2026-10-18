@@ -25,13 +25,12 @@
         .sub-card { background:#131d31; border:1px solid #1e293b; padding:12px; border-radius:8px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; border-right:4px solid #10b981; }
         .sub-card.expired { border-right-color: #ef4444; }
 
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; z-index: 1000; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; z-index: 3000; }
         .modal-content { background: #131d31; padding: 18px; border-radius: 12px; width: 92%; max-width: 380px; border: 1px solid #1e293b; box-sizing: border-box; max-height: 90vh; overflow-y: auto; }
         input, select { width: 100%; padding: 9px; margin: 5px 0 10px 0; background: #0d1526; border: 1px solid #1e293b; color: white; border-radius: 6px; box-sizing: border-box; font-size: 12px; }
         .submit-btn { width: 100%; padding: 10px; background: #38bdf8; color: #090d16; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; }
         .cancel-btn { width: 100%; padding: 9px; background: #1e293b; color: #94a3b8; border: none; border-radius: 6px; cursor: pointer; margin-top: 5px; font-size: 12px; }
 
-        /* تصميم الوصل لطباعته */
         #printArea { display: none; background: #fff; color: #000; padding: 20px; font-family: Tahoma, sans-serif; direction: rtl; width: 300px; margin: auto; }
         @media print {
             body * { visibility: hidden; }
@@ -59,8 +58,8 @@
 <input type="text" id="searchInput" class="search-box" placeholder="🔍 ابحث عن اسم المشترك أو رقم الهاتف..." oninput="render()">
 
 <div class="toolbar-grid">
-    <button class="action-btn active-blue" onclick="openModal('addSubModal')">+ إضافة مشترك جديد</button>
-    <button class="action-btn" onclick="exportData()">تصدير البيانات</button>
+    <button class="action-btn active-blue" type="button" onclick="openAddModal()">+ إضافة مشترك جديد</button>
+    <button class="action-btn" type="button" onclick="exportData()">تصدير البيانات</button>
 </div>
 
 <div class="sub-container" id="subList">
@@ -78,13 +77,33 @@
         <input type="date" id="startDate">
         <label style="font-size:11px; color:#94a3b8;">تاريخ الانتهاء:</label>
         <input type="date" id="endDate">
-        <button class="submit-btn" onclick="saveSubscriber()">حفظ وإرسال تفعيل واتساب</button>
-        <button class="cancel-btn" onclick="closeModal('addSubModal')">إلغاء</button>
+        <button class="submit-btn" type="button" onclick="saveSubscriber()">حفظ وإرسال تفعيل واتساب</button>
+        <button class="cancel-btn" type="button" onclick="closeAddModal()">إلغاء</button>
     </div>
 </div>
 
-<!-- منطقة طباعة الوصل (تكون مخفية وتظهر عند الطباعة) -->
+<!-- منطقة طباعة الوصل -->
 <div id="printArea">
     <div style="text-align: center; border-bottom: 2px dashed #000; padding-bottom: 10px; margin-bottom: 10px;">
         <h3 style="margin:0;">مهندس علي لخدمات الإنترنت</h3>
-        <p style="margin:2px 0; font-size:11px;">ه
+        <p style="margin:2px 0; font-size:11px;">هاتف: 07803741881 - الحلة</p>
+        <p style="margin:2px 0; font-size:12px; font-weight:bold;">وصل قبض اشتراك</p>
+    </div>
+    <div style="font-size: 12px; line-height: 1.8;">
+        <div><b>الاسم:</b> <span id="pName"></span></div>
+        <div><b>المبلغ:</b> <span id="pPrice"></span> د.ع</div>
+        <div><b>تاريخ التفعيل:</b> <span id="pStart"></span></div>
+        <div><b>تاريخ الانتهاء:</b> <span id="pEnd"></span></div>
+    </div>
+    <div style="text-align: center; margin-top: 20px; font-size: 11px; border-top: 1px solid #000; padding-top: 5px;">
+        شكراً لاشتراككم معنا 📡
+    </div>
+</div>
+
+<script>
+let subs = JSON.parse(localStorage.getItem('ali_isp_subs')) || [];
+
+// ضبط التواريخ الافتراضية
+document.getElementById('startDate').valueAsDate = new Date();
+let nextMonth = new Date();
+next
