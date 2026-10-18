@@ -119,4 +119,91 @@ function searchClient() {
     if(foundSubscriber) {
         document.getElementById('cName').innerText = foundSubscriber.name;
         document.getElementById('cStatus').innerHTML = foundSubscriber.payStatus === 'واصل' ? '<span style="color:#10b981">واصل ✅</span>' : '<span style="color:#f59e0b">أجل ⏳</span>';
-        document.getElementById('cEnd').innerText = found
+        document.getElementById('cEnd').innerText = foundSubscriber.endDate;
+        let priceVal = foundSubscriber.price || 30000;
+        document.getElementById('cPrice').innerText = priceVal + " د.ع";
+        document.getElementById('clientInfoBox').style.display = 'block';
+    } else {
+        alert("عذراً، لم يتم العثور على حساب بهذا اليوزر أو الرقم.");
+        document.getElementById('clientInfoBox').style.display = 'none';
+    }
+}
+
+function openTicketModal() {
+    if(!foundSubscriber) return;
+    refreshChatHistory();
+    document.getElementById('ticketModal').style.display = 'flex';
+}
+function closeTicketModal() { document.getElementById('ticketModal').style.display = 'none'; }
+
+function refreshChatHistory() {
+    let chats = JSON.parse(localStorage.getItem(`ticket_chat_${foundSubscriber.name}`)) || [];
+    let chatHtml = chats.length === 0 ? "لا توجد ردود سابقة." : chats.map(c => `<div style="margin-bottom:6px; border-bottom:1px solid #1e293b; padding-bottom:4px;"><b>${c.sender}:</b> ${c.text}</div>`).join('');
+    document.getElementById('ticketChatHistory').innerHTML = chatHtml;
+}
+
+function submitTicket() {
+    let msg = document.getElementById('ticketMessageText').value.trim();
+    if(!msg) { alert("يرجى كتابة رسالة التكت"); return; }
+
+    let ticketNum = `#${Math.floor(1000 + Math.random() * 9000)}`;
+    
+    // حفظ التكت في قائمة التكتات العامة للإدارة
+    let allTickets = JSON.parse(localStorage.getItem('all_client_tickets')) || [];
+    allTickets.push({ subName: foundSubscriber.name, ticketNum: ticketNum, message: msg, status: 'جديد (بانتظار المراجعة)' });
+    localStorage.setItem('all_client_tickets', JSON.stringify(allTickets));
+
+    // إضافة الرسالة لسجل محادثة المشترك
+    let chatItem = { sender: foundSubscriber.name, text: `[${ticketNum}] ${msg}` };
+    let chats = JSON.parse(localStorage.getItem(`ticket_chat_${foundSubscriber.name}`)) || [];
+    chats.push(chatItem);
+    localStorage.setItem(`ticket_chat_${foundSubscriber.name}`, JSON.stringify(chats));
+
+    // إرسال إشعار لصوت الجرس في لوحة الإدارة
+    let notifs = JSON.parse(localStorage.getItem('ali_admin_notifications')) || [];
+    notifs.push(`${new Date().toLocaleTimeString()} - 🎫 تكت جديد (${ticketNum}) من المشترك: ${foundSubscriber.name}`);
+    localStorage.setItem('ali_admin_notifications', JSON.stringify(notifs));
+
+    alert("✅ تم إرسال التكت بنجاح! سيتم مراجعته وتحويله للأقسام المختصة قريباً.");
+    document.getElementById('ticketMessageText').value = '';
+    refreshChatHistory();
+}
+
+function copyMasterNumber() {
+    navigator.clipboard.writeText("07724850876").then(() => {
+        alert("📋 تم نسخ رقم التحويل (07724850876) بنجاح!\nالرجاء التحويل من تطبيق الماستر ثم إرسال إشعار الواتساب.");
+    }).catch(err => {
+        alert("رقم التحويل الخاص بك هو: 07724850876");
+    });
+}
+
+function pushAdminNotification(text) {
+    let notifs = JSON.parse(localStorage.getItem('ali_admin_notifications')) || [];
+    notifs.push(`${new Date().toLocaleTimeString()} - ${text}`);
+    localStorage.setItem('ali_admin_notifications', JSON.stringify(notifs));
+}
+
+function sendWhatsAppReceipt() {
+    if(!foundSubscriber) return;
+    let priceVal = foundSubscriber.price || 30000;
+    pushAdminNotification(`💳 طلب تفعيل وتحويل ماستر للمشترك: ${foundSubscriber.name} (${priceVal} د.ع)`);
+    let msg = `مرحباً مهندس علي 📡\nلقد قمت بتحويل مبلغ الاشتراك (${priceVal} د.ع) عبر ماستر كارد إلى رقمك (${adminPhone}).\nاسم المشترك: ${foundSubscriber.name}`;
+    window.open(`https://api.whatsapp.com/send?phone=${adminPhone}&text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+function requestAgel() {
+    if(!foundSubscriber) return;
+    foundSubscriber.payStatus = 'أجل';
+    let subs = JSON.parse(localStorage.getItem('ali_isp_final_v23')) || [];
+    subs = subs.map(s => s.id === foundSubscriber.id ? foundSubscriber : s);
+    localStorage.setItem('ali_isp_final_v23', JSON.stringify(subs));
+
+    pushAdminNotification(`⏳ طلب تفعيل مؤجل (أجل) جديد للمشترك: ${foundSubscriber.name}`);
+
+    let agelMsg = `⏳ طلب تفعيل مؤجل (أجل) جديد!\nالمشترك (${foundSubscriber.name}) يطلب تفعيل حسابه كأجل.`;
+    window.open(`https://api.whatsapp.com/send?phone=${adminPhone}&text=${encodeURIComponent(agelMsg)}`, '_blank');
+    alert("تم إرسال طلب التفعيل المؤجل (الأجل) للإدارة بنجاح!");
+}
+</script>
+</body>
+</html>
