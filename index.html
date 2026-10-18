@@ -80,6 +80,7 @@
     <div class="header-btns">
         <button class="action-btn" onclick="openNotificationsModal()" style="padding: 6px 10px; font-size:11px; background:#1e293b; color:#f59e0b; position:relative;">🔔 الإشعارات</button>
         <button class="action-btn" onclick="openPinModal()" style="padding: 6px 10px; font-size:10px; background:#1e293b; color:#38bdf8;">⚙️ الرمز</button>
+        <button class="action-btn" onclick="logoutApp()" style="padding: 6px 10px; font-size:10px; background:#1e293b; color:#ef4444;" title="تسجيل خروج وإقفال البرنامج">🔒 خروج</button>
     </div>
 </div>
 
@@ -236,8 +237,18 @@ setInterval(checkNewNotifications, 3000);
 function checkPin() {
     let inputPin = document.getElementById('passCodeInput').value;
     if(inputPin === currentPin) {
+        // حفظ حالة الجلسة لكي يبقى مسجلاً للدخول
+        localStorage.setItem('ali_admin_logged_in', 'true');
         document.getElementById('lockScreen').style.display = 'none';
+        document.getElementById('passCodeInput').value = '';
     } else { alert("رمز الدخول غير صحيح!"); }
+}
+
+// زر تسجيل الخروج وقفل البرنامج
+function logoutApp() {
+    localStorage.removeItem('ali_admin_logged_in');
+    document.getElementById('passCodeInput').value = '';
+    document.getElementById('lockScreen').style.display = 'flex';
 }
 
 function openEarthlinkDirect() { window.open("https://admin.earthlink.iq/Login.aspx?returnUrl=~/Home.aspx", "_blank"); }
@@ -461,6 +472,14 @@ function updatePin() {
 }
 
 window.onload = function() {
+    // التحقق هل المستخدم مسجل دخول مسبقاً أم لا
+    let isLoggedIn = localStorage.getItem('ali_admin_logged_in');
+    if(isLoggedIn === 'true') {
+        document.getElementById('lockScreen').style.display = 'none';
+    } else {
+        document.getElementById('lockScreen').style.display = 'flex';
+    }
+
     let today = new Date().toISOString().split('T')[0];
     let startInput = document.getElementById('startDate');
     if(startInput) { startInput.value = today; calcEnd(); }
