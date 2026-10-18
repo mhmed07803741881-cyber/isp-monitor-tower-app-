@@ -5,25 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>بوابة المشترك - مكتب مهندس علي لخدمات الإنترنت</title>
     <style>
-        body { background-color: #0d1526; color: #fff; font-family: Tahoma, sans-serif; margin: 0; padding: 20px; box-sizing: border-box; display: flex; justify-content: center; align-items: center; min-height: 100vh; flex-direction: column; }
+        body { background-color: #0d1526; color: #fff; font-family: Tahoma, sans-serif; margin: 0; padding: 15px; box-sizing: border-box; display: flex; justify-content: center; align-items: center; min-height: 100vh; flex-direction: column; }
         .top-nav { width: 100%; max-width: 380px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .notif-bell-btn { background: #131d31; color: #f59e0b; border: 1px solid #1e293b; padding: 6px 10px; border-radius: 8px; font-size: 12px; cursor: pointer; }
         .broadcast-banner { background: #06b6d4; color: #090d16; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; width: 100%; max-width: 380px; font-size: 12px; font-weight: bold; text-align: center; display: none; box-sizing: border-box; }
-        .portal-container { background: #131d31; border: 1px solid #1e293b; padding: 25px; border-radius: 12px; width: 100%; max-width: 380px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
-        h2 { color: #38bdf8; text-align: center; margin-top: 0; font-size: 18px; }
-        p { color: #94a3b8; font-size: 12px; text-align: center; margin-bottom: 20px; }
-        input { width: 100%; padding: 12px; margin: 8px 0 15px 0; background: #0d1526; border: 1px solid #1e293b; color: white; border-radius: 8px; box-sizing: border-box; font-size: 14px; text-align: center; }
-        .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; margin-top: 8px; text-align: center; text-decoration: none; display: block; box-sizing: border-box; }
+        .portal-container { background: #131d31; border: 1px solid #1e293b; padding: 20px; border-radius: 12px; width: 100%; max-width: 380px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); box-sizing: border-box; }
+        h2 { color: #38bdf8; text-align: center; margin-top: 0; font-size: 17px; }
+        p { color: #94a3b8; font-size: 11px; text-align: center; margin-bottom: 15px; }
+        input, textarea { width: 100%; padding: 10px; margin: 6px 0 12px 0; background: #0d1526; border: 1px solid #1e293b; color: white; border-radius: 8px; box-sizing: border-box; font-size: 13px; text-align: center; }
+        textarea { text-align: right; }
+        .btn { width: 100%; padding: 11px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; margin-top: 6px; text-align: center; text-decoration: none; display: block; box-sizing: border-box; }
         .btn-search { background: #38bdf8; color: #090d16; }
         .btn-pay { background: #6366f1; color: #fff; }
         .btn-wa { background: #25d366; color: #fff; }
         .btn-agel { background: #f59e0b; color: #090d16; }
-        .info-box { background: #0d1526; border: 1px solid #1e293b; padding: 15px; border-radius: 8px; margin-top: 15px; display: none; }
-        .info-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px; }
+        .btn-router { background: #0284c7; color: #fff; }
+        .btn-speed { background: #10b981; color: #fff; }
+        .btn-ticket { background: #ec4899; color: #fff; }
+        .info-box { background: #0d1526; border: 1px solid #1e293b; padding: 12px; border-radius: 8px; margin-top: 12px; display: none; }
+        .info-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; }
         .info-label { color: #94a3b8; }
         .info-val { font-weight: bold; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; z-index: 99999; }
-        .modal-content { background: #131d31; padding: 20px; border-radius: 12px; width: 90%; max-width: 320px; border: 1px solid #f59e0b; }
+        .modal-content { background: #131d31; padding: 20px; border-radius: 12px; width: 90%; max-width: 320px; border: 1px solid #f59e0b; box-sizing: border-box; }
     </style>
 </head>
 <body>
@@ -40,7 +44,7 @@
 
 <div class="portal-container">
     <h2>بوابة زبائن مهندس علي</h2>
-    <p>أدخل اسم المستخدم (اليوزر) أو رقم الهاتف للتحقق من اشتراكك</p>
+    <p>أدخل اسم المستخدم (اليوزر) أو رقم الهاتف للتحقق من حسابك</p>
 
     <input type="text" id="clientQuery" placeholder="أدخل اليوزر أو رقم الهاتف">
     <button class="btn btn-search" onclick="searchClient()">بحث عن الحساب</button>
@@ -51,19 +55,43 @@
         <div class="info-row"><span class="info-label">تاريخ الانتهاء:</span><span class="info-val" id="cEnd"></span></div>
         <div class="info-row"><span class="info-label">مبلغ الاشتراك:</span><span class="info-val" id="cPrice"></span></div>
 
-        <!-- زر نسخ رقم التحويل للماستر -->
+        <!-- أزرار الدفع والخدمات -->
         <button class="btn btn-pay" onclick="copyMasterNumber()">💳 نسخ رقم التحويل (07724850876)</button>
         <button class="btn btn-wa" onclick="sendWhatsAppReceipt()">💬 إرسال إشعار التحويل واتساب</button>
         <button class="btn btn-agel" onclick="requestAgel()">⏳ طلب تفعيل مؤجل (أجل)</button>
+        
+        <!-- الأزرار الإضافية المطلوبة -->
+        <a href="http://192.168.0.1" target="_blank" class="btn btn-router">⚙️ تغيير رمز الراوتر (192.168.0.1)</a>
+        <a href="https://www.fast.com" target="_blank" class="btn btn-speed">🚀 فحص السرعة (Fast.com)</a>
+        <button class="btn btn-ticket" onclick="openTicketModal()">🎫 إرسال تكت دعم فني ومحادثة</button>
     </div>
 </div>
 
 <!-- نافذة إشعارات المشترك -->
 <div id="clientNotifModal" class="modal">
     <div class="modal-content">
-        <h3 style="margin-top:0; color:#f59e0b; text-align:center;">🔔 إشعارات المكتب</h3>
-        <p id="clientNotifText" style="font-size:12px; color:#cbd5e1; text-align:center; background:#0d1526; padding:10px; border-radius:6px; margin-bottom:15px;">لا توجد إشعارات جديدة حالياً.</p>
+        <h3 style="margin-top:0; color:#f59e0b; text-align:center; font-size:15px;">🔔 إشعارات المكتب</h3>
+        <p id="clientNotifText" style="font-size:11px; color:#cbd5e1; text-align:center; background:#0d1526; padding:10px; border-radius:6px; margin-bottom:15px;">لا توجد إشعارات جديدة حالياً.</p>
         <button class="btn btn-search" onclick="closeClientNotifModal()" style="background:#1e293b; color:#38bdf8;">إغلاق</button>
+    </div>
+</div>
+
+<!-- نافذة إرسال تكت ومحادثة مع الإدارة -->
+<div id="ticketModal" class="modal">
+    <div class="modal-content" style="border-color: #ec4899;">
+        <h3 style="margin-top:0; color:#ec4899; text-align:center; font-size:15px;">🎫 نظام التكتات والمحادثة</h3>
+        <p style="font-size:10px; color:#94a3b8; text-align:center;">رقم التكت التسلسلي: <span id="ticketNumberDisplay" style="color:#38bdf8; font-weight:bold;">#1001</span></p>
+        
+        <textarea id="ticketMessageText" rows="3" placeholder="اكتب رسالتك أو مشكلتك للإدارة هنا..."></textarea>
+        
+        <button class="btn btn-ticket" onclick="submitTicket()" style="margin-bottom:6px;">إرسال التكت للإدارة</button>
+        
+        <div style="font-size:10px; color:#94a3b8; margin-top:8px; margin-bottom:4px;">سجل المحادثة والردود:</div>
+        <div id="ticketChatHistory" style="max-height:100px; overflow-y:auto; background:#0d1526; padding:8px; border-radius:6px; font-size:11px; color:#cbd5e1; text-align:right; margin-bottom:10px;">
+            لا توجد ردود سابقة.
+        </div>
+
+        <button class="btn" onclick="closeTicketModal()" style="background:#1e293b; color:#94a3b8;">إغلاق</button>
     </div>
 </div>
 
@@ -98,15 +126,50 @@ function searchClient() {
         document.getElementById('cPrice').innerText = priceVal + " د.ع";
         document.getElementById('clientInfoBox').style.display = 'block';
     } else {
-        alert("عذراً، لم يتم العثور على اشتراك.");
+        alert("عذراً، لم يتم العثور على اشتراك بهذا اليوزر أو الرقم.");
         document.getElementById('clientInfoBox').style.display = 'none';
     }
 }
 
-// دالة نسخ رقم الماستر لتسهيل التحويل من قبل الزبون
+// توليد وترقيم التكت تلقائياً
+function openTicketModal() {
+    if(!foundSubscriber) { alert("يرجى البحث عن حسابك أولاً قبل إرسال التكت."); return; }
+    let ticketId = Math.floor(1000 + Math.random() * 9000);
+    document.getElementById('ticketNumberDisplay').innerText = `#${ticketId}`;
+    
+    // جلب سجل محادثات هذا المشترك إن وجدت
+    let chats = JSON.parse(localStorage.getItem(`ticket_chat_${foundSubscriber.name}`)) || [];
+    let chatHtml = chats.length === 0 ? "لا توجد رسائل سابقة." : chats.map(c => `<div><b>${c.sender}:</b> ${c.text}</div>`).join('');
+    document.getElementById('ticketChatHistory').innerHTML = chatHtml;
+
+    document.getElementById('ticketModal').style.display = 'flex';
+}
+
+function closeTicketModal() { document.getElementById('ticketModal').style.display = 'none'; }
+
+function submitTicket() {
+    let msg = document.getElementById('ticketMessageText').value.trim();
+    let tNum = document.getElementById('ticketNumberDisplay').innerText;
+    if(!msg) { alert("يرجى كتابة نص الرسالة في التكت"); return; }
+
+    let chatItem = { sender: foundSubscriber.name, text: `[تكت ${tNum}] ${msg}` };
+    let chats = JSON.parse(localStorage.getItem(`ticket_chat_${foundSubscriber.name}`)) || [];
+    chats.push(chatItem);
+    localStorage.setItem(`ticket_chat_${foundSubscriber.name}`, JSON.stringify(chats));
+
+    // إرسال إشعار فوري للوحة الإدارة الرئيسية
+    let notifs = JSON.parse(localStorage.getItem('ali_admin_notifications')) || [];
+    notifs.push(`${new Date().toLocaleTimeString()} - 🎫 تكت جديد (${tNum}) من المشترك: ${foundSubscriber.name} | النص: ${msg}`);
+    localStorage.setItem('ali_admin_notifications', JSON.stringify(notifs));
+
+    alert("✅ تم إرسال التكت والمحادثة بنجاح إلى مكتب مهندس علي وسيتم الرد قريباً!");
+    document.getElementById('ticketMessageText').value = '';
+    closeTicketModal();
+}
+
 function copyMasterNumber() {
     navigator.clipboard.writeText("07724850876").then(() => {
-        alert("📋 تم نسخ رقم التحويل (07724850876) بنجاح!\nالرجاء الانتقال إلى تطبيق الماستر (سوبر كي أو تطبيق المصرف) وإتمام التحويل بالمبلغ المطلوع.");
+        alert("📋 تم نسخ رقم التحويل (07724850876) بنجاح!\nالرجاء التحويل من تطبيق الماستر ثم إرسال إشعار الواتساب.");
     }).catch(err => {
         alert("رقم التحويل الخاص بك هو: 07724850876");
     });
@@ -121,7 +184,7 @@ function pushAdminNotification(text) {
 function sendWhatsAppReceipt() {
     if(!foundSubscriber) return;
     let priceVal = foundSubscriber.price || 30000;
-    pushAdminNotification(`طلب تفعيل وتحويل ماستر للمشترك: ${foundSubscriber.name} (${priceVal} د.ع)`);
+    pushAdminNotification(`💳 طلب تفعيل وتحويل ماستر للمشترك: ${foundSubscriber.name} (${priceVal} د.ع)`);
     let msg = `مرحباً مهندس علي 📡\nلقد قمت بتحويل مبلغ الاشتراك (${priceVal} د.ع) عبر ماستر كارد إلى رقمك (${adminPhone}).\nاسم المشترك: ${foundSubscriber.name}`;
     window.open(`https://api.whatsapp.com/send?phone=${adminPhone}&text=${encodeURIComponent(msg)}`, '_blank');
 }
@@ -133,7 +196,7 @@ function requestAgel() {
     subs = subs.map(s => s.id === foundSubscriber.id ? foundSubscriber : s);
     localStorage.setItem('ali_isp_final_v23', JSON.stringify(subs));
 
-    pushAdminNotification(`طلب تفعيل مؤجل (أجل) جديد للمشترك: ${foundSubscriber.name}`);
+    pushAdminNotification(`⏳ طلب تفعيل مؤجل (أجل) جديد للمشترك: ${foundSubscriber.name}`);
 
     let agelMsg = `⏳ طلب تفعيل مؤجل (أجل) جديد!\nالمشترك (${foundSubscriber.name}) يطلب تفعيل حسابه كأجل.`;
     window.open(`https://api.whatsapp.com/send?phone=${adminPhone}&text=${encodeURIComponent(agelMsg)}`, '_blank');
