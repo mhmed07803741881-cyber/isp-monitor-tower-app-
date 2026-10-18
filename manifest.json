@@ -21,3 +21,24 @@
     }
   ]
 }
+{
+  "name": "تطبيق المشترك - مهندس علي",
+  "short_name": "المشترك",
+  "start_url": "./portal.html",
+  "display": "standalone",
+  "background_color": "#0d1526",
+  "theme_color": "#0d1526",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3659/3659738.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3659/3659738.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
