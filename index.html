@@ -135,7 +135,7 @@
 <script>
 let subs = [];
 try {
-    subs = JSON.parse(localStorage.getItem('ali_isp_final_v15')) || [];
+    subs = JSON.parse(localStorage.getItem('ali_isp_final_v16')) || [];
 } catch(e) {
     subs = [];
 }
@@ -151,9 +151,9 @@ function checkPin() {
     }
 }
 
-// فتح لوحة أيرثلنك المباشرة وتجاوز قيود الحظر
+// فتح رابط أدمن أيرثلنك المباشر
 function openEarthlinkDirect() {
-    window.open("https://reseller.earthlink.iq", "_blank");
+    window.open("https://admin.earthlink.iq/Login.aspx?returnUrl=~/Home.aspx", "_blank");
 }
 
 function exportData() {
@@ -276,7 +276,7 @@ function saveSub() {
     }
 
     subs.push({ id: Date.now(), name, phone, price, payStatus, startDate, endDate });
-    localStorage.setItem('ali_isp_final_v15', JSON.stringify(subs));
+    localStorage.setItem('ali_isp_final_v16', JSON.stringify(subs));
     
     document.getElementById('subName').value = '';
     document.getElementById('subPhone').value = '';
@@ -297,7 +297,7 @@ function payDebt(id) {
     if(s) {
         if(confirm("هل تريد تثبيت تسديد المبلغ لهذا المشترك؟")) {
             s.payStatus = 'واصل';
-            localStorage.setItem('ali_isp_final_v15', JSON.stringify(subs));
+            localStorage.setItem('ali_isp_final_v16', JSON.stringify(subs));
             renderSubs();
             printReceipt(s.name, s.price || 0, s.startDate, s.endDate, 'واصل (تم التسديد)', 'وصل قبض تسديد دين');
         }
@@ -336,7 +336,7 @@ function printReceipt(name, price, start, end, payStatus, title = 'وصل قبض
 function deleteSub(id) {
     if(confirm("هل تريد حذف هذا المشترك؟")) {
         subs = subs.filter(s => s.id !== id);
-        localStorage.setItem('ali_isp_final_v15', JSON.stringify(subs));
+        localStorage.setItem('ali_isp_final_v16', JSON.stringify(subs));
         renderSubs();
     }
 }
