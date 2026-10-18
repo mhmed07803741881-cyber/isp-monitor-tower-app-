@@ -257,14 +257,12 @@ setInterval(checkNewNotifications, 3000);
 function checkPin() {
     let inputPin = document.getElementById('passCodeInput').value;
     if(inputPin === currentPin) {
-        // حفظ حالة الجلسة لكي يبقى مسجلاً للدخول
         localStorage.setItem('ali_admin_logged_in', 'true');
         document.getElementById('lockScreen').style.display = 'none';
         document.getElementById('passCodeInput').value = '';
     } else { alert("رمز الدخول غير صحيح!"); }
 }
 
-// زر تسجيل الخروج وقفل البرنامج
 function logoutApp() {
     localStorage.removeItem('ali_admin_logged_in');
     document.getElementById('passCodeInput').value = '';
@@ -297,7 +295,6 @@ function clearNotifications() {
     document.getElementById('notificationsList').innerHTML = '<div style="text-align:center; color:#64748b; padding:15px;">تم مسح السجل بنجاح.</div>';
 }
 
-// عرض وإدارة التكتات الواردة مباشرة
 function openTicketsManagerModal() {
     let allTickets = JSON.parse(localStorage.getItem('all_client_tickets')) || [];
     let container = document.getElementById('adminTicketsContainer');
@@ -321,7 +318,6 @@ function openTicketsManagerModal() {
 }
 function closeTicketsManagerModal() { document.getElementById('ticketsManagerModal').style.display = 'none'; }
 
-// تحديث حالة التكت إلى "تم المشاهدة والتحويل للأقسام المختصة" وإعلام المشترك
 function markTicketAsViewed(index) {
     let allTickets = JSON.parse(localStorage.getItem('all_client_tickets')) || [];
     if(allTickets[index]) {
@@ -346,7 +342,6 @@ function openSingleReplyModal(subName) {
 }
 function closeSingleReplyModal() { document.getElementById('singleReplyModal').style.display = 'none'; }
 
-// إرسال الرد المباشر للمشترك من زر رد
 function submitSingleReply() {
     let replyText = document.getElementById('singleAdminReplyText').value.trim();
     if(!replyText) { alert("يرجى كتابة نص الرد"); return; }
@@ -458,6 +453,20 @@ function sendActivationWhatsApp(phone, name, endDate, payStatus) {
     window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`, '_blank');
 }
 
+// إرسال إشعار مباشر داخل تطبيق المشترك
+function sendInAppNotificationToSubscriber(subName, endDate, payStatus) {
+    let statusText = payStatus === 'واصل' ? 'واصل ✅' : 'أجل ⏳';
+    let notifMsg = `🎉 تم تفعيل اشتراكك بنجاح!\nالحالة: ${statusText}\nينتهي بتاريخ: ${endDate}`;
+    
+    // حفظ الإشعار المباشر الخاص بالحساب
+    localStorage.setItem(`client_activation_notif_${subName}`, notifMsg);
+
+    // إضافة الإشعار أيضاً إلى سجل التكتات والمحادثة الخاصة به
+    let chats = JSON.parse(localStorage.getItem(`ticket_chat_${subName}`)) || [];
+    chats.push({ sender: "النظام (تفعيل تلقائي)", text: `✅ تم تفعيل الاشتراك بنجاح حتى تاريخ (${endDate}) - حالة الدفع: ${statusText}` });
+    localStorage.setItem(`ticket_chat_${subName}`, JSON.stringify(chats));
+}
+
 // فتح نافذة اختيار نوع التفعيل (نقد أو أجل)
 function openRenewModal(id) {
     let s = subs.find(item => item.id === id);
@@ -491,13 +500,16 @@ function confirmRenewSubscription() {
         renderSubs();
         closeRenewModal();
 
-        // إرسال رسالة تفعيل عبر الواتساب للمشترك
+        // 1. إرسال إشعار تلقائي مباشر إلى برنامج المشترك
+        sendInAppNotificationToSubscriber(s.name, s.endDate, s.payStatus);
+
+        // 2. إرسال رسالة تفعيل عبر الواتساب للمشترك
         sendActivationWhatsApp(s.phone, s.name, s.endDate, s.payStatus);
 
         if(s.payStatus === 'واصل') {
             printReceipt(s.name, s.price || 30000, s.startDate, s.endDate, 'واصل (تم التجديد نقداً)', 'وصل قبض تجديد اشتراك');
         } else {
-            alert(`✅ تم تجديد الاشتراك بنجاح كـ (أجل) للمشترك (${s.name})!`);
+            alert(`✅ تم تجديد الاشتراك بنجاح كـ (أجل) للمشترك (${s.name}) وتم إرسال الإشعار لتطبيقه!`);
         }
     }
 }
@@ -660,6 +672,9 @@ function saveSub() {
     
     closeModal();
     renderSubs();
+
+    // إرسال إشعار داخلي لتطبيق المشترك
+    sendInAppNotificationToSubscriber(name, endDate, payStatus);
 
     if(phone) {
         sendActivationWhatsApp(phone, name, endDate, payStatus);
