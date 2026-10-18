@@ -35,4 +35,219 @@
         @media print {
             body * { visibility: hidden; }
             #printArea, #printArea * { visibility: visible; }
-            #printArea { position: absolute; left: 0; top: 0; width:
+            #printArea { position: absolute; left: 0; top: 0; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="top-header">
+    <div class="title-area">
+        <h1>مهندس علي لخدمات الإنترنت</h1>
+        <p>نظام إدارة المشتركين والاشتراكات</p>
+    </div>
+    <button class="action-btn" onclick="resetApp()" style="padding: 6px 10px; font-size:10px;">إعادة ضبط</button>
+</div>
+
+<div class="stats-bar">
+    <div>إجمالي المشتركين: <span id="totalSubs" style="color:#38bdf8">0</span></div>
+    <div>النشطين: <span id="activeSubs" style="color:#10b981">0</span></div>
+    <div>المنتهين: <span id="expiredSubs" style="color:#ef4444">0</span></div>
+</div>
+
+<input type="text" id="searchInput" class="search-box" placeholder="🔍 ابحث عن اسم المشترك أو رقم الهاتف..." oninput="renderSubs()">
+
+<div class="toolbar-grid">
+    <button class="action-btn active-blue" onclick="openAddModal()">+ إضافة مشترك جديد</button>
+    <button class="action-btn" onclick="exportData()">تصدير البيانات</button>
+</div>
+
+<div class="sub-container" id="subList">
+    <div class="empty-state">لا توجد اشتراكات مسجلة. اضغط على "+ إضافة مشترك جديد".</div>
+</div>
+
+<!-- نافذة إضافة مشترك -->
+<div id="addSubModal" class="modal">
+    <div class="modal-content">
+        <h3>اشتراك مشترك جديد</h3>
+        <input type="text" id="subName" placeholder="اسم المشترك">
+        <input type="text" id="subPhone" placeholder="رقم الهاتف للواتساب (مثال: 964780xxxxxxxx)">
+        <input type="number" id="subPrice" placeholder="مبلغ الاشتراك (د.ع)">
+        <label style="font-size:11px; color:#94a3b8;">تاريخ التفعيل:</label>
+        <input type="date" id="startDate">
+        <label style="font-size:11px; color:#94a3b8;">تاريخ الانتهاء:</label>
+        <input type="date" id="endDate">
+        <button class="submit-btn" onclick="saveSubscriber()">حفظ وإرسال تفعيل واتساب</button>
+        <button class="cancel-btn" onclick="closeAddModal()">إلغاء</button>
+    </div>
+</div>
+
+<!-- منطقة طباعة الوصل -->
+<div id="printArea">
+    <div style="text-align: center; border-bottom: 2px dashed #000; padding-bottom: 10px; margin-bottom: 10px;">
+        <h3 style="margin:0;">مهندس علي لخدمات الإنترنت</h3>
+        <p style="margin:2px 0; font-size:11px;">هاتف: 07803741881 - الحلة</p>
+        <p style="margin:2px 0; font-size:12px; font-weight:bold;">وصل قبض اشتراك</p>
+    </div>
+    <div style="font-size: 12px; line-height: 1.8;">
+        <div><b>الاسم:</b> <span id="pName"></span></div>
+        <div><b>المبلغ:</b> <span id="pPrice"></span> د.ع</div>
+        <div><b>تاريخ التفعيل:</b> <span id="pStart"></span></div>
+        <div><b>تاريخ الانتهاء:</b> <span id="pEnd"></span></div>
+    </div>
+    <div style="text-align: center; margin-top: 20px; font-size: 11px; border-top: 1px solid #000; padding-top: 5px;">
+        شكراً لاشتراككم معنا 📡
+    </div>
+</div>
+
+<script>
+// تأكد من تحميل البيانات بدون أخطاء
+let subs = [];
+try {
+    subs = JSON.parse(localStorage.getItem('ali_isp_subs_v3')) || [];
+} catch(e) {
+    subs = [];
+}
+
+// ضبط التواريخ عند فتح الصفحة
+window.onload = function() {
+    try {
+        let today = new Date().toISOString().split('T')[0];
+        let startInput = document.getElementById('startDate');
+        let endInput = document.getElementById('endDate');
+        
+        if(startInput) startInput.value = today;
+        
+        if(endInput) {
+            let nextMonth = new Date();
+            nextMonth.setMonth(nextMonth.getMonth() + 1);
+            endInput.value = nextMonth.toISOString().split('T')[0];
+        }
+        
+        renderSubs();
+    } catch(err) {
+        console.error(err);
+    }
+};
+
+function openAddModal() {
+    let modal = document.getElementById('addSubModal');
+    if(modal) modal.style.display = 'flex';
+}
+
+function closeAddModal() {
+    let modal = document.getElementById('addSubModal');
+    if(modal) modal.style.display = 'none';
+}
+
+function renderSubs() {
+    let searchEl = document.getElementById('searchInput');
+    let query = searchEl ? searchEl.value.trim().toLowerCase() : '';
+    let html = '';
+    let active = 0, expired = 0;
+    let today = new Date().toISOString().split('T')[0];
+
+    subs.forEach(s => {
+        if(query && !s.name.toLowerCase().includes(query) && !s.phone.includes(query)) return;
+
+        let isExp = s.endDate < today;
+        if(isExp) expired++; else active++;
+
+        html += `
+            <div class="sub-card ${isExp ? 'expired' : ''}">
+                <div>
+                    <div style="font-size: 13px; font-weight: bold; color:#fff;">${s.name}</div>
+                    <div style="font-size: 10px; color: #94a3b8; margin-top:2px;">هاتف: ${s.phone || 'بدون'}</div>
+                    <div style="font-size: 11px; margin-top: 4px; color:#cbd5e1;">
+                        تفعيل: <span style="color:#38bdf8;">${s.startDate}</span> | 
+                        انتهاء: <span style="color:${isExp ? '#ef4444' : '#10b981'}; font-weight:bold;">${s.endDate}</span>
+                    </div>
+                </div>
+                <div style="display:flex; flex-direction:column; gap:4px;">
+                    <button onclick="sendWhatsapp('${s.phone}', '${s.name}', '${s.endDate}')" style="background:#25d366; color:#fff; border:none; padding:5px 8px; border-radius:5px; font-size:10px; cursor:pointer;">💬 واتساب</button>
+                    <button onclick="printReceipt('${s.name}', '${s.price}', '${s.startDate}', '${s.endDate}')" style="background:#475569; color:#fff; border:none; padding:5px 8px; border-radius:5px; font-size:10px; cursor:pointer;">🖨️ وصل</button>
+                    <button onclick="deleteSub(${s.id})" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:11px;">🗑️ حذف</button>
+                </div>
+            </div>
+        `;
+    });
+
+    let listEl = document.getElementById('subList');
+    if(listEl) listEl.innerHTML = html || `<div class="empty-state">لا توجد اشتراكات مسجلة حالياً.</div>`;
+    
+    let totalEl = document.getElementById('totalSubs');
+    let activeEl = document.getElementById('activeSubs');
+    let expiredEl = document.getElementById('expiredSubs');
+    
+    if(totalEl) totalEl.innerText = subs.length;
+    if(activeEl) activeEl.innerText = active;
+    if(expiredEl) expiredEl.innerText = expired;
+}
+
+function saveSubscriber() {
+    let name = document.getElementById('subName').value.trim();
+    let phone = document.getElementById('subPhone').value.trim();
+    let price = document.getElementById('subPrice').value.trim() || "0";
+    let startDate = document.getElementById('startDate').value;
+    let endDate = document.getElementById('endDate').value;
+
+    if(!name || !startDate || !endDate) {
+        alert("يرجى إدخال اسم المشترك وتواريخ التفعيل والانتهاء");
+        return;
+    }
+
+    subs.push({ id: Date.now(), name, phone, price, startDate, endDate });
+    localStorage.setItem('ali_isp_subs_v3', JSON.stringify(subs));
+    
+    document.getElementById('subName').value = '';
+    document.getElementById('subPhone').value = '';
+    document.getElementById('subPrice').value = '';
+    closeAddModal();
+    renderSubs();
+
+    if(phone) {
+        let msg = `مرحباً ${name} 📡\nتم تفعيل اشتراكك في (مكتب مهندس علي لخدمات الإنترنت) بنجاح.\nتاريخ التفعيل: ${startDate}\nتاريخ الانتهاء: ${endDate}\nشكراً لتواصلكم معنا!`;
+        window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+}
+
+function sendWhatsapp(phone, name, endDate) {
+    if(!phone) { alert("رقم الهاتف غير متوفر"); return; }
+    let msg = `عزيزي المشترك ${name} 📡\nنود تذكيرك بأن اشتراكك في (مكتب مهندس علي لخدمات الإنترنت) سينتهي بتاريخ ${endDate}.\nيرجى التجديد لاستمرار الخدمة.`;
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+function printReceipt(name, price, start, end) {
+    document.getElementById('pName').innerText = name;
+    document.getElementById('pPrice').innerText = price;
+    document.getElementById('pStart').innerText = start;
+    document.getElementById('pEnd').innerText = end;
+    window.print();
+}
+
+function deleteSub(id) {
+    if(confirm("هل تريد حذف هذا المشترك؟")) {
+        subs = subs.filter(s => s.id !== id);
+        localStorage.setItem('ali_isp_subs_v3', JSON.stringify(subs));
+        renderSubs();
+    }
+}
+
+function resetApp() {
+    if(confirm("مسح كافة البيانات وإعادة الضبط؟")) {
+        localStorage.removeItem('ali_isp_subs_v3');
+        subs = [];
+        renderSubs();
+    }
+}
+
+function exportData() {
+    let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(subs));
+    let dl = document.createElement('a');
+    dl.setAttribute("href", dataStr);
+    dl.setAttribute("download", "ali_isp_subscribers.json");
+    dl.click();
+}
+</script>
+</body>
+</html>
