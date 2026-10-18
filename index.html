@@ -91,7 +91,7 @@
     <div class="filter-tab" id="tab-expired" onclick="setFilter('expired')" style="color:#ef4444;">منتهي (<span id="expiredSubs">0</span>)</div>
 </div>
 
-<input type="text" id="searchInput" class="search-box" placeholder="🔍 ابحث عن اسم المشترك أو رقم الهاتف..." oninput="renderSubs()">
+<input type="text" id="searchInput" class="search-box" placeholder="🔍 ابحث عن اسم المشترك، اليوزر أو رقم الهاتف..." oninput="renderSubs()">
 
 <div class="toolbar-grid">
     <button class="action-btn active-blue" onclick="openModal()">+ إضافة مشترك</button>
@@ -160,6 +160,7 @@
 <div id="subDetailsModal" class="modal">
     <div class="modal-content" style="border-color: #10b981;">
         <h3 style="margin-top:0; color:#38bdf8; text-align:center;" id="dName">تفاصيل المشترك</h3>
+        <div class="details-row"><span class="details-label">الاسم الثلاثي:</span><span class="details-value" id="dFullName" style="color:#f59e0b;">-</span></div>
         <div class="details-row"><span class="details-label">رقم الهاتف:</span><span class="details-value" id="dPhone"></span></div>
         <div class="details-row"><span class="details-label">سعر الاشتراك:</span><span class="details-value" id="dPrice"></span></div>
         <div class="details-row"><span class="details-label">حالة الدفع:</span><span class="details-value" id="dPayStatus"></span></div>
@@ -173,7 +174,8 @@
 <div id="addSubModal" class="modal">
     <div class="modal-content">
         <h3 style="margin-top:0; color:#38bdf8;">اشتراك جديد (30 يوماً)</h3>
-        <input type="text" id="subName" placeholder="اسم المشترك / اليوزر">
+        <input type="text" id="subName" placeholder="اسم المشترك / اليوزر (الذي يسجل به الدخول)">
+        <input type="text" id="subFullName" placeholder="الاسم الثلاثي للمشترك (توضيحي فقط)">
         <input type="text" id="subPhone" placeholder="رقم الهاتف">
         <input type="number" id="subPrice" placeholder="مبلغ الاشتراك (د.ع)">
         <select id="subStatus">
@@ -396,10 +398,11 @@ function importExcelOrJson() {
                 let countAdded = 0;
                 jsonRows.forEach(row => {
                     let name = row['Name'] || row['اسم المشترك'] || row['Username'] || row['اليوزر'] || Object.values(row)[0];
+                    let fullName = row['الاسم الثلاثي'] || row['Full Name'] || "";
                     let phone = row['Phone'] || row['Mobile'] || row['الهاتف'] || "";
                     let price = row['Price'] || row['المبلغ'] || "30000";
                     if(name && String(name).trim() !== "") {
-                        subs.push({ id: Date.now() + Math.random(), name: String(name).trim(), phone: String(phone).trim(), price: String(price).trim(), payStatus: 'واصل', startDate: today, endDate: defaultEndDate });
+                        subs.push({ id: Date.now() + Math.random(), name: String(name).trim(), fullName: String(fullName).trim(), phone: String(phone).trim(), price: String(price).trim(), payStatus: 'واصل', startDate: today, endDate: defaultEndDate });
                         countAdded++;
                     }
                 });
@@ -448,6 +451,7 @@ function showSubDetails(id) {
     let s = subs.find(item => item.id === id);
     if(!s) return;
     document.getElementById('dName').innerText = `👤 ${s.name}`;
+    document.getElementById('dFullName').innerText = s.fullName || "غير محدد";
     document.getElementById('dPhone').innerText = s.phone || "غير مسجل";
     document.getElementById('dPrice').innerText = `${parseFloat(s.price || 0).toLocaleString()} د.ع`;
     document.getElementById('dPayStatus').innerHTML = s.payStatus === 'واصل' ? '<span style="color:#10b981;">واصل ✅</span>' : '<span style="color:#f59e0b;">غير واصل (أجل) ⏳</span>';
@@ -496,7 +500,13 @@ function calcEnd() {
 }
 
 function openModal() { document.getElementById('addSubModal').style.display = 'flex'; }
-function closeModal() { document.getElementById('addSubModal').style.display = 'none'; }
+function closeModal() { 
+    document.getElementById('addSubModal').style.display = 'none';
+    document.getElementById('subName').value = '';
+    document.getElementById('subFullName').value = '';
+    document.getElementById('subPhone').value = '';
+    document.getElementById('subPrice').value = '';
+}
 function setFilter(filterType) {
     currentFilter = filterType;
     document.querySelectorAll('.filter-tab').forEach(tab => tab.classList.remove('active'));
@@ -517,7 +527,11 @@ function renderSubs() {
         if(currentFilter === 'paid' && s.payStatus !== 'واصل') return;
         if(currentFilter === 'agel' && s.payStatus !== 'أجل') return;
         if(currentFilter === 'expired' && !isExp) return;
-        if(query && !s.name.toLowerCase().includes(query) && !s.phone.includes(query)) return;
+        
+        let matchName = s.name.toLowerCase().includes(query);
+        let matchFullName = (s.fullName || '').toLowerCase().includes(query);
+        let matchPhone = (s.phone || '').includes(query);
+        if(query && !matchName && !matchFullName && !matchPhone) return;
 
         let payBadge = s.payStatus === 'أجل' ? '<span style="color:#f59e0b; font-weight:bold;">[غير واصل ⏳]</span>' : '<span style="color:#10b981; font-weight:bold;">[واصل ✅]</span>';
 
@@ -527,6 +541,7 @@ function renderSubs() {
                     <input type="checkbox" class="select-checkbox sub-checkbox" data-id="${s.id}" onclick="event.stopPropagation()" onchange="updateSelectedCount()">
                     <div style="margin-right:8px;">
                         <div style="font-size: 13px; font-weight: bold;">${s.name} ${payBadge}</div>
+                        ${s.fullName ? `<div style="font-size: 10px; color: #f59e0b; font-weight:bold;">👤 ${s.fullName}</div>` : ''}
                         <div style="font-size: 10px; color: #94a3b8;">هاتف: ${s.phone || 'بدون'} | ${s.price || 0} د.ع</div>
                         <div style="font-size: 11px; margin-top: 3px; color:#cbd5e1;">تفعيل: <span style="color:#38bdf8;">${s.startDate}</span> | انتهاء: <span style="color:${isExp ? '#ef4444' : '#10b981'}; font-weight:bold;">${s.endDate}</span></div>
                     </div>
@@ -576,13 +591,14 @@ function deleteSelectedSubs() {
 
 function saveSub() {
     let name = document.getElementById('subName').value.trim();
+    let fullName = document.getElementById('subFullName').value.trim();
     let phone = document.getElementById('subPhone').value.trim();
     let price = document.getElementById('subPrice').value.trim() || "0";
     let payStatus = document.getElementById('subStatus').value;
     let startDate = document.getElementById('startDate').value;
     let endDate = document.getElementById('endDate').value;
-    if(!name || !startDate || !endDate) { alert("يرجى إدخال البيانات المطلوبة"); return; }
-    subs.push({ id: Date.now(), name, phone, price, payStatus, startDate, endDate });
+    if(!name || !startDate || !endDate) { alert("يرجى إدخال اسم المشترك / اليوزر والتواريخ المطلوبين"); return; }
+    subs.push({ id: Date.now(), name, fullName, phone, price, payStatus, startDate, endDate });
     localStorage.setItem('ali_isp_final_v23', JSON.stringify(subs));
     closeModal();
     renderSubs();
