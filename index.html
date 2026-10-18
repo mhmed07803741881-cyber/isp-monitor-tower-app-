@@ -25,7 +25,7 @@
         .sub-card { background:#131d31; border:1px solid #1e293b; padding:12px; border-radius:8px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; border-right:4px solid #10b981; }
         .sub-card.expired { border-right-color: #ef4444; }
 
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; z-index: 3000; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; z-index: 9999; }
         .modal-content { background: #131d31; padding: 18px; border-radius: 12px; width: 92%; max-width: 380px; border: 1px solid #1e293b; box-sizing: border-box; max-height: 90vh; overflow-y: auto; }
         input, select { width: 100%; padding: 9px; margin: 5px 0 10px 0; background: #0d1526; border: 1px solid #1e293b; color: white; border-radius: 6px; box-sizing: border-box; font-size: 12px; }
         .submit-btn { width: 100%; padding: 10px; background: #38bdf8; color: #090d16; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; }
@@ -35,75 +35,4 @@
         @media print {
             body * { visibility: hidden; }
             #printArea, #printArea * { visibility: visible; }
-            #printArea { position: absolute; left: 0; top: 0; width: 100%; }
-        }
-    </style>
-</head>
-<body>
-
-<div class="top-header">
-    <div class="title-area">
-        <h1>مهندس علي لخدمات الإنترنت</h1>
-        <p>نظام إدارة المشتركين والاشتراكات</p>
-    </div>
-    <button class="action-btn" onclick="resetApp()" style="padding: 6px 10px; font-size:10px;">إعادة ضبط</button>
-</div>
-
-<div class="stats-bar">
-    <div>إجمالي المشتركين: <span id="totalSubs" style="color:#38bdf8">0</span></div>
-    <div>النشطين: <span id="activeSubs" style="color:#10b981">0</span></div>
-    <div>المنتهين: <span id="expiredSubs" style="color:#ef4444">0</span></div>
-</div>
-
-<input type="text" id="searchInput" class="search-box" placeholder="🔍 ابحث عن اسم المشترك أو رقم الهاتف..." oninput="render()">
-
-<div class="toolbar-grid">
-    <button class="action-btn active-blue" type="button" onclick="openAddModal()">+ إضافة مشترك جديد</button>
-    <button class="action-btn" type="button" onclick="exportData()">تصدير البيانات</button>
-</div>
-
-<div class="sub-container" id="subList">
-    <div class="empty-state">لا توجد اشتراكات مسجلة. اضغط على "+ إضافة مشترك جديد".</div>
-</div>
-
-<!-- نافذة إضافة مشترك -->
-<div id="addSubModal" class="modal">
-    <div class="modal-content">
-        <h3>اشتراك مشترك جديد</h3>
-        <input type="text" id="subName" placeholder="اسم المشترك">
-        <input type="text" id="subPhone" placeholder="رقم الهاتف للواتساب (مثال: 964780xxxxxxxx)">
-        <input type="number" id="subPrice" placeholder="مبلغ الاشتراكات (د.ع)">
-        <label style="font-size:11px; color:#94a3b8;">تاريخ التفعيل:</label>
-        <input type="date" id="startDate">
-        <label style="font-size:11px; color:#94a3b8;">تاريخ الانتهاء:</label>
-        <input type="date" id="endDate">
-        <button class="submit-btn" type="button" onclick="saveSubscriber()">حفظ وإرسال تفعيل واتساب</button>
-        <button class="cancel-btn" type="button" onclick="closeAddModal()">إلغاء</button>
-    </div>
-</div>
-
-<!-- منطقة طباعة الوصل -->
-<div id="printArea">
-    <div style="text-align: center; border-bottom: 2px dashed #000; padding-bottom: 10px; margin-bottom: 10px;">
-        <h3 style="margin:0;">مهندس علي لخدمات الإنترنت</h3>
-        <p style="margin:2px 0; font-size:11px;">هاتف: 07803741881 - الحلة</p>
-        <p style="margin:2px 0; font-size:12px; font-weight:bold;">وصل قبض اشتراك</p>
-    </div>
-    <div style="font-size: 12px; line-height: 1.8;">
-        <div><b>الاسم:</b> <span id="pName"></span></div>
-        <div><b>المبلغ:</b> <span id="pPrice"></span> د.ع</div>
-        <div><b>تاريخ التفعيل:</b> <span id="pStart"></span></div>
-        <div><b>تاريخ الانتهاء:</b> <span id="pEnd"></span></div>
-    </div>
-    <div style="text-align: center; margin-top: 20px; font-size: 11px; border-top: 1px solid #000; padding-top: 5px;">
-        شكراً لاشتراككم معنا 📡
-    </div>
-</div>
-
-<script>
-let subs = JSON.parse(localStorage.getItem('ali_isp_subs')) || [];
-
-// ضبط التواريخ الافتراضية
-document.getElementById('startDate').valueAsDate = new Date();
-let nextMonth = new Date();
-next
+            #printArea { position: absolute; left: 0; top: 0; width:
