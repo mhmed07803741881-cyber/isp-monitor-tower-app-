@@ -6,24 +6,34 @@
     <title>بوابة المشترك - مكتب مهندس علي لخدمات الإنترنت</title>
     <style>
         body { background-color: #0d1526; color: #fff; font-family: Tahoma, sans-serif; margin: 0; padding: 20px; box-sizing: border-box; display: flex; justify-content: center; align-items: center; min-height: 100vh; flex-direction: column; }
+        .top-nav { width: 100%; max-width: 380px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .notif-bell-btn { background: #131d31; color: #f59e0b; border: 1px solid #1e293b; padding: 6px 10px; border-radius: 8px; font-size: 12px; cursor: pointer; }
         .broadcast-banner { background: #06b6d4; color: #090d16; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; width: 100%; max-width: 380px; font-size: 12px; font-weight: bold; text-align: center; display: none; box-sizing: border-box; }
         .portal-container { background: #131d31; border: 1px solid #1e293b; padding: 25px; border-radius: 12px; width: 100%; max-width: 380px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
         h2 { color: #38bdf8; text-align: center; margin-top: 0; font-size: 18px; }
         p { color: #94a3b8; font-size: 12px; text-align: center; margin-bottom: 20px; }
         input { width: 100%; padding: 12px; margin: 8px 0 15px 0; background: #0d1526; border: 1px solid #1e293b; color: white; border-radius: 8px; box-sizing: border-box; font-size: 14px; text-align: center; }
-        .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; margin-top: 8px; text-align: center; }
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; margin-top: 8px; text-align: center; text-decoration: none; display: block; box-sizing: border-box; }
         .btn-search { background: #38bdf8; color: #090d16; }
-        .btn-pay { background: #10b981; color: #fff; }
+        .btn-pay { background: #6366f1; color: #fff; }
+        .btn-wa { background: #25d366; color: #fff; }
         .btn-agel { background: #f59e0b; color: #090d16; }
         .info-box { background: #0d1526; border: 1px solid #1e293b; padding: 15px; border-radius: 8px; margin-top: 15px; display: none; }
         .info-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px; }
         .info-label { color: #94a3b8; }
         .info-val { font-weight: bold; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; z-index: 99999; }
+        .modal-content { background: #131d31; padding: 20px; border-radius: 12px; width: 90%; max-width: 320px; border: 1px solid #f59e0b; }
     </style>
 </head>
 <body>
 
-<!-- شريط الإشعارات العام من مكتب مهندس علي -->
+<div class="top-nav">
+    <div style="font-size:12px; color:#38bdf8; font-weight:bold;">مكتب مهندس علي</div>
+    <button class="notif-bell-btn" onclick="openClientNotifModal()">🔔 الإشعارات</button>
+</div>
+
+<!-- شريط الإشعارات العام -->
 <div id="broadcastBanner" class="broadcast-banner">
     📢 <span id="broadcastTextContent"></span>
 </div>
@@ -41,78 +51,85 @@
         <div class="info-row"><span class="info-label">تاريخ الانتهاء:</span><span class="info-val" id="cEnd"></span></div>
         <div class="info-row"><span class="info-label">مبلغ الاشتراك:</span><span class="info-val" id="cPrice"></span></div>
 
-        <button class="btn btn-pay" onclick="payOnline()">💳 دفع إلكتروني (ماستر / زين كاش)</button>
+        <a id="superPayBtn" href="#" target="_blank" class="btn btn-pay">💳 تحويل الماستر (سوبر كي)</a>
+        <button class="btn btn-wa" onclick="sendWhatsAppReceipt()">💬 إرسال إشعار التحويل واتساب</button>
         <button class="btn btn-agel" onclick="requestAgel()">⏳ طلب تفعيل مؤجل (أجل)</button>
+    </div>
+</div>
+
+<!-- نافذة إشعارات المشترك -->
+<div id="clientNotifModal" class="modal">
+    <div class="modal-content">
+        <h3 style="margin-top:0; color:#f59e0b; text-align:center;">🔔 إشعارات المكتب</h3>
+        <p id="clientNotifText" style="font-size:12px; color:#cbd5e1; text-align:center; background:#0d1526; padding:10px; border-radius:6px; margin-bottom:15px;">لا توجد إشعارات جديدة حالياً.</p>
+        <button class="btn btn-search" onclick="closeClientNotifModal()" style="background:#1e293b; color:#38bdf8;">إغلاق</button>
     </div>
 </div>
 
 <script>
 window.onload = function() {
-    // جلب أي إشعار عام نشط من لوحة الأدمن
     let savedMsg = localStorage.getItem('ali_app_broadcast_msg');
     if(savedMsg) {
         document.getElementById('broadcastTextContent').innerText = savedMsg;
         document.getElementById('broadcastBanner').style.display = 'block';
+        document.getElementById('clientNotifText').innerText = savedMsg;
     }
 };
 
+function openClientNotifModal() { document.getElementById('clientNotifModal').style.display = 'flex'; }
+function closeClientNotifModal() { document.getElementById('clientNotifModal').style.display = 'none'; }
+
 let foundSubscriber = null;
+const adminPhone = "9647724850876";
 
 function searchClient() {
     let query = document.getElementById('clientQuery').value.trim().toLowerCase();
-    if(!query) {
-        alert("يرجى إدخال اسم اليوزر أو رقم الهاتف");
-        return;
-    }
+    if(!query) { alert("يرجى إدخال اليوزر أو رقم الهاتف"); return; }
 
-    let subs = [];
-    try {
-        subs = JSON.parse(localStorage.getItem('ali_isp_final_v23')) || [];
-    } catch(e) {
-        subs = [];
-    }
-
+    let subs = JSON.parse(localStorage.getItem('ali_isp_final_v23')) || [];
     foundSubscriber = subs.find(s => s.name.toLowerCase().includes(query) || s.phone.includes(query));
 
     if(foundSubscriber) {
         document.getElementById('cName').innerText = foundSubscriber.name;
         document.getElementById('cStatus').innerHTML = foundSubscriber.payStatus === 'واصل' ? '<span style="color:#10b981">واصل ✅</span>' : '<span style="color:#f59e0b">غير واصل ⏳</span>';
         document.getElementById('cEnd').innerText = foundSubscriber.endDate;
-        document.getElementById('cPrice').innerText = (foundSubscriber.price || 30000) + " د.ع";
+        let priceVal = foundSubscriber.price || 30000;
+        document.getElementById('cPrice').innerText = priceVal + " د.ع";
+        document.getElementById('superPayBtn').href = `https://superkey.iq/transfer?phone=${adminPhone}&amount=${priceVal}`;
         document.getElementById('clientInfoBox').style.display = 'block';
     } else {
-        alert("عذراً، لم يتم العثور على اشتراك بهذا الاسم أو الرقم.");
+        alert("عذراً، لم يتم العثور على اشتراك.");
         document.getElementById('clientInfoBox').style.display = 'none';
     }
 }
 
-function payOnline() {
-    if(!foundSubscriber) return;
-    alert("سيتم تحويلك الآن إلى بوابة الدفع الإلكتروني الآمنة (ماستر كارد / زين كاش)...");
-    
-    foundSubscriber.payStatus = 'واصل';
-    let subs = JSON.parse(localStorage.getItem('ali_isp_final_v23')) || [];
-    subs = subs.map(s => s.id === foundSubscriber.id ? foundSubscriber : s);
-    localStorage.setItem('ali_isp_final_v23', JSON.stringify(subs));
+// دالة لتسجيل إشعار وتنبيه في نظام الإدارة عند قيام المشترك بأي إجراء
+function pushAdminNotification(text) {
+    let notifs = JSON.parse(localStorage.getItem('ali_admin_notifications')) || [];
+    notifs.push(`${new Date().toLocaleTimeString()} - ${text}`);
+    localStorage.setItem('ali_admin_notifications', JSON.stringify(notifs));
+}
 
-    let adminPhone = "9647818627764";
-    let notifyMsg = `🔔 إشعار دفع إلكتروني جديد!\nقام المشترك (${foundSubscriber.name}) بدفع اشتراكه إلكترونياً بقيمة (${foundSubscriber.price || 30000} د.ع).`;
-    window.open(`https://api.whatsapp.com/send?phone=${adminPhone}&text=${encodeURIComponent(notifyMsg)}`, '_blank');
+function sendWhatsAppReceipt() {
+    if(!foundSubscriber) return;
+    let priceVal = foundSubscriber.price || 30000;
+    pushAdminNotification(`طلب تفعيل وتحويل ماستر للمشترك: ${foundSubscriber.name} (${priceVal} د.ع)`);
+    let msg = `مرحباً مهندس علي 📡\nلقد قمت بتحويل مبلغ الاشتراك (${priceVal} د.ع) عبر ماستر كارد إلى رقمك (${adminPhone}).\nاسم المشترك: ${foundSubscriber.name}`;
+    window.open(`https://api.whatsapp.com/send?phone=${adminPhone}&text=${encodeURIComponent(msg)}`, '_blank');
 }
 
 function requestAgel() {
     if(!foundSubscriber) return;
-    
     foundSubscriber.payStatus = 'أجل';
     let subs = JSON.parse(localStorage.getItem('ali_isp_final_v23')) || [];
     subs = subs.map(s => s.id === foundSubscriber.id ? foundSubscriber : s);
     localStorage.setItem('ali_isp_final_v23', JSON.stringify(subs));
 
-    let adminPhone = "9647818627764";
+    pushAdminNotification(`طلب تفعيل مؤجل (أجل) جديد للمشترك: ${foundSubscriber.name}`);
+
     let agelMsg = `⏳ طلب تفعيل مؤجل (أجل) جديد!\nالمشترك (${foundSubscriber.name}) يطلب تفعيل حسابه كأجل.`;
     window.open(`https://api.whatsapp.com/send?phone=${adminPhone}&text=${encodeURIComponent(agelMsg)}`, '_blank');
-
-    alert("تم إرسال طلب التفعيل المؤجل (الأجل) بنجاح إلى الإدارة. شكراً لك!");
+    alert("تم إرسال طلب التفعيل المؤجل (الأجل) للإدارة بنجاح!");
 }
 </script>
 
