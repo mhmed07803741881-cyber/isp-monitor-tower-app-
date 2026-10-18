@@ -49,7 +49,7 @@
 </head>
 <body>
 
-<!-- عنصر صوت التنبيه والتكتات التفاعلي المباشر -->
+<!-- صوت التنبيه التفاعلي للإشعارات والتكتات -->
 <audio id="clientNotifSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
 
 <div class="top-nav">
@@ -158,14 +158,10 @@
 <script>
 let foundSubscriber = null;
 const adminPhone = "9647724850876";
-let lastChatLength = 0;
 
 function playNotificationSound() {
     let sound = document.getElementById('clientNotifSound');
-    if(sound) { 
-        sound.currentTime = 0;
-        sound.play().catch(e => console.log("Audio play allowed on user action")); 
-    }
+    if(sound) { sound.play().catch(e => console.log("Audio play allowed on user action")); }
 }
 
 window.onload = function() {
@@ -176,36 +172,45 @@ window.onload = function() {
         document.getElementById('clientNotifText').innerText = savedMsg;
     }
     checkSavedSession();
-    
-    // فحص المحادثات والإشعارات القادمة من الإدارة كل 3 ثوانٍ
-    setInterval(listenForAdminUpdates, 3000);
+
+    // تشغيل مراقب الرسائل والتكتات والإشعارات الجديدة تلقائياً كل ثانيتين
+    setInterval(listenForIncomingMessagesAndNotifs, 2000);
 };
 
-// فحص واستقبال ردود الإدارة وإشعار التفعيل تلقائياً مع تشغيل الصوت
-function listenForAdminUpdates() {
+// فحص واستلام التكتات والردود وإشعارات التفعيل مع تشغيل الصوت فوراً
+function listenForIncomingMessagesAndNotifs() {
     if(!foundSubscriber) return;
 
-    // 1. فحص التحديث على المحادثات والتكتات
+    // 1. مراقبة الردود والمحادثات
     let chats = JSON.parse(localStorage.getItem(`ticket_chat_${foundSubscriber.name}`)) || [];
-    if(chats.length > lastChatLength) {
-        if(lastChatLength !== 0) {
-            playNotificationSound(); // تشغيل صوت الإشعار عند وصول رد من الإدارة
+    let lastChatCount = parseInt(localStorage.getItem(`last_chat_count_${foundSubscriber.name}`) || '0');
+
+    if(chats.length > lastChatCount) {
+        playNotificationSound();
+        localStorage.setItem(`last_chat_count_${foundSubscriber.name}`, chats.length);
+        
+        // إذا كانت نافذة التكت مفتوحة، يتم تحديث المحادثة فوراً
+        let modal = document.getElementById('ticketModal');
+        if(modal && modal.style.display === 'flex') {
+            refreshChatHistory();
         }
-        lastChatLength = chats.length;
-        refreshChatHistory();
     }
 
-    // 2. فحص إشعار التفعيل التلقائي الصادر من لوحة الإدارة
+    // 2. مراقبة إشعارات التفعيل التلقائي المرسلة من الإدارة
     let actNotif = localStorage.getItem(`client_activation_notif_${foundSubscriber.name}`);
     if(actNotif) {
         playNotificationSound();
-        alert(actNotif);
-        localStorage.removeItem(`client_activation_notif_${foundSubscriber.name}`); // مسح الإشعار بعد العرض
-        
-        // إعادة تحديث بيانات الاشتراك الظاهرة بالشاشة
+        document.getElementById('clientNotifText').innerText = actNotif;
+        document.getElementById('clientNotifModal').style.display = 'flex';
+        localStorage.removeItem(`client_activation_notif_${foundSubscriber.name}`);
+
+        // تحديث بيانات الاشتراك الظاهرة في الصفحة
         let subs = JSON.parse(localStorage.getItem('ali_isp_final_v23')) || [];
-        foundSubscriber = subs.find(s => s.name.toLowerCase() === foundSubscriber.name.toLowerCase());
-        if(foundSubscriber) showSubscriberDashboard();
+        let updatedSub = subs.find(s => s.name.toLowerCase() === foundSubscriber.name.toLowerCase());
+        if(updatedSub) {
+            foundSubscriber = updatedSub;
+            showSubscriberDashboard();
+        }
     }
 }
 
@@ -244,6 +249,10 @@ function loginClient() {
         localStorage.setItem('ali_active_portal_user', foundSubscriber.name);
         showSubscriberDashboard();
         playNotificationSound();
+
+        // تعيين العدد الحالي للرسائل لتجنب تنبيه الرسائل القديمة
+        let chats = JSON.parse(localStorage.getItem(`ticket_chat_${foundSubscriber.name}`)) || [];
+        localStorage.setItem(`last_chat_count_${foundSubscriber.name}`, chats.length);
     } else {
         alert("خطأ في تسجيل الدخول!\nاسم المستخدم أو كلمة المرور (رقم الهاتف) غير صحيحة.");
     }
@@ -258,16 +267,11 @@ function showSubscriberDashboard() {
     
     document.getElementById('loginFormArea').style.display = 'none';
     document.getElementById('clientInfoBox').style.display = 'block';
-
-    // تعيين عدد الرسائل الأولي للمحادثة
-    let chats = JSON.parse(localStorage.getItem(`ticket_chat_${foundSubscriber.name}`)) || [];
-    lastChatLength = chats.length;
 }
 
 function logoutClient(isAuto = false) {
     localStorage.removeItem('ali_active_portal_user');
     foundSubscriber = null;
-    lastChatLength = 0;
     document.getElementById('clientInfoBox').style.display = 'none';
     document.getElementById('loginFormArea').style.display = 'block';
     document.getElementById('clientUsernameInput').value = '';
@@ -317,11 +321,14 @@ function submitTicket() {
     chats.push(chatItem);
     localStorage.setItem(`ticket_chat_${foundSubscriber.name}`, JSON.stringify(chats));
 
+    // تحديث العدّاد لعدم تكرار التنبيه لنفس الرسالة التي أرسلها المشترك بنفسه
+    localStorage.setItem(`last_chat_count_${foundSubscriber.name}`, chats.length);
+
     let notifs = JSON.parse(localStorage.getItem('ali_admin_notifications')) || [];
     notifs.push(`${new Date().toLocaleTimeString()} - 🎫 تكت جديد (${ticketNum}) من المشترك: ${foundSubscriber.name}`);
     localStorage.setItem('ali_admin_notifications', JSON.stringify(notifs));
 
-    playNotificationSound(); // تشغيل صوت الإشعار عند إرسال التكت
+    playNotificationSound();
     alert("✅ تم إرسال التكت بنجاح! سيتم مراجعته وتحويله للأقسام المختصة.");
     document.getElementById('ticketMessageText').value = '';
     refreshChatHistory();
