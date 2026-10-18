@@ -51,7 +51,8 @@
         <div class="info-row"><span class="info-label">تاريخ الانتهاء:</span><span class="info-val" id="cEnd"></span></div>
         <div class="info-row"><span class="info-label">مبلغ الاشتراك:</span><span class="info-val" id="cPrice"></span></div>
 
-        <a id="superPayBtn" href="#" target="_blank" class="btn btn-pay">💳 تحويل الماستر (سوبر كي)</a>
+        <!-- زر نسخ رقم التحويل للماستر -->
+        <button class="btn btn-pay" onclick="copyMasterNumber()">💳 نسخ رقم التحويل (07724850876)</button>
         <button class="btn btn-wa" onclick="sendWhatsAppReceipt()">💬 إرسال إشعار التحويل واتساب</button>
         <button class="btn btn-agel" onclick="requestAgel()">⏳ طلب تفعيل مؤجل (أجل)</button>
     </div>
@@ -95,7 +96,6 @@ function searchClient() {
         document.getElementById('cEnd').innerText = foundSubscriber.endDate;
         let priceVal = foundSubscriber.price || 30000;
         document.getElementById('cPrice').innerText = priceVal + " د.ع";
-        document.getElementById('superPayBtn').href = `https://superkey.iq/transfer?phone=${adminPhone}&amount=${priceVal}`;
         document.getElementById('clientInfoBox').style.display = 'block';
     } else {
         alert("عذراً، لم يتم العثور على اشتراك.");
@@ -103,7 +103,15 @@ function searchClient() {
     }
 }
 
-// دالة لتسجيل إشعار وتنبيه في نظام الإدارة عند قيام المشترك بأي إجراء
+// دالة نسخ رقم الماستر لتسهيل التحويل من قبل الزبون
+function copyMasterNumber() {
+    navigator.clipboard.writeText("07724850876").then(() => {
+        alert("📋 تم نسخ رقم التحويل (07724850876) بنجاح!\nالرجاء الانتقال إلى تطبيق الماستر (سوبر كي أو تطبيق المصرف) وإتمام التحويل بالمبلغ المطلوع.");
+    }).catch(err => {
+        alert("رقم التحويل الخاص بك هو: 07724850876");
+    });
+}
+
 function pushAdminNotification(text) {
     let notifs = JSON.parse(localStorage.getItem('ali_admin_notifications')) || [];
     notifs.push(`${new Date().toLocaleTimeString()} - ${text}`);
