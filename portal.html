@@ -1,18 +1,17 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <!-- ربط الـ PWA -->
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0d1526">
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js');
-  }
-</script>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>بوابة المشترك - مكتب مهندس علي لخدمات الإنترنت</title>
+    <!-- ربط الـ PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0d1526">
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js');
+      }
+    </script>
     <style>
         body { background-color: #0d1526; color: #fff; font-family: Tahoma, sans-serif; margin: 0; padding: 15px; box-sizing: border-box; display: flex; justify-content: center; align-items: center; min-height: 100vh; flex-direction: column; }
         .top-nav { width: 100%; max-width: 380px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
@@ -31,6 +30,7 @@
         .btn-agel { background: #f59e0b; color: #090d16; }
         .btn-router { background: #0284c7; color: #fff; }
         .btn-speed { background: #10b981; color: #fff; }
+        .btn-router-pass { background: #8b5cf6; color: #fff; }
         .btn-ticket { background: #ec4899; color: #fff; }
         .btn-logout { background: #ef4444; color: #fff; }
         .info-box { background: #0d1526; border: 1px solid #1e293b; padding: 12px; border-radius: 8px; margin-top: 12px; display: none; }
@@ -40,6 +40,11 @@
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; z-index: 99999; }
         .modal-content { background: #131d31; padding: 20px; border-radius: 12px; width: 90%; max-width: 320px; border: 1px solid #ec4899; box-sizing: border-box; }
         .support-phones { background: #0d1526; border: 1px solid #1e293b; padding: 8px; border-radius: 8px; text-align: center; font-size: 11px; margin-top: 15px; color: #38bdf8; }
+        
+        /* تصميم مربعات كلمات مرور الراوتر */
+        .router-box-item { background: #0d1526; border: 1px solid #38bdf8; padding: 10px; border-radius: 8px; margin-bottom: 8px; text-align: center; }
+        .router-box-label { font-size: 10px; color: #94a3b8; margin-bottom: 4px; }
+        .router-box-val { font-size: 14px; font-weight: bold; color: #38bdf8; letter-spacing: 1px; }
     </style>
 </head>
 <body>
@@ -81,6 +86,7 @@
         <button class="btn btn-agel" onclick="requestAgel()">⏳ طلب تفعيل مؤجل (أجل)</button>
         
         <a href="http://192.168.0.1" target="_blank" class="btn btn-router">⚙️ تغيير رمز الراوتر (192.168.0.1)</a>
+        <button class="btn btn-router-pass" onclick="openRouterPassModal()">🔑 كلمات دخول الراوتر</button>
         <a href="https://www.fast.com" target="_blank" class="btn btn-speed">🚀 فحص السرعة (Fast.com)</a>
         <button class="btn btn-ticket" onclick="openTicketModal()">🎫 إرسال تكت دعم فني ومتابعة الردود</button>
         
@@ -101,6 +107,34 @@
         <h3 style="margin-top:0; color:#f59e0b; text-align:center; font-size:15px;">🔔 إشعارات المكتب</h3>
         <p id="clientNotifText" style="font-size:11px; color:#cbd5e1; text-align:center; background:#0d1526; padding:10px; border-radius:6px; margin-bottom:15px;">لا توجد إشعارات جديدة حالياً.</p>
         <button class="btn btn-search" onclick="closeClientNotifModal()" style="background:#1e293b; color:#38bdf8;">إغلاق</button>
+    </div>
+</div>
+
+<!-- نافذة كلمات دخول الراوتر (الثلاث مربعات) -->
+<div id="routerPassModal" class="modal">
+    <div class="modal-content" style="border-color: #8b5cf6; max-width: 300px;">
+        <h3 style="margin-top:0; color:#8b5cf6; text-align:center; font-size:15px;">🔑 كلمات دخول الراوتر الشائعة</h3>
+        <p style="font-size:10px; color:#94a3b8; margin-bottom:10px;">استخدم إحدى الكلمات التالية لفتح صفحة الراوتر:</p>
+        
+        <!-- المربع الأول -->
+        <div class="router-box-item">
+            <div class="router-box-label">الاحتمال الأول:</div>
+            <div class="router-box-val">admin</div>
+        </div>
+
+        <!-- المربع الثاني -->
+        <div class="router-box-item">
+            <div class="router-box-label">الاحتمال الثاني:</div>
+            <div class="router-box-val">admin</div>
+        </div>
+
+        <!-- المربع الثالث -->
+        <div class="router-box-item">
+            <div class="router-box-label">الاحتمال الثالث:</div>
+            <div class="router-box-val">admin1</div>
+        </div>
+
+        <button class="btn" onclick="closeRouterPassModal()" style="background:#1e293b; color:#38bdf8; margin-top:15px;">إغلاق</button>
     </div>
 </div>
 
@@ -131,15 +165,12 @@ function playNotificationSound() {
 }
 
 window.onload = function() {
-    // 1. التحقق من الإشعار العام
     let savedMsg = localStorage.getItem('ali_app_broadcast_msg');
     if(savedMsg) {
         document.getElementById('broadcastTextContent').innerText = savedMsg;
         document.getElementById('broadcastBanner').style.display = 'block';
         document.getElementById('clientNotifText').innerText = savedMsg;
     }
-
-    // 2. التحقق من بقاء الدخول وحذف الاشتراك التلقائي من البرنامج الرئيسي
     checkSavedSession();
 };
 
@@ -148,15 +179,11 @@ function checkSavedSession() {
     if(!savedUser) return;
 
     let subs = JSON.parse(localStorage.getItem('ali_isp_final_v23')) || [];
-    
-    // التحقق هل المشترك ما زال موجوداً في سجل البرنامج الرئيسي
     foundSubscriber = subs.find(s => s.name.toLowerCase() === savedUser.toLowerCase());
 
     if(foundSubscriber) {
-        // المشترك موجود -> إبقاء تسجيل الدخول وعرض بياناته
         showSubscriberDashboard();
     } else {
-        // تم مسح المشترك من البرنامج الرئيسي -> تسجيل خروج تلقائي وفوري
         logoutClient(true);
     }
 }
@@ -179,7 +206,6 @@ function loginClient() {
     });
 
     if(foundSubscriber) {
-        // حفظ جلسة الدخول حتى لا يخرج عند إغلاق التطبيق
         localStorage.setItem('ali_active_portal_user', foundSubscriber.name);
         showSubscriberDashboard();
         playNotificationSound();
@@ -219,6 +245,10 @@ function openClientNotifModal() {
     document.getElementById('clientNotifModal').style.display = 'flex'; 
 }
 function closeClientNotifModal() { document.getElementById('clientNotifModal').style.display = 'none'; }
+
+// دوال نافذة كلمات مرور الراوتر
+function openRouterPassModal() { document.getElementById('routerPassModal').style.display = 'flex'; }
+function closeRouterPassModal() { document.getElementById('routerPassModal').style.display = 'none'; }
 
 function openTicketModal() {
     if(!foundSubscriber) return;
