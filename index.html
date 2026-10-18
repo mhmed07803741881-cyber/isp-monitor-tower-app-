@@ -21,6 +21,7 @@
         .action-btn.earthlink-btn { background: #e11d48; color: #fff; font-weight: bold; border-color: #f43f5e; grid-column: span 2; }
         .action-btn.import-btn { background: #f59e0b; color: #000; font-weight: bold; border-color: #d97706; }
         .action-btn.delete-btn { background: #ef4444; color: #fff; font-weight: bold; border-color: #dc2626; }
+        .action-btn.notify-btn { background: #8b5cf6; color: #fff; font-weight: bold; border-color: #7c3aed; grid-column: span 2; }
 
         .search-box { width: 100%; padding: 10px; margin-bottom: 8px; background: #131d31; border: 1px solid #1e293b; color: white; border-radius: 8px; box-sizing: border-box; font-size: 12px; }
 
@@ -77,9 +78,10 @@
 <div class="toolbar-grid">
     <button class="action-btn active-blue" onclick="openModal()">+ إضافة مشترك</button>
     <button class="action-btn import-btn" onclick="importExcelOrJson()">📥 استيراد ملف أيرثلنك / إكسل</button>
+    <button class="action-btn notify-btn" onclick="sendGroupDebtReminder()">📢 تنبيه غير المسددين (3 أيام)</button>
     <button class="action-btn" onclick="toggleSelectAll()" id="selectAllBtn" style="background:#475569; color:#fff;">☑️ تحديد الكل</button>
     <button class="action-btn delete-btn" onclick="deleteSelectedSubs()">🗑️ حذف المحدد (<span id="selectedCount">0</span>)</button>
-    <button class="action-btn" onclick="exportData()" style="background:#10b981; color:#fff;">💾 حفظ نسخة احتياطية</button>
+    <button class="action-btn" onclick="exportData()" style="background:#10b981; color:#fff; grid-column: span 2;">💾 حفظ نسخة احتياطية</button>
     <button class="action-btn earthlink-btn" onclick="openEarthlinkDirect()">🌐 فتح لوحة ريسلر أيرثلنك</button>
 </div>
 
@@ -144,7 +146,7 @@
 <script>
 let subs = [];
 try {
-    subs = JSON.parse(localStorage.getItem('ali_isp_final_v18')) || [];
+    subs = JSON.parse(localStorage.getItem('ali_isp_final_v19')) || [];
 } catch(e) {
     subs = [];
 }
@@ -194,7 +196,7 @@ function importExcelOrJson() {
                     let importedData = JSON.parse(event.target.result);
                     if(Array.isArray(importedData)) {
                         subs = importedData;
-                        localStorage.setItem('ali_isp_final_v18', JSON.stringify(subs));
+                        localStorage.setItem('ali_isp_final_v19', JSON.stringify(subs));
                         renderSubs();
                         alert("✅ تم استعادة البيانات بنجاح!");
                     }
@@ -244,7 +246,7 @@ function importExcelOrJson() {
                         }
                     });
 
-                    localStorage.setItem('ali_isp_final_v18', JSON.stringify(subs));
+                    localStorage.setItem('ali_isp_final_v19', JSON.stringify(subs));
                     renderSubs();
                     alert(`✅ تم استيراد (${countAdded}) مشترك بنجاح من ملف أيرثلنك!`);
 
@@ -255,6 +257,28 @@ function importExcelOrJson() {
         }
     };
     input.click();
+}
+
+// إرسال تنبيه التسديد خلال 3 أيام لجميع المشتركين غير المسددين (أجل)
+function sendGroupDebtReminder() {
+    let unPaidSubs = subs.filter(s => s.payStatus === 'أجل' && s.phone && s.phone.trim() !== "");
+
+    if(unPaidSubs.length === 0) {
+        alert("لا يوجد مشتركين بحالة (أجل) يمتلكون أرقام هواتف مسجلة حالياً.");
+        return;
+    }
+
+    if(confirm(`تم إيجاد (${unPaidSubs.length}) مشترك غير مسدد.\nهل تريد البدء بإرسال رسالة التنبيه (تسديد خلال 3 أيام) عبر الواتساب؟`)) {
+        unPaidSubs.forEach((s, index) => {
+            setTimeout(() => {
+                let cleanPhone = s.phone.replace(/\D/g, '');
+                if(cleanPhone.startsWith('0')) cleanPhone = '964' + cleanPhone.substring(1);
+
+                let msg = `عزيزي المشترك ${s.name} ⏳\nنود تذكيرك بوجود مبلغ اشتراك معلق (أجل) في مكتب مهندس علي لخدمات الإنترنت.\nيرجى تسديد المبلغ خلال 3 أيام لتجنب انقطاع الخدمة.\nهواتف المكتب: 07818627764 - 07724850876`;
+                window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`, '_blank');
+            }, index * 1200); // إرسال بفارق ثانية ونصف بين كل مشترك لتفادي حظر واتساب
+        });
+    }
 }
 
 function openPinModal() {
@@ -356,7 +380,6 @@ function renderSubs() {
     updateSelectedCount();
 }
 
-// دالة تحديد الكل أو إلغاء التحديد
 function toggleSelectAll() {
     let checkboxes = document.querySelectorAll('.sub-checkbox');
     isAllSelected = !isAllSelected;
@@ -365,13 +388,11 @@ function toggleSelectAll() {
     updateSelectedCount();
 }
 
-// تحديث العداد للمشتركين المحددين
 function updateSelectedCount() {
     let selectedBoxes = document.querySelectorAll('.sub-checkbox:checked');
     document.getElementById('selectedCount').innerText = selectedBoxes.length;
 }
 
-// حذف المشتركين المحددين فردياً أو كلياً
 function deleteSelectedSubs() {
     let selectedBoxes = document.querySelectorAll('.sub-checkbox:checked');
     if(selectedBoxes.length === 0) {
@@ -382,7 +403,7 @@ function deleteSelectedSubs() {
     if(confirm(`هل أنت تأكد من رغبتك في حذف (${selectedBoxes.length}) مشترك محدد؟`)) {
         let idsToDelete = Array.from(selectedBoxes).map(cb => parseFloat(cb.getAttribute('data-id')));
         subs = subs.filter(s => !idsToDelete.includes(s.id));
-        localStorage.setItem('ali_isp_final_v18', JSON.stringify(subs));
+        localStorage.setItem('ali_isp_final_v19', JSON.stringify(subs));
         isAllSelected = false;
         document.getElementById('selectAllBtn').innerText = "☑️ تحديد الكل";
         renderSubs();
@@ -404,7 +425,7 @@ function saveSub() {
     }
 
     subs.push({ id: Date.now(), name, phone, price, payStatus, startDate, endDate });
-    localStorage.setItem('ali_isp_final_v18', JSON.stringify(subs));
+    localStorage.setItem('ali_isp_final_v19', JSON.stringify(subs));
     
     document.getElementById('subName').value = '';
     document.getElementById('subPhone').value = '';
@@ -425,7 +446,7 @@ function payDebt(id) {
     if(s) {
         if(confirm("هل تريد تثبيت تسديد المبلغ لهذا المشترك؟")) {
             s.payStatus = 'واصل';
-            localStorage.setItem('ali_isp_final_v18', JSON.stringify(subs));
+            localStorage.setItem('ali_isp_final_v19', JSON.stringify(subs));
             renderSubs();
             printReceipt(s.name, s.price || 0, s.startDate, s.endDate, 'واصل (تم التسديد)', 'وصل قبض تسديد دين');
         }
@@ -438,12 +459,8 @@ function sendWhatsapp(phone, name, endDate, payStatus, startDate) {
     if(cleanPhone.startsWith('0')) cleanPhone = '964' + cleanPhone.substring(1);
     
     let msg = "";
-    let startD = new Date(startDate);
-    let todayD = new Date();
-    let diffDays = Math.floor((todayD - startD) / (1000 * 60 * 60 * 24));
-
-    if(payStatus === 'أجل' && diffDays >= 5) {
-        msg = `عزيزي المشترك ${name} ⏳\nنود تذكيرك بوجود مبلغ اشتراك معلق (أجل) مضى عليه أكثر من 5 أيام في (مكتب مهندس علي لخدمات الإنترنت).\nتلفونات المكتب: 07818627764 - 07724850876\nيرجى تسديد المبلغ لاستمرار الخدمة.`;
+    if(payStatus === 'أجل') {
+        msg = `عزيزي المشترك ${name} ⏳\nنود تذكيرك بوجود مبلغ اشتراك معلق (أجل) في مكتب مهندس علي لخدمات الإنترنت.\nيرجى تسديد المبلغ خلال 3 أيام لتجنب انقطاع الخدمة.\nهواتف المكتب: 07818627764 - 07724850876`;
     } else {
         msg = `عزيزي المشترك ${name} 📡\nتذكير من (مكتب مهندس علي لخدمات الإنترنت):\nتلفونات المكتب: 07818627764 - 07724850876\nاشتراكك سينتهي بتاريخ ${endDate}.\nحالة الدفع: ${payStatus}.`;
     }
@@ -464,7 +481,7 @@ function printReceipt(name, price, start, end, payStatus, title = 'وصل قبض
 function deleteSub(id) {
     if(confirm("هل تريد حذف هذا المشترك؟")) {
         subs = subs.filter(s => s.id !== id);
-        localStorage.setItem('ali_isp_final_v18', JSON.stringify(subs));
+        localStorage.setItem('ali_isp_final_v19', JSON.stringify(subs));
         renderSubs();
     }
 }
