@@ -22,7 +22,8 @@
         .action-btn.earthlink-btn { background: #e11d48; color: #fff; font-weight: bold; border-color: #f43f5e; grid-column: span 2; }
         .action-btn.import-btn { background: #f59e0b; color: #000; font-weight: bold; border-color: #d97706; }
         .action-btn.delete-btn { background: #ef4444; color: #fff; font-weight: bold; border-color: #dc2626; }
-        .action-btn.notify-btn { background: #8b5cf6; color: #fff; font-weight: bold; border-color: #7c3aed; grid-column: span 2; }
+        .action-btn.notify-btn { background: #8b5cf6; color: #fff; font-weight: bold; border-color: #7c3aed; }
+        .action-btn.broadcast-btn { background: #06b6d4; color: #090d16; font-weight: bold; border-color: #0891b2; grid-column: span 2; }
 
         .search-box { width: 100%; padding: 10px; margin-bottom: 8px; background: #131d31; border: 1px solid #1e293b; color: white; border-radius: 8px; box-sizing: border-box; font-size: 12px; }
 
@@ -40,7 +41,7 @@
         .details-label { color: #94a3b8; }
         .details-value { font-weight: bold; color: #fff; }
 
-        input, select { width: 100%; padding: 10px; margin: 6px 0 12px 0; background: #0d1526; border: 1px solid #1e293b; color: white; border-radius: 6px; box-sizing: border-box; font-size: 13px; }
+        input, select, textarea { width: 100%; padding: 10px; margin: 6px 0 12px 0; background: #0d1526; border: 1px solid #1e293b; color: white; border-radius: 6px; box-sizing: border-box; font-size: 13px; }
         .submit-btn { width: 100%; padding: 11px; background: #38bdf8; color: #090d16; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; }
         .cancel-btn { width: 100%; padding: 10px; background: #1e293b; color: #94a3b8; border: none; border-radius: 6px; cursor: pointer; margin-top: 6px; font-size: 13px; }
 
@@ -83,8 +84,9 @@
 
 <div class="toolbar-grid">
     <button class="action-btn active-blue" onclick="openModal()">+ إضافة مشترك</button>
-    <button class="action-btn import-btn" onclick="importExcelOrJson()">📥 استيراد ملف أيرثلنك / إكسل</button>
-    <button class="action-btn notify-btn" onclick="sendGroupDebtReminder()">📢 تنبيه غير المسددين (3 أيام)</button>
+    <button class="action-btn import-btn" onclick="importExcelOrJson()">📥 استيراد ملف أيرثلنك</button>
+    <button class="action-btn notify-btn" onclick="sendGroupDebtReminder()">📢 تنبيه غير المسددين</button>
+    <button class="action-btn broadcast-btn" onclick="openBroadcastModal()">📣 إرسال إشعار عام للكل (واتساب / التطبيق)</button>
     <button class="action-btn" onclick="toggleSelectAll()" id="selectAllBtn" style="background:#475569; color:#fff;">☑️ تحديد الكل</button>
     <button class="action-btn delete-btn" onclick="deleteSelectedSubs()">🗑️ حذف المحدد (<span id="selectedCount">0</span>)</button>
     <button class="action-btn" onclick="exportData()" style="background:#10b981; color:#fff; grid-column: span 2;">💾 حفظ نسخة احتياطية</button>
@@ -95,39 +97,33 @@
     <div style="text-align: center; color: #64748b; padding: 30px;">لا توجد اشتراكات مسجلة.</div>
 </div>
 
+<!-- نافذة إرسال إشعار عام للكل -->
+<div id="broadcastModal" class="modal">
+    <div class="modal-content" style="border-color: #06b6d4;">
+        <h3 style="margin-top:0; color:#06b6d4; text-align:center;">📣 إرسال إشعار وتنبيه عام</h3>
+        <p style="font-size:11px; color:#94a3b8; text-align:center;">هذه الرسالة ستظهر في إشعارات بوابة المشتركين، ويمكن إرسالها جماعياً عبر الواتساب.</p>
+        
+        <label style="font-size:11px; color:#94a3b8;">نص الإشعار:</label>
+        <textarea id="broadcastText" rows="4" style="background:#0d1526; color:#fff; border:1px solid #1e293b; border-radius:6px; padding:8px; width:100%; font-size:12px;">عزيزنا المشترك، نود إعلامكم بوجود تحديثات وصيانة عامة لشبكة الإنترنت لتحسين جودة الخدمة. شكراً لاختياركم مكتب مهندس علي.</textarea>
+
+        <button class="submit-btn" onclick="saveAppBroadcast()" style="background:#06b6d4; color:#090d16; margin-bottom:6px;">نشر الإشعار في التطبيق</button>
+        <button class="submit-btn" onclick="sendWhatsAppBroadcast()" style="background:#25d366; color:#fff;">إرسال عبر الواتساب للكل</button>
+        <button class="cancel-btn" onclick="closeBroadcastModal()">إغلاق</button>
+    </div>
+</div>
+
 <!-- نافذة تفاصيل المشترك المكتملة -->
 <div id="subDetailsModal" class="modal">
     <div class="modal-content" style="border-color: #10b981;">
         <h3 style="margin-top:0; color:#38bdf8; text-align:center;" id="dName">تفاصيل المشترك</h3>
         
-        <div class="details-row">
-            <span class="details-label">رقم الهاتف:</span>
-            <span class="details-value" id="dPhone"></span>
-        </div>
-        <div class="details-row">
-            <span class="details-label">سعر الاشتراك الشهري:</span>
-            <span class="details-value" id="dPrice"></span>
-        </div>
-        <div class="details-row">
-            <span class="details-label">حالة الدفع الحالية:</span>
-            <span class="details-value" id="dPayStatus"></span>
-        </div>
-        <div class="details-row">
-            <span class="details-label">تاريخ التفعيل:</span>
-            <span class="details-value" id="dStart" style="color:#38bdf8;"></span>
-        </div>
-        <div class="details-row">
-            <span class="details-label">تاريخ الانتهاء:</span>
-            <span class="details-value" id="dEnd"></span>
-        </div>
-        <div class="details-row">
-            <span class="details-label">عدد الأشهر المفعلة (المسددة):</span>
-            <span class="details-value" id="dMonthsPaid" style="color:#10b981;"></span>
-        </div>
-        <div class="details-row">
-            <span class="details-label">عدد الأشهر المطلوبة (الدين):</span>
-            <span class="details-value" id="dMonthsDue" style="color:#ef4444;"></span>
-        </div>
+        <div class="details-row"><span class="details-label">رقم الهاتف:</span><span class="details-value" id="dPhone"></span></div>
+        <div class="details-row"><span class="details-label">سعر الاشتراك:</span><span class="details-value" id="dPrice"></span></div>
+        <div class="details-row"><span class="details-label">حالة الدفع:</span><span class="details-value" id="dPayStatus"></span></div>
+        <div class="details-row"><span class="details-label">تاريخ التفعيل:</span><span class="details-value" id="dStart" style="color:#38bdf8;"></span></div>
+        <div class="details-row"><span class="details-label">تاريخ الانتهاء:</span><span class="details-value" id="dEnd"></span></div>
+        <div class="details-row"><span class="details-label">الأشهر المفعلة:</span><span class="details-value" id="dMonthsPaid" style="color:#10b981;"></span></div>
+        <div class="details-row"><span class="details-label">الأشهر المطلوبة:</span><span class="details-value" id="dMonthsDue" style="color:#ef4444;"></span></div>
         <div class="details-row" style="background:#0d1526; padding:10px 6px; border-radius:6px; margin-top:8px;">
             <span class="details-label" style="color:#f59e0b; font-weight:bold;">إجمالي المبلغ المطلوب:</span>
             <span class="details-value" id="dTotalDebt" style="color:#f59e0b; font-size:14px;"></span>
@@ -194,7 +190,7 @@
 <script>
 let subs = [];
 try {
-    subs = JSON.parse(localStorage.getItem('ali_isp_final_v22')) || [];
+    subs = JSON.parse(localStorage.getItem('ali_isp_final_v23')) || [];
 } catch(e) {
     subs = [];
 }
@@ -227,6 +223,50 @@ function exportData() {
     alert("💾 تم حفظ نسخة احتياطية من كافة البيانات على هاتفك بنجاح!");
 }
 
+function openBroadcastModal() {
+    document.getElementById('broadcastModal').style.display = 'flex';
+}
+
+function closeBroadcastModal() {
+    document.getElementById('broadcastModal').style.display = 'none';
+}
+
+// حفظ الإشعار ليظهر في تطبيق المشتركين (Portal)
+function saveAppBroadcast() {
+    let text = document.getElementById('broadcastText').value.trim();
+    if(!text) {
+        alert("يرجى كتابة نص الإشعار");
+        return;
+    }
+    localStorage.setItem('ali_app_broadcast_msg', text);
+    alert("📢 تم نشر الإشعار بنجاح! سيظهر الآن في واجهة جميع المشتركين عند فتح بوابتهم الخاصة.");
+    closeBroadcastModal();
+}
+
+// إرسال الإشعار جماعياً عبر الواتساب لكل المشتركين الذين لديهم أرقام
+function sendWhatsAppBroadcast() {
+    let text = document.getElementById('broadcastText').value.trim();
+    let validSubs = subs.filter(s => s.phone && s.phone.trim() !== "");
+
+    if(validSubs.length === 0) {
+        alert("لا يوجد مشتركين بأرقام هاتف مسجلة لإرسال الرسالة.");
+        return;
+    }
+
+    if(confirm(`هل تريد إرسال هذا الإشعار عبر الواتساب إلى (${validSubs.length}) مشترك؟`)) {
+        validSubs.forEach((s, index) => {
+            setTimeout(() => {
+                let cleanPhone = s.phone.replace(/\D/g, '');
+                if(cleanPhone.startsWith('0')) cleanPhone = '964' + cleanPhone.substring(1);
+
+                let fullMsg = `مرحباً المشترك ${s.name} 📡\n\n${text}\n\nمكتب مهندس علي لخدمات الإنترنت\nهواتف المكتب: 07818627764 - 07724850876`;
+                window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(fullMsg)}`, '_blank');
+            }, index * 1200);
+        });
+        closeBroadcastModal();
+    }
+}
+
 function importExcelOrJson() {
     let input = document.createElement('input');
     input.type = 'file';
@@ -245,7 +285,7 @@ function importExcelOrJson() {
                     let importedData = JSON.parse(event.target.result);
                     if(Array.isArray(importedData)) {
                         subs = importedData;
-                        localStorage.setItem('ali_isp_final_v22', JSON.stringify(subs));
+                        localStorage.setItem('ali_isp_final_v23', JSON.stringify(subs));
                         renderSubs();
                         alert("✅ تم استعادة البيانات بنجاح!");
                     }
@@ -295,12 +335,12 @@ function importExcelOrJson() {
                         }
                     });
 
-                    localStorage.setItem('ali_isp_final_v22', JSON.stringify(subs));
+                    localStorage.setItem('ali_isp_final_v23', JSON.stringify(subs));
                     renderSubs();
                     alert(`✅ تم استيراد (${countAdded}) مشترك بنجاح من ملف أيرثلنك!`);
 
                 } catch(err) {
-                    alert("حدث خطأ أثناء تحليل ملف الإكسل. يرجى التأكد من بصيغة الملف.");
+                    alert("حدث خطأ أثناء تحليل ملف الإكسل.");
                 }
             };
         }
@@ -329,22 +369,20 @@ function sendGroupDebtReminder() {
     }
 }
 
-// دالة إعادة تفعيل وتجديد الاشتراك لمدة 30 يوماً إضافية
 function renewSubscription(id) {
     let s = subs.find(item => item.id === id);
     if(s) {
         if(confirm(`هل تريد إعادة تفعيل وتجديد اشتراك المشترك (${s.name}) لمدة 30 يوماً؟`)) {
             let today = new Date();
             let startStr = today.toISOString().split('T')[0];
-            
             today.setDate(today.getDate() + 30);
             let endStr = today.toISOString().split('T')[0];
 
             s.startDate = startStr;
             s.endDate = endStr;
-            s.payStatus = 'واصل'; // جعله واصل بعد إعادة التفعيل والتجديد
+            s.payStatus = 'واصل';
 
-            localStorage.setItem('ali_isp_final_v22', JSON.stringify(subs));
+            localStorage.setItem('ali_isp_final_v23', JSON.stringify(subs));
             renderSubs();
             printReceipt(s.name, s.price || 30000, s.startDate, s.endDate, 'واصل (تم تجديد التفعيل)', 'وصل قبض تجديد اشتراك');
         }
@@ -523,7 +561,7 @@ function deleteSelectedSubs() {
     if(confirm(`هل أنت تأكد من رغبتك في حذف (${selectedBoxes.length}) مشترك محدد؟`)) {
         let idsToDelete = Array.from(selectedBoxes).map(cb => parseFloat(cb.getAttribute('data-id')));
         subs = subs.filter(s => !idsToDelete.includes(s.id));
-        localStorage.setItem('ali_isp_final_v22', JSON.stringify(subs));
+        localStorage.setItem('ali_isp_final_v23', JSON.stringify(subs));
         isAllSelected = false;
         document.getElementById('selectAllBtn').innerText = "☑️ تحديد الكل";
         renderSubs();
@@ -545,7 +583,7 @@ function saveSub() {
     }
 
     subs.push({ id: Date.now(), name, phone, price, payStatus, startDate, endDate });
-    localStorage.setItem('ali_isp_final_v22', JSON.stringify(subs));
+    localStorage.setItem('ali_isp_final_v23', JSON.stringify(subs));
     
     document.getElementById('subName').value = '';
     document.getElementById('subPhone').value = '';
@@ -566,7 +604,7 @@ function payDebt(id) {
     if(s) {
         if(confirm(`هل تريد تثبيت تسديد المبلغ للمشترك (${s.name})؟`)) {
             s.payStatus = 'واصل';
-            localStorage.setItem('ali_isp_final_v22', JSON.stringify(subs));
+            localStorage.setItem('ali_isp_final_v23', JSON.stringify(subs));
             renderSubs();
             printReceipt(s.name, s.price || 0, s.startDate, s.endDate, 'واصل (تم التسديد)', 'وصل قبض تسديد دين');
         }
@@ -601,7 +639,7 @@ function printReceipt(name, price, start, end, payStatus, title = 'وصل قبض
 function deleteSub(id) {
     if(confirm("هل تريد حذف هذا المشترك؟")) {
         subs = subs.filter(s => s.id !== id);
-        localStorage.setItem('ali_isp_final_v22', JSON.stringify(subs));
+        localStorage.setItem('ali_isp_final_v23', JSON.stringify(subs));
         renderSubs();
     }
 }
