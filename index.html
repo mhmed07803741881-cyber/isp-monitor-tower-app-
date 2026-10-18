@@ -26,7 +26,8 @@
 
         .search-box { width: 100%; padding: 10px; margin-bottom: 8px; background: #131d31; border: 1px solid #1e293b; color: white; border-radius: 8px; box-sizing: border-box; font-size: 12px; }
 
-        .sub-card { background:#131d31; border:1px solid #1e293b; padding:12px; border-radius:8px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; border-right:4px solid #10b981; }
+        .sub-card { background:#131d31; border:1px solid #1e293b; padding:12px; border-radius:8px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; border-right:4px solid #10b981; cursor: pointer; transition: background 0.2s; }
+        .sub-card:hover { background: #1e293b; }
         .sub-card.expired { border-right-color: #ef4444; }
         .sub-card.agel { border-right-color: #f59e0b; }
 
@@ -34,6 +35,10 @@
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; z-index: 99999; }
         .modal-content { background: #131d31; padding: 20px; border-radius: 12px; width: 90%; max-width: 350px; border: 1px solid #38bdf8; }
+
+        .details-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1e293b; font-size: 12px; }
+        .details-label { color: #94a3b8; }
+        .details-value { font-weight: bold; color: #fff; }
 
         input, select { width: 100%; padding: 10px; margin: 6px 0 12px 0; background: #0d1526; border: 1px solid #1e293b; color: white; border-radius: 6px; box-sizing: border-box; font-size: 13px; }
         .submit-btn { width: 100%; padding: 11px; background: #38bdf8; color: #090d16; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; }
@@ -67,7 +72,6 @@
     <button class="action-btn" onclick="openPinModal()" style="padding: 6px 10px; font-size:10px; background:#1e293b; color:#38bdf8;">⚙️ الرمز</button>
 </div>
 
-<!-- أزرار الفلترة والتبويب الذكي -->
 <div class="stats-bar">
     <div class="filter-tab active" id="tab-all" onclick="setFilter('all')">الكل (<span id="totalSubs">0</span>)</div>
     <div class="filter-tab" id="tab-paid" onclick="setFilter('paid')" style="color:#10b981;">واصل (<span id="paidSubs">0</span>)</div>
@@ -89,6 +93,48 @@
 
 <div id="subList">
     <div style="text-align: center; color: #64748b; padding: 30px;">لا توجد اشتراكات مسجلة.</div>
+</div>
+
+<!-- نافذة تفاصيل المشترك المكتملة -->
+<div id="subDetailsModal" class="modal">
+    <div class="modal-content" style="border-color: #10b981;">
+        <h3 style="margin-top:0; color:#38bdf8; text-align:center;" id="dName">تفاصيل المشترك</h3>
+        
+        <div class="details-row">
+            <span class="details-label">رقم الهاتف:</span>
+            <span class="details-value" id="dPhone"></span>
+        </div>
+        <div class="details-row">
+            <span class="details-label">سعر الاشتراك الشهري:</span>
+            <span class="details-value" id="dPrice"></span>
+        </div>
+        <div class="details-row">
+            <span class="details-label">حالة الدفع الحالية:</span>
+            <span class="details-value" id="dPayStatus"></span>
+        </div>
+        <div class="details-row">
+            <span class="details-label">تاريخ التفعيل:</span>
+            <span class="details-value" id="dStart" style="color:#38bdf8;"></span>
+        </div>
+        <div class="details-row">
+            <span class="details-label">تاريخ الانتهاء:</span>
+            <span class="details-value" id="dEnd"></span>
+        </div>
+        <div class="details-row">
+            <span class="details-label">عدد الأشهر المفعلة (المسددة):</span>
+            <span class="details-value" id="dMonthsPaid" style="color:#10b981;"></span>
+        </div>
+        <div class="details-row">
+            <span class="details-label">عدد الأشهر المطلوبة (الدين):</span>
+            <span class="details-value" id="dMonthsDue" style="color:#ef4444;"></span>
+        </div>
+        <div class="details-row" style="background:#0d1526; padding:10px 6px; border-radius:6px; margin-top:8px;">
+            <span class="details-label" style="color:#f59e0b; font-weight:bold;">إجمالي المبلغ المطلوب:</span>
+            <span class="details-value" id="dTotalDebt" style="color:#f59e0b; font-size:14px;"></span>
+        </div>
+
+        <button class="cancel-btn" onclick="closeDetailsModal()" style="margin-top:15px; background:#38bdf8; color:#090d16; font-weight:bold;">إغلاق</button>
+    </div>
 </div>
 
 <!-- نافذة إضافة مشترك -->
@@ -148,14 +194,14 @@
 <script>
 let subs = [];
 try {
-    subs = JSON.parse(localStorage.getItem('ali_isp_final_v20')) || [];
+    subs = JSON.parse(localStorage.getItem('ali_isp_final_v21')) || [];
 } catch(e) {
     subs = [];
 }
 
 let currentPin = localStorage.getItem('app_pin') || '1234';
 let isAllSelected = false;
-let currentFilter = 'all'; // الفلتر الافتراضي
+let currentFilter = 'all';
 
 function checkPin() {
     let inputPin = document.getElementById('passCodeInput').value;
@@ -199,7 +245,7 @@ function importExcelOrJson() {
                     let importedData = JSON.parse(event.target.result);
                     if(Array.isArray(importedData)) {
                         subs = importedData;
-                        localStorage.setItem('ali_isp_final_v20', JSON.stringify(subs));
+                        localStorage.setItem('ali_isp_final_v21', JSON.stringify(subs));
                         renderSubs();
                         alert("✅ تم استعادة البيانات بنجاح!");
                     }
@@ -249,7 +295,7 @@ function importExcelOrJson() {
                         }
                     });
 
-                    localStorage.setItem('ali_isp_final_v20', JSON.stringify(subs));
+                    localStorage.setItem('ali_isp_final_v21', JSON.stringify(subs));
                     renderSubs();
                     alert(`✅ تم استيراد (${countAdded}) مشترك بنجاح من ملف أيرثلنك!`);
 
@@ -281,6 +327,47 @@ function sendGroupDebtReminder() {
             }, index * 1200);
         });
     }
+}
+
+// عرض نافذة تفاصيل المشترك عند النقر عليه
+function showSubDetails(id) {
+    let s = subs.find(item => item.id === id);
+    if(!s) return;
+
+    let priceVal = parseFloat(s.price) || 0;
+    let today = new Date();
+    let endD = new Date(s.endDate);
+    
+    // حساب الأشهر المفعلة والمطلوبة
+    let monthsPaid = s.payStatus === 'واصل' ? 1 : 0;
+    let monthsDue = 0;
+
+    if(s.payStatus === 'أجل') {
+        monthsDue = 1;
+        // إذا كان متأخراً لعدة أشهر بعد تاريخ الانتهاء
+        if(today > endD) {
+            let diffDays = Math.floor((today - endD) / (1000 * 60 * 60 * 24));
+            monthsDue += Math.floor(diffDays / 30);
+        }
+    }
+
+    let totalDebt = monthsDue * priceVal;
+
+    document.getElementById('dName').innerText = `👤 ${s.name}`;
+    document.getElementById('dPhone').innerText = s.phone || "غير مسجل";
+    document.getElementById('dPrice').innerText = `${priceVal.toLocaleString()} د.ع`;
+    document.getElementById('dPayStatus').innerHTML = s.payStatus === 'واصل' ? '<span style="color:#10b981;">واصل ✅</span>' : '<span style="color:#f59e0b;">غير واصل (أجل) ⏳</span>';
+    document.getElementById('dStart').innerText = s.startDate;
+    document.getElementById('dEnd').innerText = s.endDate;
+    document.getElementById('dMonthsPaid').innerText = `${monthsPaid} شهر`;
+    document.getElementById('dMonthsDue').innerText = `${monthsDue} شهر`;
+    document.getElementById('dTotalDebt').innerText = `${totalDebt.toLocaleString()} د.ع`;
+
+    document.getElementById('subDetailsModal').style.display = 'flex';
+}
+
+function closeDetailsModal() {
+    document.getElementById('subDetailsModal').style.display = 'none';
 }
 
 function openPinModal() {
@@ -337,7 +424,6 @@ function closeModal() {
     document.getElementById('addSubModal').style.display = 'none';
 }
 
-// دالة تغيير التبويب والفلترة
 function setFilter(filterType) {
     currentFilter = filterType;
     document.querySelectorAll('.filter-tab').forEach(tab => tab.classList.remove('active'));
@@ -356,7 +442,6 @@ function renderSubs() {
         if(isExp) expiredCount++;
         if(s.payStatus === 'أجل') agelCount++; else paidCount++;
 
-        // شروط الفلترة بتبويبات
         if(currentFilter === 'paid' && s.payStatus !== 'واصل') return;
         if(currentFilter === 'agel' && s.payStatus !== 'أجل') return;
         if(currentFilter === 'expired' && !isExp) return;
@@ -367,8 +452,8 @@ function renderSubs() {
 
         html += `
             <div class="sub-card ${s.payStatus === 'أجل' ? 'agel' : (isExp ? 'expired' : '')}">
-                <div style="display:flex; align-items:center;">
-                    <input type="checkbox" class="select-checkbox sub-checkbox" data-id="${s.id}" onchange="updateSelectedCount()">
+                <div style="display:flex; align-items:center; flex:1;" onclick="showSubDetails(${s.id})">
+                    <input type="checkbox" class="select-checkbox sub-checkbox" data-id="${s.id}" onclick="event.stopPropagation()" onchange="updateSelectedCount()">
                     <div style="margin-right:8px;">
                         <div style="font-size: 13px; font-weight: bold;">${s.name} ${payBadge}</div>
                         <div style="font-size: 10px; color: #94a3b8;">هاتف: ${s.phone || 'بدون'} | ${s.price || 0} د.ع</div>
@@ -377,7 +462,7 @@ function renderSubs() {
                         </div>
                     </div>
                 </div>
-                <div style="display:flex; flex-direction:column; gap:3px;">
+                <div style="display:flex; flex-direction:column; gap:3px;" onclick="event.stopPropagation()">
                     ${s.payStatus === 'أجل' ? `<button onclick="payDebt(${s.id})" style="background:#10b981; color:#fff; border:none; padding:4px 6px; border-radius:4px; font-size:10px; cursor:pointer;" title="تسديد الدين">💵 تسديد</button>` : ''}
                     <button onclick="sendWhatsapp('${s.phone}', '${s.name}', '${s.endDate}', '${s.payStatus}', '${s.startDate}')" style="background:#25d366; color:#fff; border:none; padding:4px 6px; border-radius:4px; font-size:10px; cursor:pointer;" title="رسالة واتساب">💬 واتساب</button>
                     <button onclick="printReceipt('${s.name}', '${s.price || 0}', '${s.startDate}', '${s.endDate}', '${s.payStatus}', 'وصل قبض اشتراك')" style="background:#475569; color:#fff; border:none; padding:4px 6px; border-radius:4px; font-size:10px; cursor:pointer;" title="طباعة وصل">🖨️ وصل</button>
@@ -418,7 +503,7 @@ function deleteSelectedSubs() {
     if(confirm(`هل أنت تأكد من رغبتك في حذف (${selectedBoxes.length}) مشترك محدد؟`)) {
         let idsToDelete = Array.from(selectedBoxes).map(cb => parseFloat(cb.getAttribute('data-id')));
         subs = subs.filter(s => !idsToDelete.includes(s.id));
-        localStorage.setItem('ali_isp_final_v20', JSON.stringify(subs));
+        localStorage.setItem('ali_isp_final_v21', JSON.stringify(subs));
         isAllSelected = false;
         document.getElementById('selectAllBtn').innerText = "☑️ تحديد الكل";
         renderSubs();
@@ -440,7 +525,7 @@ function saveSub() {
     }
 
     subs.push({ id: Date.now(), name, phone, price, payStatus, startDate, endDate });
-    localStorage.setItem('ali_isp_final_v20', JSON.stringify(subs));
+    localStorage.setItem('ali_isp_final_v21', JSON.stringify(subs));
     
     document.getElementById('subName').value = '';
     document.getElementById('subPhone').value = '';
@@ -456,13 +541,12 @@ function saveSub() {
     }
 }
 
-// تسديد الدين وانتقال الحساب تلقائياً لقائمة الواصل
 function payDebt(id) {
     let s = subs.find(item => item.id === id);
     if(s) {
         if(confirm(`هل تريد تثبيت تسديد المبلغ للمشترك (${s.name})؟`)) {
             s.payStatus = 'واصل';
-            localStorage.setItem('ali_isp_final_v20', JSON.stringify(subs));
+            localStorage.setItem('ali_isp_final_v21', JSON.stringify(subs));
             renderSubs();
             printReceipt(s.name, s.price || 0, s.startDate, s.endDate, 'واصل (تم التسديد)', 'وصل قبض تسديد دين');
         }
@@ -497,7 +581,7 @@ function printReceipt(name, price, start, end, payStatus, title = 'وصل قبض
 function deleteSub(id) {
     if(confirm("هل تريد حذف هذا المشترك؟")) {
         subs = subs.filter(s => s.id !== id);
-        localStorage.setItem('ali_isp_final_v20', JSON.stringify(subs));
+        localStorage.setItem('ali_isp_final_v21', JSON.stringify(subs));
         renderSubs();
     }
 }
