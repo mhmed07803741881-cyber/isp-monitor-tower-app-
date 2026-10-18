@@ -26,10 +26,7 @@
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; z-index: 99999; }
         .modal-content { background: #131d31; padding: 20px; border-radius: 12px; width: 90%; max-width: 350px; border: 1px solid #38bdf8; }
-        
-        /* تنسيق نافذة أيرثلنك المدمجة */
-        .earthlink-modal-content { background: #131d31; padding: 10px; border-radius: 12px; width: 95%; height: 90vh; border: 1px solid #f43f5e; display: flex; flex-direction: column; }
-        
+
         input, select { width: 100%; padding: 10px; margin: 6px 0 12px 0; background: #0d1526; border: 1px solid #1e293b; color: white; border-radius: 6px; box-sizing: border-box; font-size: 13px; }
         .submit-btn { width: 100%; padding: 11px; background: #38bdf8; color: #090d16; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; }
         .cancel-btn { width: 100%; padding: 10px; background: #1e293b; color: #94a3b8; border: none; border-radius: 6px; cursor: pointer; margin-top: 6px; font-size: 13px; }
@@ -73,23 +70,12 @@
 
 <div class="toolbar-grid">
     <button class="action-btn active-blue" onclick="openModal()">+ إضافة مشترك</button>
-    <button class="action-btn" onclick="uploadToDrive(true)" style="background:#4285F4; color:#fff;">☁️ رفع للدرايف</button>
-    <button class="action-btn earthlink-btn" onclick="openEarthlinkModal()">🌐 لوحة ريسلر أيرثلنك</button>
+    <button class="action-btn" onclick="exportData()" style="background:#10b981; color:#fff;">💾 حفظ نسخة احتياطية</button>
+    <button class="action-btn earthlink-btn" onclick="openEarthlinkDirect()">🌐 فتح لوحة ريسلر أيرثلنك</button>
 </div>
 
 <div id="subList">
     <div style="text-align: center; color: #64748b; padding: 30px;">لا توجد اشتراكات مسجلة.</div>
-</div>
-
-<!-- نافذة لوحة أيرثلنك المدمجة -->
-<div id="earthlinkModal" class="modal">
-    <div class="earthlink-modal-content">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-            <span style="color:#f43f5e; font-weight:bold; font-size:13px;">🌐 لوحة أيرثلنك الرسمية</span>
-            <button onclick="closeEarthlinkModal()" style="background:#1e293b; color:#fff; border:none; padding:4px 10px; border-radius:4px; cursor:pointer; font-size:11px;">✕ إغلاق</button>
-        </div>
-        <iframe src="https://reseller.earthlink.iq" style="width:100%; height:100%; border:none; border-radius:8px; background:#fff;"></iframe>
-    </div>
 </div>
 
 <!-- نافذة إضافة مشترك -->
@@ -147,11 +133,9 @@
 </div>
 
 <script>
-const GOOGLE_SCRIPT_URL = "ضع_رابط_WEB_APP_الخاص_بك_هنا";
-
 let subs = [];
 try {
-    subs = JSON.parse(localStorage.getItem('ali_isp_final_v14')) || [];
+    subs = JSON.parse(localStorage.getItem('ali_isp_final_v15')) || [];
 } catch(e) {
     subs = [];
 }
@@ -162,48 +146,25 @@ function checkPin() {
     let inputPin = document.getElementById('passCodeInput').value;
     if(inputPin === currentPin) {
         document.getElementById('lockScreen').style.display = 'none';
-        autoBackupToDrive();
     } else {
         alert("رمز الدخول غير صحيح!");
     }
 }
 
-function openEarthlinkModal() {
-    document.getElementById('earthlinkModal').style.display = 'flex';
+// فتح لوحة أيرثلنك المباشرة وتجاوز قيود الحظر
+function openEarthlinkDirect() {
+    window.open("https://reseller.earthlink.iq", "_blank");
 }
 
-function closeEarthlinkModal() {
-    document.getElementById('earthlinkModal').style.display = 'none';
-}
-
-function autoBackupToDrive() {
-    let today = new Date().toISOString().split('T')[0];
-    let lastDriveBackup = localStorage.getItem('last_drive_backup_date');
-
-    if(lastDriveBackup !== today && subs.length > 0 && GOOGLE_SCRIPT_URL !== "ضع_رابط_WEB_APP_الخاص_بك_هنا") {
-        uploadToDrive(false);
-    }
-}
-
-function uploadToDrive(isManual = false) {
-    if(GOOGLE_SCRIPT_URL === "ضع_رابط_WEB_APP_الخاص_بك_هنا") {
-        if(isManual) alert("يرجى إعداد رابط Google Apps Script أولاً لربط البرنامج بجوجل درايف.");
-        return;
-    }
-
-    let today = new Date().toISOString().split('T')[0];
-
-    fetch(GOOGLE_SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(subs)
-    }).then(() => {
-        localStorage.setItem('last_drive_backup_date', today);
-        if(isManual) alert("☁️ تم رفع النسخة الاحتياطية بنجاح إلى Google Drive الخاص بك!");
-    }).catch(err => {
-        if(isManual) alert("حدث خطأ أثناء الرفع إلى Google Drive");
-    });
+function exportData() {
+    let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(subs));
+    let dl = document.createElement('a');
+    dl.setAttribute("href", dataStr);
+    dl.setAttribute("download", "ali_isp_backup_" + new Date().toISOString().split('T')[0] + ".json");
+    document.body.appendChild(dl);
+    dl.click();
+    document.body.removeChild(dl);
+    alert("💾 تم حفظ نسخة احتياطية من كافة البيانات على هاتفك بنجاح!");
 }
 
 function openPinModal() {
@@ -315,7 +276,7 @@ function saveSub() {
     }
 
     subs.push({ id: Date.now(), name, phone, price, payStatus, startDate, endDate });
-    localStorage.setItem('ali_isp_final_v14', JSON.stringify(subs));
+    localStorage.setItem('ali_isp_final_v15', JSON.stringify(subs));
     
     document.getElementById('subName').value = '';
     document.getElementById('subPhone').value = '';
@@ -336,7 +297,7 @@ function payDebt(id) {
     if(s) {
         if(confirm("هل تريد تثبيت تسديد المبلغ لهذا المشترك؟")) {
             s.payStatus = 'واصل';
-            localStorage.setItem('ali_isp_final_v14', JSON.stringify(subs));
+            localStorage.setItem('ali_isp_final_v15', JSON.stringify(subs));
             renderSubs();
             printReceipt(s.name, s.price || 0, s.startDate, s.endDate, 'واصل (تم التسديد)', 'وصل قبض تسديد دين');
         }
@@ -375,7 +336,7 @@ function printReceipt(name, price, start, end, payStatus, title = 'وصل قبض
 function deleteSub(id) {
     if(confirm("هل تريد حذف هذا المشترك؟")) {
         subs = subs.filter(s => s.id !== id);
-        localStorage.setItem('ali_isp_final_v14', JSON.stringify(subs));
+        localStorage.setItem('ali_isp_final_v15', JSON.stringify(subs));
         renderSubs();
     }
 }
