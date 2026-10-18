@@ -1,44 +1,21 @@
 {
-  "name": "ISP Tower Monitor",
-  "short_name": "ISP Monitor",
-  "description": "A mobile application to monitor and control MikroTik-based internet towers",
-  "start_url": "/isp-monitor-tower-app-/",
-  "scope": "/isp-monitor-tower-app-/",
-  "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#0f172a",
-  "orientation": "portrait",
+  "short_name": "بوابة المشترك",
+  "name": "تطبيق زبائن مهندس علي",
   "icons": [
     {
-      "src": "https://img.icons8.com/color/192/router.png",
-      "sizes": "192x192",
-      "type": "image/png"
+      "src": "https://cdn-icons-png.flaticon.com/512/535/535239.png",
+      "type": "image/png",
+      "sizes": "192x192"
     },
     {
-      "src": "https://img.icons8.com/color/512/router.png",
-      "sizes": "512x512",
-      "type": "image/png"
+      "src": "https://cdn-icons-png.flaticon.com/512/535/535239.png",
+      "type": "image/png",
+      "sizes": "512x512"
     }
-  ]
-}
-{
-  "name": "تطبيق المشترك - مهندس علي",
-  "short_name": "المشترك",
+  ],
   "start_url": "./portal.html",
-  "display": "standalone",
   "background_color": "#0d1526",
   "theme_color": "#0d1526",
-  "orientation": "portrait",
-  "icons": [
-    {
-      "src": "https://cdn-icons-png.flaticon.com/512/3659/3659738.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "https://cdn-icons-png.flaticon.com/512/3659/3659738.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
-  ]
+  "display": "standalone",
+  "orientation": "portrait"
 }
