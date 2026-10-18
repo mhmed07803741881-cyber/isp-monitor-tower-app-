@@ -48,12 +48,12 @@
 
 <div class="portal-container">
     <h2>بوابة زبائن مهندس علي</h2>
-    <p>أدخل اسم المستخدم (اليوزر) أو رقم الهاتف للتحقق من حسابك</p>
+    <p>سجل الدخول باستخدام اسم المستخدم وكلمة المرور (رقم الهاتف)</p>
 
-    <!-- مربعات تسجيل الدخول والبحث (اليوزر / رقم الهاتف) -->
-    <input type="text" id="clientUsernameInput" placeholder="أدخل اسم المستخدم (اليوزر)">
-    <input type="text" id="clientPhoneInput" placeholder="أدخل رقم الهاتف">
-    <button class="btn btn-search" onclick="searchClient()">تسجيل الدخول / بحث</button>
+    <!-- حقول تسجيل الدخول المطلوبة -->
+    <input type="text" id="clientUsernameInput" placeholder="اسم المستخدم (اليوزر)">
+    <input type="password" id="clientPasswordInput" placeholder="كلمة المرور (رقم الهاتف)">
+    <button class="btn btn-search" onclick="loginClient()">تسجيل الدخول</button>
 
     <div id="clientInfoBox" class="info-box">
         <div class="info-row"><span class="info-label">اسم المشترك:</span><span class="info-val" id="cName" style="color:#38bdf8"></span></div>
@@ -112,7 +112,6 @@ window.onload = function() {
         document.getElementById('broadcastBanner').style.display = 'block';
         document.getElementById('clientNotifText').innerText = savedMsg;
         
-        // تشغيل صوت التنبيه عند وجود إشعار عام للمشترك
         let sound = document.getElementById('clientNotifSound');
         if(sound) { sound.play().catch(e => console.log(e)); }
     }
@@ -124,22 +123,23 @@ function closeClientNotifModal() { document.getElementById('clientNotifModal').s
 let foundSubscriber = null;
 const adminPhone = "9647724850876";
 
-function searchClient() {
-    let usernameQuery = document.getElementById('clientUsernameInput').value.trim().toLowerCase();
-    let phoneQuery = document.getElementById('clientPhoneInput').value.trim();
+// دالة تسجيل الدخول المشترطة بالاسم وكلمة المرور (رقم الهاتف)
+function loginClient() {
+    let username = document.getElementById('clientUsernameInput').value.trim().toLowerCase();
+    let password = document.getElementById('clientPasswordInput').value.trim();
 
-    if(!usernameQuery && !phoneQuery) {
-        alert("يرجى إدخال اسم المستخدم أو رقم الهاتف للبحث");
+    if(!username || !password) {
+        alert("يرجى كتابة اسم المستخدم وكلمة المرور (رقم الهاتف)");
         return;
     }
 
     let subs = JSON.parse(localStorage.getItem('ali_isp_final_v23')) || [];
     
+    // التحقق من مطابقة اسم المشترك ورقم الهاتف مع البيانات المسجلة
     foundSubscriber = subs.find(s => {
-        let matchName = usernameQuery ? s.name.toLowerCase().includes(usernameQuery) : true;
-        let matchPhone = phoneQuery ? s.phone.includes(phoneQuery) : true;
-        if(usernameQuery && phoneQuery) return matchName && matchPhone;
-        return matchName || matchPhone;
+        let matchName = s.name.toLowerCase() === username || s.name.toLowerCase().includes(username);
+        let matchPhone = s.phone.trim() === password;
+        return matchName && matchPhone;
     });
 
     if(foundSubscriber) {
@@ -150,7 +150,7 @@ function searchClient() {
         document.getElementById('cPrice').innerText = priceVal + " د.ع";
         document.getElementById('clientInfoBox').style.display = 'block';
     } else {
-        alert("عذراً، لم يتم العثور على حساب مطابق للمعلومات المدخلة.");
+        alert("خطأ في تسجيل الدخول!\nاسم المستخدم أو كلمة المرور (رقم الهاتف) غير صحيحة.");
         document.getElementById('clientInfoBox').style.display = 'none';
     }
 }
