@@ -28,9 +28,13 @@
         .info-val { font-weight: bold; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; z-index: 99999; }
         .modal-content { background: #131d31; padding: 20px; border-radius: 12px; width: 90%; max-width: 320px; border: 1px solid #ec4899; box-sizing: border-box; }
+        .support-phones { background: #0d1526; border: 1px solid #1e293b; padding: 8px; border-radius: 8px; text-align: center; font-size: 11px; margin-top: 15px; color: #38bdf8; }
     </style>
 </head>
 <body>
+
+<!-- صوت التنبيه للشعارات -->
+<audio id="clientNotifSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
 
 <div class="top-nav">
     <div style="font-size:12px; color:#38bdf8; font-weight:bold;">مكتب مهندس علي</div>
@@ -46,8 +50,10 @@
     <h2>بوابة زبائن مهندس علي</h2>
     <p>أدخل اسم المستخدم (اليوزر) أو رقم الهاتف للتحقق من حسابك</p>
 
-    <input type="text" id="clientQuery" placeholder="أدخل اليوزر أو رقم الهاتف">
-    <button class="btn btn-search" onclick="searchClient()">بحث عن الحساب</button>
+    <!-- مربعات تسجيل الدخول والبحث (اليوزر / رقم الهاتف) -->
+    <input type="text" id="clientUsernameInput" placeholder="أدخل اسم المستخدم (اليوزر)">
+    <input type="text" id="clientPhoneInput" placeholder="أدخل رقم الهاتف">
+    <button class="btn btn-search" onclick="searchClient()">تسجيل الدخول / بحث</button>
 
     <div id="clientInfoBox" class="info-box">
         <div class="info-row"><span class="info-label">اسم المشترك:</span><span class="info-val" id="cName" style="color:#38bdf8"></span></div>
@@ -55,19 +61,24 @@
         <div class="info-row"><span class="info-label">تاريخ الانتهاء:</span><span class="info-val" id="cEnd"></span></div>
         <div class="info-row"><span class="info-label">مبلغ الاشتراك:</span><span class="info-val" id="cPrice"></span></div>
 
-        <!-- أزرار الدفع والخدمات -->
+        <!-- أزرار الخدمات والتحويل والدعم -->
         <button class="btn btn-pay" onclick="copyMasterNumber()">💳 نسخ رقم التحويل (07724850876)</button>
         <button class="btn btn-wa" onclick="sendWhatsAppReceipt()">💬 إرسال إشعار التحويل واتساب</button>
         <button class="btn btn-agel" onclick="requestAgel()">⏳ طلب تفعيل مؤجل (أجل)</button>
         
-        <!-- أزرار الإعدادات والسرعة والتكتات -->
         <a href="http://192.168.0.1" target="_blank" class="btn btn-router">⚙️ تغيير رمز الراوتر (192.168.0.1)</a>
         <a href="https://www.fast.com" target="_blank" class="btn btn-speed">🚀 فحص السرعة (Fast.com)</a>
         <button class="btn btn-ticket" onclick="openTicketModal()">🎫 إرسال تكت دعم فني ومتابعة الردود</button>
     </div>
+
+    <!-- أرقام الصيانة الظاهرة في التطبيق -->
+    <div class="support-phones">
+        📞 هواتف الصيانة والمكتب:<br>
+        <b>07818627764 - 07724850876</b>
+    </div>
 </div>
 
-<!-- نافذة إشعارات المشترك العامة -->
+<!-- نافذة إشعارات المشترك -->
 <div id="clientNotifModal" class="modal">
     <div class="modal-content" style="border-color: #f59e0b;">
         <h3 style="margin-top:0; color:#f59e0b; text-align:center; font-size:15px;">🔔 إشعارات المكتب</h3>
@@ -76,7 +87,7 @@
     </div>
 </div>
 
-<!-- نافذة المحادثة والتكتات للمشترك -->
+<!-- نافذة المحادثة والتكتات -->
 <div id="ticketModal" class="modal">
     <div class="modal-content">
         <h3 style="margin-top:0; color:#ec4899; text-align:center; font-size:15px;">🎫 تكتات الدعم الفني والمحادثة</h3>
@@ -100,6 +111,10 @@ window.onload = function() {
         document.getElementById('broadcastTextContent').innerText = savedMsg;
         document.getElementById('broadcastBanner').style.display = 'block';
         document.getElementById('clientNotifText').innerText = savedMsg;
+        
+        // تشغيل صوت التنبيه عند وجود إشعار عام للمشترك
+        let sound = document.getElementById('clientNotifSound');
+        if(sound) { sound.play().catch(e => console.log(e)); }
     }
 };
 
@@ -110,11 +125,22 @@ let foundSubscriber = null;
 const adminPhone = "9647724850876";
 
 function searchClient() {
-    let query = document.getElementById('clientQuery').value.trim().toLowerCase();
-    if(!query) { alert("يرجى إدخال اليوزر أو رقم الهاتف"); return; }
+    let usernameQuery = document.getElementById('clientUsernameInput').value.trim().toLowerCase();
+    let phoneQuery = document.getElementById('clientPhoneInput').value.trim();
+
+    if(!usernameQuery && !phoneQuery) {
+        alert("يرجى إدخال اسم المستخدم أو رقم الهاتف للبحث");
+        return;
+    }
 
     let subs = JSON.parse(localStorage.getItem('ali_isp_final_v23')) || [];
-    foundSubscriber = subs.find(s => s.name.toLowerCase().includes(query) || s.phone.includes(query));
+    
+    foundSubscriber = subs.find(s => {
+        let matchName = usernameQuery ? s.name.toLowerCase().includes(usernameQuery) : true;
+        let matchPhone = phoneQuery ? s.phone.includes(phoneQuery) : true;
+        if(usernameQuery && phoneQuery) return matchName && matchPhone;
+        return matchName || matchPhone;
+    });
 
     if(foundSubscriber) {
         document.getElementById('cName').innerText = foundSubscriber.name;
@@ -124,7 +150,7 @@ function searchClient() {
         document.getElementById('cPrice').innerText = priceVal + " د.ع";
         document.getElementById('clientInfoBox').style.display = 'block';
     } else {
-        alert("عذراً، لم يتم العثور على حساب بهذا اليوزر أو الرقم.");
+        alert("عذراً، لم يتم العثور على حساب مطابق للمعلومات المدخلة.");
         document.getElementById('clientInfoBox').style.display = 'none';
     }
 }
@@ -148,23 +174,20 @@ function submitTicket() {
 
     let ticketNum = `#${Math.floor(1000 + Math.random() * 9000)}`;
     
-    // حفظ التكت في قائمة التكتات العامة للإدارة
     let allTickets = JSON.parse(localStorage.getItem('all_client_tickets')) || [];
     allTickets.push({ subName: foundSubscriber.name, ticketNum: ticketNum, message: msg, status: 'جديد (بانتظار المراجعة)' });
     localStorage.setItem('all_client_tickets', JSON.stringify(allTickets));
 
-    // إضافة الرسالة لسجل محادثة المشترك
     let chatItem = { sender: foundSubscriber.name, text: `[${ticketNum}] ${msg}` };
     let chats = JSON.parse(localStorage.getItem(`ticket_chat_${foundSubscriber.name}`)) || [];
     chats.push(chatItem);
     localStorage.setItem(`ticket_chat_${foundSubscriber.name}`, JSON.stringify(chats));
 
-    // إرسال إشعار لصوت الجرس في لوحة الإدارة
     let notifs = JSON.parse(localStorage.getItem('ali_admin_notifications')) || [];
     notifs.push(`${new Date().toLocaleTimeString()} - 🎫 تكت جديد (${ticketNum}) من المشترك: ${foundSubscriber.name}`);
     localStorage.setItem('ali_admin_notifications', JSON.stringify(notifs));
 
-    alert("✅ تم إرسال التكت بنجاح! سيتم مراجعته وتحويله للأقسام المختصة قريباً.");
+    alert("✅ تم إرسال التكت بنجاح! سيتم مراجعته وتحويله للأقسام المختصة.");
     document.getElementById('ticketMessageText').value = '';
     refreshChatHistory();
 }
