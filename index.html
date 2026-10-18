@@ -25,6 +25,7 @@
         .action-btn.delete-btn { background: #ef4444; color: #fff; font-weight: bold; border-color: #dc2626; }
         .action-btn.notify-btn { background: #8b5cf6; color: #fff; font-weight: bold; border-color: #7c3aed; }
         .action-btn.broadcast-btn { background: #06b6d4; color: #090d16; font-weight: bold; border-color: #0891b2; grid-column: span 2; }
+        .action-btn.tickets-btn { background: #ec4899; color: #fff; font-weight: bold; border-color: #db2777; grid-column: span 2; }
 
         .search-box { width: 100%; padding: 10px; margin-bottom: 8px; background: #131d31; border: 1px solid #1e293b; color: white; border-radius: 8px; box-sizing: border-box; font-size: 12px; }
 
@@ -36,7 +37,7 @@
         .select-checkbox { width: 18px; height: 18px; margin-left: 10px; cursor: pointer; accent-color: #38bdf8; }
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; z-index: 99999; }
-        .modal-content { background: #131d31; padding: 20px; border-radius: 12px; width: 90%; max-width: 350px; border: 1px solid #38bdf8; }
+        .modal-content { background: #131d31; padding: 20px; border-radius: 12px; width: 90%; max-width: 350px; border: 1px solid #38bdf8; box-sizing: border-box; }
 
         .details-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1e293b; font-size: 12px; }
         .details-label { color: #94a3b8; }
@@ -57,6 +58,9 @@
 </head>
 <body>
 
+<!-- عنصر صوت التنبيه التفاعلي -->
+<audio id="notifSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
+
 <div id="lockScreen">
     <div style="background:#131d31; padding:25px; border-radius:12px; width:85%; max-width:320px; text-align:center; border:1px solid #38bdf8;">
         <h3 style="color:#38bdf8; margin-top:0;">🔐 قفل البرنامج</h3>
@@ -72,7 +76,7 @@
         <p>هواتف المكتب: 07818627764 - 07724850876</p>
     </div>
     <div class="header-btns">
-        <button class="action-btn" onclick="openNotificationsModal()" style="padding: 6px 10px; font-size:11px; background:#1e293b; color:#f59e0b; position:relative;">🔔 الإشعارات</button>
+        <button class="action-btn" onclick="openNotificationsModal()" style="padding: 6px 10px; font-size:11px; background:#1e293b; color:#f59e0b;">🔔 الإشعارات</button>
         <button class="action-btn" onclick="openPinModal()" style="padding: 6px 10px; font-size:10px; background:#1e293b; color:#38bdf8;">⚙️ الرمز</button>
     </div>
 </div>
@@ -91,6 +95,7 @@
     <button class="action-btn import-btn" onclick="importExcelOrJson()">📥 استيراد ملف أيرثلنك</button>
     <button class="action-btn notify-btn" onclick="sendGroupDebtReminder()">📢 تنبيه غير المسددين</button>
     <button class="action-btn broadcast-btn" onclick="openBroadcastModal()">📣 إرسال إشعار عام للكل</button>
+    <button class="action-btn tickets-btn" onclick="openTicketsManagerModal()">🎫 إدارة والرد على تكتات المشتركين</button>
     <button class="action-btn" onclick="toggleSelectAll()" id="selectAllBtn" style="background:#475569; color:#fff;">☑️ تحديد الكل</button>
     <button class="action-btn delete-btn" onclick="deleteSelectedSubs()">🗑️ حذف المحدد (<span id="selectedCount">0</span>)</button>
     <button class="action-btn" onclick="exportData()" style="background:#10b981; color:#fff; grid-column: span 2;">💾 حفظ نسخة احتياطية</button>
@@ -101,16 +106,30 @@
     <div style="text-align: center; color: #64748b; padding: 30px;">لا توجد اشتراكات مسجلة.</div>
 </div>
 
+<!-- نافذة إدارة والرد على التكتات -->
+<div id="ticketsManagerModal" class="modal">
+    <div class="modal-content" style="border-color: #ec4899; max-width: 380px;">
+        <h3 style="margin-top:0; color:#ec4899; text-align:center;">🎫 إدارة تكتات المشتركين والرد عليها</h3>
+        <p style="font-size:10px; color:#94a3b8; text-align:center;">اختر المشترك لإرسال الرد الفوري إلى بوابته:</p>
+
+        <label style="font-size:11px; color:#94a3b8;">اسم المشترك (اليوزر):</label>
+        <input type="text" id="replySubscriberName" placeholder="أدخل اسم المشترك تماماً">
+
+        <label style="font-size:11px; color:#94a3b8;">نص الرد من الإدارة:</label>
+        <textarea id="adminReplyText" rows="3" placeholder="اكتب ردك للمشترك هنا..."></textarea>
+
+        <button class="submit-btn" onclick="sendAdminReply()" style="background:#ec4899; color:#fff; margin-bottom:6px;">إرسال الرد للمشترك</button>
+        <button class="cancel-btn" onclick="closeTicketsManagerModal()">إغلاق</button>
+    </div>
+</div>
+
 <!-- نافذة عرض الإشعارات للإدارة -->
 <div id="notificationsModal" class="modal">
     <div class="modal-content" style="border-color: #f59e0b;">
         <h3 style="margin-top:0; color:#f59e0b; text-align:center;">🔔 سجل إشعارات النظام</h3>
-        <p style="font-size:11px; color:#94a3b8; text-align:center;">التنبيهات وطلبات الدفع والأجل الواردة من المشتركين:</p>
-        
         <div id="notificationsList" style="max-height: 200px; overflow-y: auto; background:#0d1526; padding:8px; border-radius:6px; font-size:11px; margin-bottom:12px; color:#cbd5e1;">
             لا توجد إشعارات جديدة حالياً.
         </div>
-
         <button class="submit-btn" onclick="clearNotifications()" style="background:#ef4444; color:#fff; margin-bottom:6px;">مسح السجل</button>
         <button class="cancel-btn" onclick="closeNotificationsModal()">إغلاق</button>
     </div>
@@ -120,7 +139,6 @@
 <div id="broadcastModal" class="modal">
     <div class="modal-content" style="border-color: #06b6d4;">
         <h3 style="margin-top:0; color:#06b6d4; text-align:center;">📣 إرسال إشعار وتنبيه عام</h3>
-        <label style="font-size:11px; color:#94a3b8;">نص الإشعار:</label>
         <textarea id="broadcastText" rows="4" style="background:#0d1526; color:#fff; border:1px solid #1e293b; border-radius:6px; padding:8px; width:100%; font-size:12px;">عزيزنا المشترك، نود إعلامكم بوجود تحديثات وصيانة عامة للشبكة. شكراً لاختياركم مكتب مهندس علي.</textarea>
         <button class="submit-btn" onclick="saveAppBroadcast()" style="background:#06b6d4; color:#090d16; margin-bottom:6px;">نشر الإشعار في التطبيق</button>
         <button class="submit-btn" onclick="sendWhatsAppBroadcast()" style="background:#25d366; color:#fff;">إرسال عبر الواتساب للكل</button>
@@ -128,7 +146,7 @@
     </div>
 </div>
 
-<!-- نافذة تفاصيل المشترك المكتملة -->
+<!-- نافذة تفاصيل المشترك -->
 <div id="subDetailsModal" class="modal">
     <div class="modal-content" style="border-color: #10b981;">
         <h3 style="margin-top:0; color:#38bdf8; text-align:center;" id="dName">تفاصيل المشترك</h3>
@@ -146,16 +164,13 @@
     <div class="modal-content">
         <h3 style="margin-top:0; color:#38bdf8;">اشتراك جديد (30 يوماً)</h3>
         <input type="text" id="subName" placeholder="اسم المشترك / اليوزر">
-        <input type="text" id="subPhone" placeholder="رقم الهاتف (مثال: 07801234567)">
+        <input type="text" id="subPhone" placeholder="رقم الهاتف">
         <input type="number" id="subPrice" placeholder="مبلغ الاشتراك (د.ع)">
-        <label style="font-size:11px; color:#94a3b8;">حالة الدفع:</label>
         <select id="subStatus">
             <option value="واصل">✅ واصل (مدفوع)</option>
             <option value="أجل">⏳ أجل (غير مدفوع)</option>
         </select>
-        <label style="font-size:11px; color:#94a3b8;">تاريخ التفعيل:</label>
         <input type="date" id="startDate" onchange="calcEnd()">
-        <label style="font-size:11px; color:#94a3b8;">تاريخ الانتهاء:</label>
         <input type="date" id="endDate">
         <button class="submit-btn" onclick="saveSub()">حفظ وإرسال واتساب</button>
         <button class="cancel-btn" onclick="closeModal()">إلغاء</button>
@@ -173,7 +188,6 @@
     </div>
 </div>
 
-<!-- طباعة الوصل -->
 <div id="printArea">
     <div style="text-align: center; border-bottom: 2px dashed #000; padding-bottom: 8px; margin-bottom: 8px;">
         <h3 style="margin:0; font-size:13px;">مكتب مهندس علي لخدمات الإنترنت</h3>
@@ -193,21 +207,28 @@
 let subs = [];
 try {
     subs = JSON.parse(localStorage.getItem('ali_isp_final_v23')) || [];
-} catch(e) {
-    subs = [];
-}
+} catch(e) { subs = []; }
 
 let currentPin = localStorage.getItem('app_pin') || '1234';
-let isAllSelected = false;
 let currentFilter = 'all';
+
+// فحص الإشعارات الجديدة وتشغيل الصوت عند وجود جديد
+function checkNewNotifications() {
+    let notifs = JSON.parse(localStorage.getItem('ali_admin_notifications')) || [];
+    let lastCount = parseInt(localStorage.getItem('ali_last_notif_count') || '0');
+    if(notifs.length > lastCount) {
+        let sound = document.getElementById('notifSound');
+        if(sound) { sound.play().catch(e => console.log("Audio play blocked")); }
+        localStorage.setItem('ali_last_notif_count', notifs.length);
+    }
+}
+setInterval(checkNewNotifications, 3000);
 
 function checkPin() {
     let inputPin = document.getElementById('passCodeInput').value;
     if(inputPin === currentPin) {
         document.getElementById('lockScreen').style.display = 'none';
-    } else {
-        alert("رمز الدخول غير صحيح!");
-    }
+    } else { alert("رمز الدخول غير صحيح!"); }
 }
 
 function openEarthlinkDirect() {
@@ -222,7 +243,7 @@ function exportData() {
     document.body.appendChild(dl);
     dl.click();
     document.body.removeChild(dl);
-    alert("💾 تم حفظ نسخة احتياطية من كافة البيانات على هاتفك بنجاح!");
+    alert("💾 تم حفظ نسخة احتياطية بنجاح!");
 }
 
 function openNotificationsModal() {
@@ -239,22 +260,39 @@ function openNotificationsModal() {
     document.getElementById('notificationsModal').style.display = 'flex';
 }
 
-function closeNotificationsModal() {
-    document.getElementById('notificationsModal').style.display = 'none';
-}
-
+function closeNotificationsModal() { document.getElementById('notificationsModal').style.display = 'none'; }
 function clearNotifications() {
     localStorage.removeItem('ali_admin_notifications');
+    localStorage.setItem('ali_last_notif_count', '0');
     document.getElementById('notificationsList').innerHTML = '<div style="text-align:center; color:#64748b; padding:15px;">تم مسح السجل بنجاح.</div>';
 }
 
-function openBroadcastModal() {
-    document.getElementById('broadcastModal').style.display = 'flex';
+function openTicketsManagerModal() { document.getElementById('ticketsManagerModal').style.display = 'flex'; }
+function closeTicketsManagerModal() { document.getElementById('ticketsManagerModal').style.display = 'none'; }
+
+// إرسال رد الإدارة على تكتات المشترك
+function sendAdminReply() {
+    let subName = document.getElementById('replySubscriberName').value.trim();
+    let replyText = document.getElementById('adminReplyText').value.trim();
+
+    if(!subName || !replyText) {
+        alert("يرجى إدخال اسم المشترك ونص الرد بوضوح");
+        return;
+    }
+
+    let chatItem = { sender: "مكتب مهندس علي (الإدارة)", text: replyText };
+    let chats = JSON.parse(localStorage.getItem(`ticket_chat_${subName}`)) || [];
+    chats.push(chatItem);
+    localStorage.setItem(`ticket_chat_${subName}`, JSON.stringify(chats));
+
+    alert(`✅ تم إرسال الرد بنجاح إلى المشترك (${subName}) وسيظهر فوراً في بوابته الخاصة!`);
+    document.getElementById('replySubscriberName').value = '';
+    document.getElementById('adminReplyText').value = '';
+    closeTicketsManagerModal();
 }
 
-function closeBroadcastModal() {
-    document.getElementById('broadcastModal').style.display = 'none';
-}
+function openBroadcastModal() { document.getElementById('broadcastModal').style.display = 'flex'; }
+function closeBroadcastModal() { document.getElementById('broadcastModal').style.display = 'none'; }
 
 function saveAppBroadcast() {
     let text = document.getElementById('broadcastText').value.trim();
@@ -267,7 +305,7 @@ function saveAppBroadcast() {
 function sendWhatsAppBroadcast() {
     let text = document.getElementById('broadcastText').value.trim();
     let validSubs = subs.filter(s => s.phone && s.phone.trim() !== "");
-    if(validSubs.length === 0) { alert("لا توجد أرقام هاتف مسجلة."); return; }
+    if(validSubs.length === 0) { alert("لا توجد أرقام هواتف مسجلة."); return; }
     if(confirm(`إرسال عبر الواتساب إلى (${validSubs.length}) مشترك؟`)) {
         validSubs.forEach((s, index) => {
             setTimeout(() => {
@@ -333,7 +371,7 @@ function sendGroupDebtReminder() {
             setTimeout(() => {
                 let cleanPhone = s.phone.replace(/\D/g, '');
                 if(cleanPhone.startsWith('0')) cleanPhone = '964' + cleanPhone.substring(1);
-                let msg = `عزيزي المشترك ${s.name} ⏳\nنود تذكيرك بوجود مبلغ اشتراك معلق (أجل) في مكتب مهندس علي لخدمات الإنترنت.\nيرجى التسديد خلال 3 أيام.`;
+                let msg = `عزيزي المشترك ${s.name} ⏳\nنود تذكيرك بوجود مبلغ اشتراك معلق (أجل) في مكتب مهندس علي.\nيرجى التسديد خلال 3 أيام.`;
                 window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`, '_blank');
             }, index * 1200);
         });
@@ -377,7 +415,7 @@ function updatePin() {
     let oldP = document.getElementById('oldPin').value;
     let newP = document.getElementById('newPin').value;
     if(oldP !== currentPin) { alert("الرمز الحالي غير صحيح"); return; }
-    if(!newP || newP.length < 4) { alert("يرجى إدخال 4 أرمام على الأقل"); return; }
+    if(!newP || newP.length < 4) { alert("يرجى إدخال 4 أرقام على الأقل"); return; }
     currentPin = newP;
     localStorage.setItem('app_pin', currentPin);
     alert("تم تغيير رمز الدخول بنجاح!");
