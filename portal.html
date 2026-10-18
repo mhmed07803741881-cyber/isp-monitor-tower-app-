@@ -45,6 +45,12 @@
         .router-box-item { background: #0d1526; border: 1px solid #38bdf8; padding: 10px; border-radius: 8px; margin-bottom: 8px; text-align: center; }
         .router-box-label { font-size: 10px; color: #94a3b8; margin-bottom: 4px; }
         .router-box-val { font-size: 14px; font-weight: bold; color: #38bdf8; letter-spacing: 1px; }
+
+        /* تنسيق فقرات المحادثة وتحديثات الأقسام */
+        .chat-msg-item { margin-bottom: 8px; border-bottom: 1px solid #1e293b; padding-bottom: 6px; }
+        .chat-sender-admin { color: #38bdf8; font-weight: bold; }
+        .chat-sender-system { color: #10b981; font-weight: bold; }
+        .chat-sender-user { color: #f59e0b; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -138,7 +144,7 @@
     </div>
 </div>
 
-<!-- نافذة المحادثة والتكتات -->
+<!-- نافذة المحادثة والتكتات وتحديثات الأقسام -->
 <div id="ticketModal" class="modal">
     <div class="modal-content">
         <h3 style="margin-top:0; color:#ec4899; text-align:center; font-size:15px;">🎫 تكتات الدعم الفني والمحادثة</h3>
@@ -146,9 +152,9 @@
         <textarea id="ticketMessageText" rows="3" placeholder="اكتب مشكلتك أو استفسارك هنا..."></textarea>
         <button class="btn btn-ticket" onclick="submitTicket()" style="margin-bottom:10px;">إرسال التكت للإدارة</button>
 
-        <div style="font-size:11px; color:#94a3b8; margin-bottom:4px; text-align:right;">سجل المحادثة وتحديثات الأقسام:</div>
-        <div id="ticketChatHistory" style="max-height: 150px; overflow-y: auto; background:#0d1526; padding:8px; border-radius:6px; font-size:11px; color:#cbd5e1; text-align:right; margin-bottom:10px;">
-            لا توجد رسائل.
+        <div style="font-size:11px; color:#94a3b8; margin-bottom:4px; text-align:right;">📜 سجل المحادثة وتحديثات الأقسام:</div>
+        <div id="ticketChatHistory" style="max-height: 180px; overflow-y: auto; background:#0d1526; padding:8px; border-radius:6px; font-size:11px; color:#cbd5e1; text-align:right; margin-bottom:10px;">
+            لا توجد رسائل أو تحديثات.
         </div>
 
         <button class="btn" onclick="closeTicketModal()" style="background:#1e293b; color:#38bdf8;">إغلاق</button>
@@ -173,15 +179,15 @@ window.onload = function() {
     }
     checkSavedSession();
 
-    // تشغيل مراقب الرسائل والتكتات والإشعارات الجديدة تلقائياً كل ثانيتين
+    // مراقبة فورية مستمرة للردود وتحديثات الأقسام والإشعارات كل ثانيتين
     setInterval(listenForIncomingMessagesAndNotifs, 2000);
 };
 
-// فحص واستلام التكتات والردود وإشعارات التفعيل مع تشغيل الصوت فوراً
+// فحص واستلام الرسائل وتحديثات الأقسام مع صوت التنبيه المباشر
 function listenForIncomingMessagesAndNotifs() {
     if(!foundSubscriber) return;
 
-    // 1. مراقبة الردود والمحادثات
+    // 1. مراقبة سجل المحادثة وتحديثات الأقسام
     let chats = JSON.parse(localStorage.getItem(`ticket_chat_${foundSubscriber.name}`)) || [];
     let lastChatCount = parseInt(localStorage.getItem(`last_chat_count_${foundSubscriber.name}`) || '0');
 
@@ -189,14 +195,11 @@ function listenForIncomingMessagesAndNotifs() {
         playNotificationSound();
         localStorage.setItem(`last_chat_count_${foundSubscriber.name}`, chats.length);
         
-        // إذا كانت نافذة التكت مفتوحة، يتم تحديث المحادثة فوراً
-        let modal = document.getElementById('ticketModal');
-        if(modal && modal.style.display === 'flex') {
-            refreshChatHistory();
-        }
+        // التحديث الفوري لسجل المحادثة والتكتات
+        refreshChatHistory();
     }
 
-    // 2. مراقبة إشعارات التفعيل التلقائي المرسلة من الإدارة
+    // 2. مراقبة إشعارات التفعيل التلقائي
     let actNotif = localStorage.getItem(`client_activation_notif_${foundSubscriber.name}`);
     if(actNotif) {
         playNotificationSound();
@@ -204,7 +207,7 @@ function listenForIncomingMessagesAndNotifs() {
         document.getElementById('clientNotifModal').style.display = 'flex';
         localStorage.removeItem(`client_activation_notif_${foundSubscriber.name}`);
 
-        // تحديث بيانات الاشتراك الظاهرة في الصفحة
+        // تحديث البيانات على الشاشة
         let subs = JSON.parse(localStorage.getItem('ali_isp_final_v23')) || [];
         let updatedSub = subs.find(s => s.name.toLowerCase() === foundSubscriber.name.toLowerCase());
         if(updatedSub) {
@@ -250,7 +253,6 @@ function loginClient() {
         showSubscriberDashboard();
         playNotificationSound();
 
-        // تعيين العدد الحالي للرسائل لتجنب تنبيه الرسائل القديمة
         let chats = JSON.parse(localStorage.getItem(`ticket_chat_${foundSubscriber.name}`)) || [];
         localStorage.setItem(`last_chat_count_${foundSubscriber.name}`, chats.length);
     } else {
@@ -300,10 +302,26 @@ function openTicketModal() {
 }
 function closeTicketModal() { document.getElementById('ticketModal').style.display = 'none'; }
 
+// عرض وتحديث سجل المحادثة وتحديثات الأقسام بالألوان
 function refreshChatHistory() {
     let chats = JSON.parse(localStorage.getItem(`ticket_chat_${foundSubscriber.name}`)) || [];
-    let chatHtml = chats.length === 0 ? "لا توجد ردود سابقة." : chats.map(c => `<div style="margin-bottom:6px; border-bottom:1px solid #1e293b; padding-bottom:4px;"><b>${c.sender}:</b> ${c.text}</div>`).join('');
-    document.getElementById('ticketChatHistory').innerHTML = chatHtml;
+    
+    if(chats.length === 0) {
+        document.getElementById('ticketChatHistory').innerHTML = "لا توجد رسائل أو تحديثات سابقة.";
+    } else {
+        let chatHtml = chats.map(c => {
+            let senderClass = "chat-sender-user";
+            if(c.sender.includes("النظام")) senderClass = "chat-sender-system";
+            else if(c.sender.includes("مكتب") || c.sender.includes("الدعم")) senderClass = "chat-sender-admin";
+
+            return `
+                <div class="chat-msg-item">
+                    <span class="${senderClass}">${c.sender}:</span> ${c.text}
+                </div>
+            `;
+        }).join('');
+        document.getElementById('ticketChatHistory').innerHTML = chatHtml;
+    }
 }
 
 function submitTicket() {
@@ -321,7 +339,6 @@ function submitTicket() {
     chats.push(chatItem);
     localStorage.setItem(`ticket_chat_${foundSubscriber.name}`, JSON.stringify(chats));
 
-    // تحديث العدّاد لعدم تكرار التنبيه لنفس الرسالة التي أرسلها المشترك بنفسه
     localStorage.setItem(`last_chat_count_${foundSubscriber.name}`, chats.length);
 
     let notifs = JSON.parse(localStorage.getItem('ali_admin_notifications')) || [];
