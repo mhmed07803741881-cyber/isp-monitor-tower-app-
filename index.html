@@ -189,6 +189,23 @@
     </div>
 </div>
 
+<!-- نافذة اختيار نوع التفعيل (نقد أو أجل) -->
+<div id="renewModal" class="modal">
+    <div class="modal-content" style="border-color: #0284c7; max-width: 320px;">
+        <h3 style="margin-top:0; color:#38bdf8; text-align:center;">🔄 تفعيل اشتراك جديد</h3>
+        <p style="font-size:11px; color:#94a3b8; text-align:center;" id="renewSubTargetName"></p>
+        
+        <label style="font-size:11px; color:#cbd5e1;">اختر طريقة الدفع للتجديد:</label>
+        <select id="renewPayType" style="margin-top:8px;">
+            <option value="واصل">✅ واصل (نقداً - مدفوع)</option>
+            <option value="أجل">⏳ أجل (غير مدفوع)</option>
+        </select>
+
+        <button class="submit-btn" onclick="confirmRenewSubscription()" style="background:#0284c7; color:#fff; margin-top:10px;">تأكيد التفعيل (30 يوماً)</button>
+        <button class="cancel-btn" onclick="closeRenewModal()">إلغاء</button>
+    </div>
+</div>
+
 <!-- نافذة تغيير رمز الدخول -->
 <div id="pinModal" class="modal">
     <div class="modal-content">
@@ -223,6 +240,7 @@ let currentPin = localStorage.getItem('app_pin') || '1234';
 let isAllSelected = false;
 let currentFilter = 'all';
 let activeReplySubscriber = "";
+let selectedRenewId = null;
 
 // فحص التكتات والإشعارات الجديدة وتشغيل صوت الجرس تلقائياً
 function checkNewNotifications() {
@@ -431,31 +449,55 @@ function sendGroupDebtReminder() {
 }
 
 // دالة مساعدة لفتح واتساب بإرسال رسالة تفعيل الاشتراك
-function sendActivationWhatsApp(phone, name, endDate) {
+function sendActivationWhatsApp(phone, name, endDate, payStatus) {
     if(!phone || phone.trim() === "") return;
     let cleanPhone = phone.replace(/\D/g, '');
     if(cleanPhone.startsWith('0')) cleanPhone = '964' + cleanPhone.substring(1);
-    let msg = `عزيزنا المشترك (${name}) 📡\nتم تفعيل اشتراكك بنجاح في مكتب مهندس علي لخدمات الإنترنت ✅\nتاريخ انتهاء الاشتراك: ${endDate}\nشكراً لاختياركم خدماتنا.\nهواتف المكتب: 07818627764 - 07724850876`;
+    let statusText = payStatus === 'واصل' ? 'واصل ✅ (مدفوع)' : 'أجل ⏳ (غير مدفوع)';
+    let msg = `عزيزنا المشترك (${name}) 📡\nتم تجديد/تفعيل اشتراكك بنجاح في مكتب مهندس علي لخدمات الإنترنت ✅\nالحالة: ${statusText}\nتاريخ انتهاء الاشتراك: ${endDate}\nشكراً لاختياركم خدماتنا.\nهواتف المكتب: 07818627764 - 07724850876`;
     window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`, '_blank');
 }
 
-function renewSubscription(id) {
+// فتح نافذة اختيار نوع التفعيل (نقد أو أجل)
+function openRenewModal(id) {
     let s = subs.find(item => item.id === id);
     if(s) {
-        if(confirm(`تجديد اشتراك (${s.name}) لمدة 30 يوماً؟`)) {
-            let today = new Date();
-            let startStr = today.toISOString().split('T')[0];
-            today.setDate(today.getDate() + 30);
-            s.startDate = startStr;
-            s.endDate = today.toISOString().split('T')[0];
-            s.payStatus = 'واصل';
-            localStorage.setItem('ali_isp_final_v23', JSON.stringify(subs));
-            renderSubs();
-            
-            // إرسال رسالة تفعيل عبر الواتساب للمشترك
-            sendActivationWhatsApp(s.phone, s.name, s.endDate);
+        selectedRenewId = id;
+        document.getElementById('renewSubTargetName').innerText = `المشترك: ${s.name}`;
+        document.getElementById('renewPayType').value = 'واصل';
+        document.getElementById('renewModal').style.display = 'flex';
+    }
+}
+function closeRenewModal() {
+    selectedRenewId = null;
+    document.getElementById('renewModal').style.display = 'none';
+}
 
-            printReceipt(s.name, s.price || 30000, s.startDate, s.endDate, 'واصل (تم تجديد التفعيل)', 'وصل قبض تجديد اشتراك');
+// تأكيد التفعيل بعد اختيار نوع الدفع
+function confirmRenewSubscription() {
+    if(!selectedRenewId) return;
+    let s = subs.find(item => item.id === selectedRenewId);
+    let chosenPayType = document.getElementById('renewPayType').value;
+
+    if(s) {
+        let today = new Date();
+        let startStr = today.toISOString().split('T')[0];
+        today.setDate(today.getDate() + 30);
+        s.startDate = startStr;
+        s.endDate = today.toISOString().split('T')[0];
+        s.payStatus = chosenPayType;
+
+        localStorage.setItem('ali_isp_final_v23', JSON.stringify(subs));
+        renderSubs();
+        closeRenewModal();
+
+        // إرسال رسالة تفعيل عبر الواتساب للمشترك
+        sendActivationWhatsApp(s.phone, s.name, s.endDate, s.payStatus);
+
+        if(s.payStatus === 'واصل') {
+            printReceipt(s.name, s.price || 30000, s.startDate, s.endDate, 'واصل (تم التجديد نقداً)', 'وصل قبض تجديد اشتراك');
+        } else {
+            alert(`✅ تم تجديد الاشتراك بنجاح كـ (أجل) للمشترك (${s.name})!`);
         }
     }
 }
@@ -489,7 +531,6 @@ function updatePin() {
 }
 
 window.onload = function() {
-    // التحقق هل المستخدم مسجل دخول مسبقاً أم لا
     let isLoggedIn = localStorage.getItem('ali_admin_logged_in');
     if(isLoggedIn === 'true') {
         document.getElementById('lockScreen').style.display = 'none';
@@ -561,7 +602,7 @@ function renderSubs() {
                 </div>
                 <div style="display:flex; flex-direction:column; gap:3px;" onclick="event.stopPropagation()">
                     ${s.payStatus === 'أجل' ? `<button onclick="payDebt(${s.id})" style="background:#10b981; color:#fff; border:none; padding:4px 6px; border-radius:4px; font-size:10px; cursor:pointer;">💵 تسديد</button>` : ''}
-                    <button onclick="renewSubscription(${s.id})" style="background:#0284c7; color:#fff; border:none; padding:4px 6px; border-radius:4px; font-size:10px; cursor:pointer;">🔄 تفعيل</button>
+                    <button onclick="openRenewModal(${s.id})" style="background:#0284c7; color:#fff; border:none; padding:4px 6px; border-radius:4px; font-size:10px; cursor:pointer;">🔄 تفعيل</button>
                     <button onclick="sendWhatsapp('${s.phone}', '${s.name}', '${s.endDate}', '${s.payStatus}', '${s.startDate}')" style="background:#25d366; color:#fff; border:none; padding:4px 6px; border-radius:4px; font-size:10px; cursor:pointer;">💬 واتساب</button>
                     <button onclick="printReceipt('${s.name}', '${s.price || 0}', '${s.startDate}', '${s.endDate}', '${s.payStatus}', 'وصل قبض اشتراك')" style="background:#475569; color:#fff; border:none; padding:4px 6px; border-radius:4px; font-size:10px; cursor:pointer;">🖨️ وصل</button>
                     <button onclick="deleteSub(${s.id})" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:10px;">🗑️ حذف</button>
@@ -620,9 +661,8 @@ function saveSub() {
     closeModal();
     renderSubs();
 
-    // إرسال رسالة واتساب تلقائية عند إضافة مشترك جديد إذا كان لديه رقم هاتف
     if(phone) {
-        sendActivationWhatsApp(phone, name, endDate);
+        sendActivationWhatsApp(phone, name, endDate, payStatus);
     }
 }
 
