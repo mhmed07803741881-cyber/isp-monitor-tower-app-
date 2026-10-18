@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مراقب الأبراج - ISP Manager</title>
+    <title>سجل الديون - Debt Manager</title>
     <style>
         body { background-color: #0d1526; color: #fff; font-family: Tahoma, sans-serif; margin: 0; padding: 10px; box-sizing: border-box; }
         .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #1e293b; padding-bottom: 10px; }
@@ -12,259 +12,200 @@
         .title-area h1 { margin: 0; font-size: 16px; color: #fff; }
         .title-area p { margin: 2px 0 0 0; font-size: 10px; color: #64748b; }
 
-        .stats-bar { display: flex; gap: 10px; font-size: 11px; color: #94a3b8; margin-bottom: 10px; background: #131d31; padding: 8px 12px; border-radius: 8px; border: 1px solid #1e293b; align-items: center; }
+        .stats-bar { display: flex; justify-content: space-between; font-size: 11px; color: #94a3b8; margin-bottom: 10px; background: #131d31; padding: 10px 12px; border-radius: 8px; border: 1px solid #1e293b; align-items: center; }
         .stats-bar span { font-weight: bold; }
 
-        .toolbar-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-bottom: 8px; }
-        .action-btn { background: #131d31; color: #cbd5e1; border: 1px solid #1e293b; padding: 8px 4px; border-radius: 8px; font-size: 11px; cursor: pointer; text-align: center; white-space: nowrap; }
+        .toolbar-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-bottom: 8px; }
+        .action-btn { background: #131d31; color: #cbd5e1; border: 1px solid #1e293b; padding: 10px 6px; border-radius: 8px; font-size: 12px; cursor: pointer; text-align: center; white-space: nowrap; }
         .action-btn.active-blue { background: #38bdf8; color: #090d16; font-weight: bold; border-color: #38bdf8; }
 
-        .towers-section { display: flex; gap: 5px; overflow-x: auto; margin-bottom: 10px; padding-bottom: 4px; }
-        .tower-tab { background: #131d31; color: #cbd5e1; border: 1px solid #1e293b; padding: 6px 12px; border-radius: 8px; font-size: 11px; cursor: pointer; white-space: nowrap; }
-        .tower-tab.active { color: #38bdf8; border-color: #38bdf8; font-weight: bold; }
-
-        .bottom-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-bottom: 12px; }
-
-        .devices-container { margin-top: 8px; }
+        .debt-container { margin-top: 8px; }
         .empty-state { text-align: center; color: #64748b; padding: 30px 15px; background: #131d31; border-radius: 10px; border: 1px dashed #1e293b; font-size: 12px; }
         
-        .device-card { background:#131d31; border:1px solid #1e293b; padding:10px; border-radius:8px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center; border-right:4px solid #10b981; }
-        .device-card.offline { border-right-color: #ef4444; }
+        .debt-card { background:#131d31; border:1px solid #1e293b; padding:12px; border-radius:8px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; border-right:4px solid #ef4444; }
+        .debt-card.paid { border-right-color: #10b981; }
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; z-index: 1000; }
         .modal-content { background: #131d31; padding: 18px; border-radius: 12px; width: 92%; max-width: 360px; border: 1px solid #1e293b; box-sizing: border-box; }
-        input, select { width: 100%; padding: 9px; margin: 5px 0 10px 0; background: #0d1526; border: 1px solid #1e293b; color: white; border-radius: 6px; box-sizing: border-box; font-size: 12px; }
-        .submit-btn { width: 100%; padding: 10px; background: #38bdf8; color: #090d16; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; }
-        .cancel-btn { width: 100%; padding: 9px; background: #1e293b; color: #94a3b8; border: none; border-radius: 6px; cursor: pointer; margin-top: 5px; font-size: 12px; }
-        
-        #vpnStatusBanner { background: #10b981; color: #fff; padding: 6px; font-size: 11px; text-align: center; border-radius: 6px; margin-bottom: 10px; display: none; }
+        input, select { width: 100%; padding: 10px; margin: 6px 0 12px 0; background: #0d1526; border: 1px solid #1e293b; color: white; border-radius: 6px; box-sizing: border-box; font-size: 13px; }
+        .submit-btn { width: 100%; padding: 11px; background: #38bdf8; color: #090d16; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; }
+        .cancel-btn { width: 100%; padding: 10px; background: #1e293b; color: #94a3b8; border: none; border-radius: 6px; cursor: pointer; margin-top: 5px; font-size: 13px; }
     </style>
 </head>
 <body>
-
-<div id="vpnStatusBanner">🟢 متصل بشبكة الـ VPN بنجاح</div>
 
 <div class="top-header">
     <div style="display: flex; gap: 5px;">
         <button class="icon-btn" onclick="resetApp()">إعادة ضبط</button>
     </div>
     <div class="title-area">
-        <h1>مراقب الأبراج</h1>
-        <p id="headerSummary">0 جهاز على 0 برج</p>
+        <h1>سجل ديون المشتركين</h1>
+        <p id="headerSummary">0 زبون مسجل</p>
     </div>
 </div>
 
 <div class="stats-bar">
-    <div><span id="statOnline" style="color:#10b981">0</span> يعمل</div>
-    <div><span id="statOffline" style="color:#ef4444">0</span> مقطوع</div>
-    <div style="margin-right:auto;"><span id="statAvgPing" style="color:#38bdf8">2.5</span> ms</div>
+    <div>إجمالي الديون: <span id="totalDebt" style="color:#ef4444">0 د.ع</span></div>
+    <div>الواصل: <span id="totalPaid" style="color:#10b981">0 د.ع</span></div>
+    <div>المتبقي: <span id="totalRemaining" style="color:#38bdf8">0 د.ع</span></div>
 </div>
 
 <div class="toolbar-grid">
-    <button class="action-btn" onclick="refreshAll()">تحديث</button>
-    <button class="action-btn active-blue" onclick="openModal('addDeviceModal')">أضف أجهزة</button>
-    <button class="action-btn" onclick="openModal('credentialsModal')">الباسورد</button>
-    <button class="action-btn" onclick="openModal('vpnModal')">VPN</button>
+    <button class="action-btn active-blue" onclick="openModal('addDebtModal')">+ إضافة دين جديد</button>
+    <button class="action-btn" onclick="exportData()">تصدير نسخة</button>
+    <button class="action-btn" onclick="importData()">استيراد ملف</button>
 </div>
 
-<div class="towers-section" id="towersTabs">
-    <div class="tower-tab active" onclick="selectTower('all')">كل الأبراج</div>
+<div class="debt-container" id="debtList">
+    <div class="empty-state">لا توجد ديون مسجلة حالياً.<br>اضغط على "+ إضافة دين جديد" للبدء.</div>
 </div>
 
-<div class="bottom-actions">
-    <button class="action-btn active-blue" onclick="openModal('addTowerModal')">+ برج جديد</button>
-    <button class="action-btn" onclick="exportData()">تصدير</button>
-    <button class="action-btn" onclick="importData()">استيراد</button>
-</div>
-
-<div class="devices-container" id="devicesList">
-    <div class="empty-state">أضف برجاً جديداً وابدأ بإضافة الأجهزة للبدء.</div>
-</div>
-
-<!-- نافذة برج جديد -->
-<div id="addTowerModal" class="modal">
+<!-- نافذة إضافة دين جديد -->
+<div id="addDebtModal" class="modal">
     <div class="modal-content">
-        <h3>برج جديد</h3>
-        <input type="text" id="newTowerName" placeholder="اسم البرج (مثال: الحلة 1)">
-        <button class="submit-btn" onclick="saveTower()">حفظ</button>
-        <button class="cancel-btn" onclick="closeModal('addTowerModal')">إلغاء</button>
+        <h3>إضافة دين جديد لزبون</h3>
+        <input type="text" id="custName" placeholder="اسم المشترك / الزبون (مثال: أحمد محمد)">
+        <input type="number" id="custAmount" placeholder="مبلغ الدين الكلي (د.ع)">
+        <input type="text" id="custPhone" placeholder="رقم الهاتف (اختياري)">
+        <input type="text" id="custNotes" placeholder="ملاحظات (مثال: اشتراك شهر... / سحب كيبل)">
+        <button class="submit-btn" onclick="saveNewDebt()">حفظ الدين</button>
+        <button class="cancel-btn" onclick="closeModal('addDebtModal')">إلغاء</button>
     </div>
 </div>
 
-<!-- نافذة إضافة أجهزة -->
-<div id="addDeviceModal" class="modal">
+<!-- نافذة تسديد جزء من الدين -->
+<div id="payModal" class="modal">
     <div class="modal-content">
-        <h3>أضف عناوين الـ IP</h3>
-        <select id="targetTowerSelect"></select>
-        <select id="devTypeSelect">
-            <option value="MikroTik">MikroTik (admin)</option>
-            <option value="Ubiquiti">Ubiquiti (ubnt)</option>
-            <option value="Mimosa">Mimosa (admin)</option>
-        </select>
-        <textarea id="bulkIpInput" rows="3" placeholder="10.0.0.1&#10;10.0.0.2" style="width:100%; padding:8px; background:#0d1526; border:1px solid #1e293b; color:#fff; border-radius:6px; font-size:12px;"></textarea>
-        <button class="submit-btn" onclick="saveBulkDevices()">حفظ</button>
-        <button class="cancel-btn" onclick="closeModal('addDeviceModal')">إلغاء</button>
-    </div>
-</div>
-
-<!-- نافذة الباسوردات -->
-<div id="credentialsModal" class="modal">
-    <div class="modal-content">
-        <h3>بيانات الدخول</h3>
-        <select id="credType">
-            <option value="MikroTik">MikroTik</option>
-            <option value="Ubiquiti">Ubiquiti</option>
-            <option value="Mimosa">Mimosa</option>
-        </select>
-        <input type="password" id="credPass" placeholder="كلمة المرور">
-        <button class="submit-btn" onclick="saveCreds()">حفظ</button>
-        <button class="cancel-btn" onclick="closeModal('credentialsModal')">إلغاء</button>
-    </div>
-</div>
-
-<!-- نافذة VPN -->
-<div id="vpnModal" class="modal">
-    <div class="modal-content">
-        <h3>الاتصال بالـ VPN</h3>
-        <input type="text" id="vpnUser" placeholder="اسم المستخدم">
-        <input type="password" id="vpnPass" placeholder="كلمة المرور">
-        <button class="submit-btn" style="background:#10b981;" onclick="connectVpn()">اتصال</button>
-        <button class="cancel-btn" style="background:#ef4444; color:#fff;" onclick="disconnectVpn()">قطع الاتصال</button>
-        <button class="cancel-btn" onclick="closeModal('vpnModal')">إغلاق</button>
+        <h3>تسديد دفعة</h3>
+        <p id="payCustomerName" style="font-size: 12px; color: #38bdf8; margin-bottom: 10px;"></p>
+        <input type="number" id="payAmountInput" placeholder="مبلغ التسديد (د.ع)">
+        <button class="submit-btn" style="background:#10b981;" onclick="confirmPayment()">تثبيت التسديد</button>
+        <button class="cancel-btn" onclick="closeModal('payModal')">إلغاء</button>
     </div>
 </div>
 
 <script>
-let db = JSON.parse(localStorage.getItem('isp_safe_db')) || {};
-let currentTower = 'all';
-let isVpnOn = localStorage.getItem('isp_vpn') === 'true';
-
-function checkVpn() {
-    document.getElementById('vpnStatusBanner').style.display = isVpnOn ? 'block' : 'none';
-}
+let debts = JSON.parse(localStorage.getItem('isp_debt_book')) || [];
+let currentPayId = null;
 
 function render() {
-    checkVpn();
-    let towers = Object.keys(db);
-    let total = 0, online = 0, offline = 0;
     let html = '';
-    let tabs = `<div class="tower-tab ${currentTower === 'all' ? 'active' : ''}" onclick="selectTower('all')">كل الأبراج</div>`;
-    let selectOpts = '';
+    let sumDebt = 0, sumPaid = 0;
 
-    towers.forEach(t => {
-        tabs += `<div class="tower-tab ${currentTower === t ? 'active' : ''}" onclick="selectTower('${t}')">${db[t].length} ${t}</div>`;
-        selectOpts += `<option value="${t}">${t}</option>`;
-    });
+    debts.forEach(d => {
+        sumDebt += d.amount;
+        sumPaid += d.paid;
+        let remaining = d.amount - d.paid;
+        let isFullyPaid = remaining <= 0;
 
-    document.getElementById('towersTabs').innerHTML = tabs;
-    document.getElementById('targetTowerSelect').innerHTML = selectOpts || "<option value=''>أضف برجاً أولاً</option>";
-
-    towers.forEach(t => {
-        if(currentTower !== 'all' && currentTower !== t) return;
-        db[t].forEach(d => {
-            total++;
-            if(d.status === 'online' && isVpnOn) online++; else offline++;
-            
-            html += `
-                <div class="device-card ${d.status === 'online' && isVpnOn ? '' : 'offline'}">
-                    <div>
-                        <div style="font-size:13px; font-weight:bold; color:#38bdf8;">${d.ip} (${d.type})</div>
-                        <div style="font-size:10px; color:#94a3b8;">[${t}]</div>
-                    </div>
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <span style="font-size:11px; font-weight:bold; color:${d.status==='online' && isVpnOn?'#10b981':'#ef4444'}">${d.status==='online' && isVpnOn?'متصل':'مقطوع'}</span>
-                        <button onclick="deleteDev('${t}', ${d.id})" style="background:none; border:none; color:#ef4444; cursor:pointer;">🗑️</button>
+        html += `
+            <div class="debt-card ${isFullyPaid ? 'paid' : ''}">
+                <div>
+                    <div style="font-size: 14px; font-weight: bold; color:#fff;">${d.name} <span style="font-size:11px; color:#94a3b8;">(${d.phone || 'بدون هاتف'})</span></div>
+                    <div style="font-size: 11px; color: #94a3b8; margin-top:2px;">${d.notes || 'اشتراك إنترنت'}</div>
+                    <div style="font-size: 12px; margin-top: 4px;">
+                        الدين: <span style="color:#f59e0b;">${d.amount}</span> | 
+                        الواصل: <span style="color:#10b981;">${d.paid}</span> | 
+                        المتبقي: <span style="color:${isFullyPaid ? '#10b981' : '#ef4444'}; font-weight:bold;">${remaining} د.ع</span>
                     </div>
                 </div>
-            `;
-        });
+                <div style="display:flex; flex-direction:column; gap:5px;">
+                    ${!isFullyPaid ? `<button onclick="openPayModal(${d.id})" style="background:#10b981; color:#fff; border:none; padding:6px 10px; border-radius:6px; font-size:11px; cursor:pointer;">تسديد</button>` : `<span style="font-size:11px; color:#10b981; font-weight:bold;">مُسدد بالكامل</span>`}
+                    <button onclick="deleteDebt(${d.id})" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:12px; text-align:left;">🗑️ حذف</button>
+                </div>
+            </div>
+        `;
     });
 
-    document.getElementById('devicesList').innerHTML = html || `<div class="empty-state">لا توجد أجهزة مضافة حالياً. اضغط على "+ برج جديد".</div>`;
-    document.getElementById('statOnline').innerText = online;
-    document.getElementById('statOffline').innerText = offline;
-    document.getElementById('headerSummary').innerText = `${total} جهاز على ${towers.length} برج`;
+    document.getElementById('debtList').innerHTML = html || `<div class="empty-state">لا توجد ديون مسجلة حالياً.</div>`;
+    document.getElementById('totalDebt').innerText = sumDebt + " د.ع";
+    document.getElementById('totalPaid').innerText = sumPaid + " د.ع";
+    document.getElementById('totalRemaining').innerText = (sumDebt - sumPaid) + " د.ع";
+    document.getElementById('headerSummary').innerText = debts.length + " زبون مسجل";
 }
 
-function selectTower(t) { currentTower = t; render(); }
 function openModal(id) { document.getElementById(id).style.display = 'flex'; }
 function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
-function saveTower() {
-    let name = document.getElementById('newTowerName').value.trim();
-    if(!name) return;
-    if(!db[name]) db[name] = [];
-    localStorage.setItem('isp_safe_db', JSON.stringify(db));
-    document.getElementById('newTowerName').value = '';
-    closeModal('addTowerModal');
-    render();
-}
+function saveNewDebt() {
+    let name = document.getElementById('custName').value.trim();
+    let amount = parseFloat(document.getElementById('custAmount').value);
+    let phone = document.getElementById('custPhone').value.trim();
+    let notes = document.getElementById('custNotes').value.trim();
 
-function saveBulkDevices() {
-    let tower = document.getElementById('targetTowerSelect').value;
-    let type = document.getElementById('devTypeSelect').value;
-    let ips = document.getElementById('bulkIpInput').value.trim();
-    if(!tower || !ips) return;
+    if(!name || isNaN(amount)) {
+        alert("يرجى إدخال اسم الزبون ومبلغ الدين بشكل صحيح");
+        return;
+    }
 
-    ips.split('\n').forEach(ip => {
-        let clean = ip.trim();
-        if(clean && !db[tower].some(d => d.ip === clean)) {
-            db[tower].push({ id: Date.now() + Math.random(), ip: clean, type: type, status: 'online' });
-        }
+    debts.push({
+        id: Date.now(),
+        name: name,
+        amount: amount,
+        paid: 0,
+        phone: phone,
+        notes: notes,
+        date: new Date().toLocaleDateString('ar-IQ')
     });
 
-    localStorage.setItem('isp_safe_db', JSON.stringify(db));
-    document.getElementById('bulkIpInput').value = '';
-    closeModal('addDeviceModal');
+    localStorage.setItem('isp_debt_book', JSON.stringify(debts));
+    document.getElementById('custName').value = '';
+    document.getElementById('custAmount').value = '';
+    document.getElementById('custPhone').value = '';
+    document.getElementById('custNotes').value = '';
+    closeModal('addDebtModal');
     render();
 }
 
-function refreshAll() {
-    render();
-    alert("تم التحديث بنجاح!");
+function openPayModal(id) {
+    currentPayId = id;
+    let d = debts.find(item => item.id === id);
+    if(d) {
+        document.getElementById('payCustomerName').innerText = "المشترك: " + d.name + " (المتبقي: " + (d.amount - d.paid) + " د.ع)";
+        document.getElementById('payAmountInput').value = '';
+        openModal('payModal');
+    }
 }
 
-function connectVpn() {
-    isVpnOn = true;
-    localStorage.setItem('isp_vpn', 'true');
-    closeModal('vpnModal');
-    render();
-    alert("تم الاتصال بالـ VPN بنجاح!");
+function confirmPayment() {
+    let payVal = parseFloat(document.getElementById('payAmountInput').value);
+    if(isNaN(payVal) || payVal <= 0) {
+        alert("يرجى إدخال مبلغ صحيح للتسديد");
+        return;
+    }
+
+    let d = debts.find(item => item.id === currentPayId);
+    if(d) {
+        d.paid += payVal;
+        if(d.paid > d.amount) d.paid = d.amount; // لئلا يتجاوز المبلغ الكلي
+        localStorage.setItem('isp_debt_book', JSON.stringify(debts));
+        closeModal('payModal');
+        render();
+        alert("تم تثبيت التسديد بنجاح!");
+    }
 }
 
-function disconnectVpn() {
-    isVpnOn = false;
-    localStorage.removeItem('isp_vpn');
-    closeModal('vpnModal');
-    render();
-    alert("تم قطع الاتصال.");
-}
-
-function saveCreds() {
-    alert("تم حفظ بيانات الدخول بنجاح!");
-    closeModal('credentialsModal');
-}
-
-function deleteDev(t, id) {
-    if(confirm("حذف الجهاز؟")) {
-        db[t] = db[t].filter(d => d.id !== id);
-        localStorage.setItem('isp_safe_db', JSON.stringify(db));
+function deleteDebt(id) {
+    if(confirm("هل تريد حذف سجل هذا الدين؟")) {
+        debts = debts.filter(item => item.id !== id);
+        localStorage.setItem('isp_debt_book', JSON.stringify(debts));
         render();
     }
 }
 
 function resetApp() {
-    if(confirm("هل تريد مسح البيانات وإعادة ضبط التطبيق؟")) {
-        localStorage.clear();
-        location.reload();
+    if(confirm("هل تريد مسح كافة السجلات وإعادة الضبط؟")) {
+        localStorage.removeItem('isp_debt_book');
+        debts = [];
+        render();
     }
 }
 
 function exportData() {
-    let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db));
+    let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(debts));
     let dl = document.createElement('a');
     dl.setAttribute("href", dataStr);
-    dl.setAttribute("download", "backup.json");
+    dl.setAttribute("download", "debt_book_backup.json");
     dl.click();
 }
 
@@ -275,10 +216,12 @@ function importData() {
         let r = new FileReader();
         r.readAsText(e.target.files[0], 'UTF-8');
         r.onload = ev => {
-            db = JSON.parse(ev.target.result);
-            localStorage.setItem('isp_safe_db', JSON.stringify(db));
-            render();
-            alert("تم الاستيراد بنجاح!");
+            try {
+                debts = JSON.parse(ev.target.result);
+                localStorage.setItem('isp_debt_book', JSON.stringify(debts));
+                render();
+                alert("تم استيراد سجل الديون بنجاح!");
+            } catch(err) { alert("ملف غير صالح"); }
         }
     }
     inp.click();
