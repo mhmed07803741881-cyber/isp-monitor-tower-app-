@@ -13,7 +13,7 @@
         .stats-bar { display: flex; justify-content: space-between; font-size: 11px; color: #94a3b8; margin-bottom: 10px; background: #131d31; padding: 10px 12px; border-radius: 8px; border: 1px solid #1e293b; align-items: center; }
         .stats-bar span { font-weight: bold; }
 
-        .toolbar-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-bottom: 8px; }
+        .toolbar-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; margin-bottom: 8px; }
         .action-btn { background: #131d31; color: #cbd5e1; border: 1px solid #1e293b; padding: 10px 4px; border-radius: 8px; font-size: 11px; cursor: pointer; text-align: center; }
         .action-btn.active-blue { background: #38bdf8; color: #090d16; font-weight: bold; border-color: #38bdf8; }
 
@@ -68,7 +68,7 @@
 
 <div class="toolbar-grid">
     <button class="action-btn active-blue" onclick="openModal()">+ إضافة مشترك</button>
-    <button class="action-btn" onclick="exportData()" style="background:#10b981; color:#fff;" title="حفظ نسخة احتياطية">💾 حفظ نسخة</button>
+    <button class="action-btn" onclick="exportToDrive()" style="background:#4285F4; color:#fff;" title="حفظ نسخة احتياطية محلية وسحابية">☁️ حفظ نسخة</button>
     <button class="action-btn" onclick="importData()" style="background:#f59e0b; color:#000;" title="استعادة من ملف">📥 استعادة</button>
 </div>
 
@@ -133,7 +133,7 @@
 <script>
 let subs = [];
 try {
-    subs = JSON.parse(localStorage.getItem('ali_isp_final_v10')) || [];
+    subs = JSON.parse(localStorage.getItem('ali_isp_final_v12')) || [];
 } catch(e) {
     subs = [];
 }
@@ -258,7 +258,7 @@ function saveSub() {
     }
 
     subs.push({ id: Date.now(), name, phone, price, payStatus, startDate, endDate });
-    localStorage.setItem('ali_isp_final_v10', JSON.stringify(subs));
+    localStorage.setItem('ali_isp_final_v12', JSON.stringify(subs));
     
     document.getElementById('subName').value = '';
     document.getElementById('subPhone').value = '';
@@ -279,7 +279,7 @@ function payDebt(id) {
     if(s) {
         if(confirm("هل تريد تثبيت تسديد المبلغ لهذا المشترك؟")) {
             s.payStatus = 'واصل';
-            localStorage.setItem('ali_isp_final_v10', JSON.stringify(subs));
+            localStorage.setItem('ali_isp_final_v12', JSON.stringify(subs));
             renderSubs();
             printReceipt(s.name, s.price || 0, s.startDate, s.endDate, 'واصل (تم التسديد)', 'وصل قبض تسديد دين');
         }
@@ -311,6 +311,7 @@ function printReceipt(name, price, start, end, payStatus, title = 'وصل قبض
     document.getElementById('pPrice').innerText = price;
     document.getElementById('pPayStatus').innerText = payStatus;
     document.getElementById('pStart').innerText = start;
+    document.getElementById('pEnd').innerText,innerText = end;
     document.getElementById('pEnd').innerText = end;
     window.print();
 }
@@ -318,21 +319,24 @@ function printReceipt(name, price, start, end, payStatus, title = 'وصل قبض
 function deleteSub(id) {
     if(confirm("هل تريد حذف هذا المشترك؟")) {
         subs = subs.filter(s => s.id !== id);
-        localStorage.setItem('ali_isp_final_v10', JSON.stringify(subs));
+        localStorage.setItem('ali_isp_final_v12', JSON.stringify(subs));
         renderSubs();
     }
 }
 
-// تصدير البيانات (حفظ نسخة احتياطية كملف على الجهاز)
-function exportData() {
+// تصدير وحفظ النسخة في جوجل درايف (عن طريق تنزيل الملف ليتم حفظه تلقائياً في مجلد تنزيلات الدرايف أو مشاركته)
+function exportToDrive() {
     let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(subs));
     let dl = document.createElement('a');
     dl.setAttribute("href", dataStr);
-    dl.setAttribute("download", "ali_isp_backup_" + new Date().toISOString().split('T')[0] + ".json");
+    dl.setAttribute("download", "ali_isp_google_drive_backup_" + new Date().toISOString().split('T')[0] + ".json");
+    document.body.appendChild(dl);
     dl.click();
+    document.body.removeChild(dl);
+    alert("☁️ تم تجهيز وحفظ النسخة الاحتياطية. يمكنك رفعها مباشرة إلى تطبيق Google Drive على هاتفك لضمان حفظها سحابياً!");
 }
 
-// استيراد البيانات (استعادة البيانات من ملف الحفظ القديم)
+// استيراد البيانات من جوجل الدرايف أو الجهاز
 function importData() {
     let input = document.createElement('input');
     input.type = 'file';
@@ -346,7 +350,7 @@ function importData() {
                 let importedData = JSON.parse(readerEvent.target.result);
                 if(Array.isArray(importedData)) {
                     subs = importedData;
-                    localStorage.setItem('ali_isp_final_v10', JSON.stringify(subs));
+                    localStorage.setItem('ali_isp_final_v12', JSON.stringify(subs));
                     renderSubs();
                     alert("تم استعادة البيانات بنجاح!");
                 } else {
