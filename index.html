@@ -430,6 +430,15 @@ function sendGroupDebtReminder() {
     }
 }
 
+// دالة مساعدة لفتح واتساب بإرسال رسالة تفعيل الاشتراك
+function sendActivationWhatsApp(phone, name, endDate) {
+    if(!phone || phone.trim() === "") return;
+    let cleanPhone = phone.replace(/\D/g, '');
+    if(cleanPhone.startsWith('0')) cleanPhone = '964' + cleanPhone.substring(1);
+    let msg = `عزيزنا المشترك (${name}) 📡\nتم تفعيل اشتراكك بنجاح في مكتب مهندس علي لخدمات الإنترنت ✅\nتاريخ انتهاء الاشتراك: ${endDate}\nشكراً لاختياركم خدماتنا.\nهواتف المكتب: 07818627764 - 07724850876`;
+    window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`, '_blank');
+}
+
 function renewSubscription(id) {
     let s = subs.find(item => item.id === id);
     if(s) {
@@ -442,6 +451,10 @@ function renewSubscription(id) {
             s.payStatus = 'واصل';
             localStorage.setItem('ali_isp_final_v23', JSON.stringify(subs));
             renderSubs();
+            
+            // إرسال رسالة تفعيل عبر الواتساب للمشترك
+            sendActivationWhatsApp(s.phone, s.name, s.endDate);
+
             printReceipt(s.name, s.price || 30000, s.startDate, s.endDate, 'واصل (تم تجديد التفعيل)', 'وصل قبض تجديد اشتراك');
         }
     }
@@ -597,11 +610,20 @@ function saveSub() {
     let payStatus = document.getElementById('subStatus').value;
     let startDate = document.getElementById('startDate').value;
     let endDate = document.getElementById('endDate').value;
+    
     if(!name || !startDate || !endDate) { alert("يرجى إدخال اسم المشترك / اليوزر والتواريخ المطلوبين"); return; }
-    subs.push({ id: Date.now(), name, fullName, phone, price, payStatus, startDate, endDate });
+    
+    let newSub = { id: Date.now(), name, fullName, phone, price, payStatus, startDate, endDate };
+    subs.push(newSub);
     localStorage.setItem('ali_isp_final_v23', JSON.stringify(subs));
+    
     closeModal();
     renderSubs();
+
+    // إرسال رسالة واتساب تلقائية عند إضافة مشترك جديد إذا كان لديه رقم هاتف
+    if(phone) {
+        sendActivationWhatsApp(phone, name, endDate);
+    }
 }
 
 function payDebt(id) {
