@@ -20,12 +20,15 @@
         .action-btn.active-blue { background: #38bdf8; color: #090d16; font-weight: bold; border-color: #38bdf8; }
         .action-btn.earthlink-btn { background: #e11d48; color: #fff; font-weight: bold; border-color: #f43f5e; grid-column: span 2; }
         .action-btn.import-btn { background: #f59e0b; color: #000; font-weight: bold; border-color: #d97706; }
+        .action-btn.delete-btn { background: #ef4444; color: #fff; font-weight: bold; border-color: #dc2626; }
 
         .search-box { width: 100%; padding: 10px; margin-bottom: 8px; background: #131d31; border: 1px solid #1e293b; color: white; border-radius: 8px; box-sizing: border-box; font-size: 12px; }
 
         .sub-card { background:#131d31; border:1px solid #1e293b; padding:12px; border-radius:8px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; border-right:4px solid #10b981; }
         .sub-card.expired { border-right-color: #ef4444; }
         .sub-card.agel { border-right-color: #f59e0b; }
+
+        .select-checkbox { width: 18px; height: 18px; margin-left: 10px; cursor: pointer; accent-color: #38bdf8; }
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; z-index: 99999; }
         .modal-content { background: #131d31; padding: 20px; border-radius: 12px; width: 90%; max-width: 350px; border: 1px solid #38bdf8; }
@@ -74,6 +77,8 @@
 <div class="toolbar-grid">
     <button class="action-btn active-blue" onclick="openModal()">+ إضافة مشترك</button>
     <button class="action-btn import-btn" onclick="importExcelOrJson()">📥 استيراد ملف أيرثلنك / إكسل</button>
+    <button class="action-btn" onclick="toggleSelectAll()" id="selectAllBtn" style="background:#475569; color:#fff;">☑️ تحديد الكل</button>
+    <button class="action-btn delete-btn" onclick="deleteSelectedSubs()">🗑️ حذف المحدد (<span id="selectedCount">0</span>)</button>
     <button class="action-btn" onclick="exportData()" style="background:#10b981; color:#fff;">💾 حفظ نسخة احتياطية</button>
     <button class="action-btn earthlink-btn" onclick="openEarthlinkDirect()">🌐 فتح لوحة ريسلر أيرثلنك</button>
 </div>
@@ -139,12 +144,13 @@
 <script>
 let subs = [];
 try {
-    subs = JSON.parse(localStorage.getItem('ali_isp_final_v17')) || [];
+    subs = JSON.parse(localStorage.getItem('ali_isp_final_v18')) || [];
 } catch(e) {
     subs = [];
 }
 
 let currentPin = localStorage.getItem('app_pin') || '1234';
+let isAllSelected = false;
 
 function checkPin() {
     let inputPin = document.getElementById('passCodeInput').value;
@@ -170,7 +176,6 @@ function exportData() {
     alert("💾 تم حفظ نسخة احتياطية من كافة البيانات على هاتفك بنجاح!");
 }
 
-// دالة استيراد ملفات الإكسل المفرغة من لوحة أيرثلنك تلقائياً
 function importExcelOrJson() {
     let input = document.createElement('input');
     input.type = 'file';
@@ -182,7 +187,6 @@ function importExcelOrJson() {
         let fileName = file.name.toLowerCase();
 
         if(fileName.endsWith('.json')) {
-            // استيراد نسخة JSON احتياطية
             let reader = new FileReader();
             reader.readAsText(file, 'UTF-8');
             reader.onload = event => {
@@ -190,7 +194,7 @@ function importExcelOrJson() {
                     let importedData = JSON.parse(event.target.result);
                     if(Array.isArray(importedData)) {
                         subs = importedData;
-                        localStorage.setItem('ali_isp_final_v17', JSON.stringify(subs));
+                        localStorage.setItem('ali_isp_final_v18', JSON.stringify(subs));
                         renderSubs();
                         alert("✅ تم استعادة البيانات بنجاح!");
                     }
@@ -199,7 +203,6 @@ function importExcelOrJson() {
                 }
             };
         } else {
-            // استيراد ملف إكسل / CSV المفرغ من أيرثلنك
             let reader = new FileReader();
             reader.readAsArrayBuffer(file);
             reader.onload = event => {
@@ -223,7 +226,6 @@ function importExcelOrJson() {
                     let countAdded = 0;
 
                     jsonRows.forEach(row => {
-                        // البحث عن اسم المشترك أو اليوزر بغض النظر عن اسم العمود
                         let name = row['Name'] || row['اسم المشترك'] || row['Username'] || row['اليوزر'] || row['اسم المستخدم'] || row['الاسم'] || Object.values(row)[0];
                         let phone = row['Phone'] || row['Mobile'] || row['الهاتف'] || row['رقم الهاتف'] || row['الموبايل'] || "";
                         let price = row['Price'] || row['المبلغ'] || row['السعر'] || "30000";
@@ -242,7 +244,7 @@ function importExcelOrJson() {
                         }
                     });
 
-                    localStorage.setItem('ali_isp_final_v17', JSON.stringify(subs));
+                    localStorage.setItem('ali_isp_final_v18', JSON.stringify(subs));
                     renderSubs();
                     alert(`✅ تم استيراد (${countAdded}) مشترك بنجاح من ملف أيرثلنك!`);
 
@@ -326,11 +328,14 @@ function renderSubs() {
 
         html += `
             <div class="sub-card ${s.payStatus === 'أجل' ? 'agel' : (isExp ? 'expired' : '')}">
-                <div>
-                    <div style="font-size: 13px; font-weight: bold;">${s.name} ${payBadge}</div>
-                    <div style="font-size: 10px; color: #94a3b8;">هاتف: ${s.phone || 'بدون'} | ${s.price || 0} د.ع</div>
-                    <div style="font-size: 11px; margin-top: 3px; color:#cbd5e1;">
-                        تفعيل: <span style="color:#38bdf8;">${s.startDate}</span> | انتهاء: <span style="color:${isExp ? '#ef4444' : '#10b981'}; font-weight:bold;">${s.endDate}</span>
+                <div style="display:flex; align-items:center;">
+                    <input type="checkbox" class="select-checkbox sub-checkbox" data-id="${s.id}" onchange="updateSelectedCount()">
+                    <div style="margin-right:8px;">
+                        <div style="font-size: 13px; font-weight: bold;">${s.name} ${payBadge}</div>
+                        <div style="font-size: 10px; color: #94a3b8;">هاتف: ${s.phone || 'بدون'} | ${s.price || 0} د.ع</div>
+                        <div style="font-size: 11px; margin-top: 3px; color:#cbd5e1;">
+                            تفعيل: <span style="color:#38bdf8;">${s.startDate}</span> | انتهاء: <span style="color:${isExp ? '#ef4444' : '#10b981'}; font-weight:bold;">${s.endDate}</span>
+                        </div>
                     </div>
                 </div>
                 <div style="display:flex; flex-direction:column; gap:3px;">
@@ -348,6 +353,41 @@ function renderSubs() {
     document.getElementById('paidSubs').innerText = paidCount;
     document.getElementById('agelSubs').innerText = agelCount;
     document.getElementById('expiredSubs').innerText = expiredCount;
+    updateSelectedCount();
+}
+
+// دالة تحديد الكل أو إلغاء التحديد
+function toggleSelectAll() {
+    let checkboxes = document.querySelectorAll('.sub-checkbox');
+    isAllSelected = !isAllSelected;
+    checkboxes.forEach(cb => cb.checked = isAllSelected);
+    document.getElementById('selectAllBtn').innerText = isAllSelected ? "❎ إلغاء التحديد" : "☑️ تحديد الكل";
+    updateSelectedCount();
+}
+
+// تحديث العداد للمشتركين المحددين
+function updateSelectedCount() {
+    let selectedBoxes = document.querySelectorAll('.sub-checkbox:checked');
+    document.getElementById('selectedCount').innerText = selectedBoxes.length;
+}
+
+// حذف المشتركين المحددين فردياً أو كلياً
+function deleteSelectedSubs() {
+    let selectedBoxes = document.querySelectorAll('.sub-checkbox:checked');
+    if(selectedBoxes.length === 0) {
+        alert("يرجى تحديد مشترك واحد على الأقل للحذف!");
+        return;
+    }
+
+    if(confirm(`هل أنت تأكد من رغبتك في حذف (${selectedBoxes.length}) مشترك محدد؟`)) {
+        let idsToDelete = Array.from(selectedBoxes).map(cb => parseFloat(cb.getAttribute('data-id')));
+        subs = subs.filter(s => !idsToDelete.includes(s.id));
+        localStorage.setItem('ali_isp_final_v18', JSON.stringify(subs));
+        isAllSelected = false;
+        document.getElementById('selectAllBtn').innerText = "☑️ تحديد الكل";
+        renderSubs();
+        alert("تم حذف المشتركين المحددين بنجاح!");
+    }
 }
 
 function saveSub() {
@@ -364,7 +404,7 @@ function saveSub() {
     }
 
     subs.push({ id: Date.now(), name, phone, price, payStatus, startDate, endDate });
-    localStorage.setItem('ali_isp_final_v17', JSON.stringify(subs));
+    localStorage.setItem('ali_isp_final_v18', JSON.stringify(subs));
     
     document.getElementById('subName').value = '';
     document.getElementById('subPhone').value = '';
@@ -385,7 +425,7 @@ function payDebt(id) {
     if(s) {
         if(confirm("هل تريد تثبيت تسديد المبلغ لهذا المشترك؟")) {
             s.payStatus = 'واصل';
-            localStorage.setItem('ali_isp_final_v17', JSON.stringify(subs));
+            localStorage.setItem('ali_isp_final_v18', JSON.stringify(subs));
             renderSubs();
             printReceipt(s.name, s.price || 0, s.startDate, s.endDate, 'واصل (تم التسديد)', 'وصل قبض تسديد دين');
         }
@@ -424,7 +464,7 @@ function printReceipt(name, price, start, end, payStatus, title = 'وصل قبض
 function deleteSub(id) {
     if(confirm("هل تريد حذف هذا المشترك؟")) {
         subs = subs.filter(s => s.id !== id);
-        localStorage.setItem('ali_isp_final_v17', JSON.stringify(subs));
+        localStorage.setItem('ali_isp_final_v18', JSON.stringify(subs));
         renderSubs();
     }
 }
