@@ -193,21 +193,23 @@ function playNotificationSound() {
     }
 }
 
-// المزامنة اللحظية الفورية مع السحابة للتأكد من وجود المشترك وطرد المحذوفين فوراً
+// الاستماع المباشر للسحابة وتطبيق الطرد الفوري القسري للمحذوفين
 db.ref('ali_isp_subscribers').on('value', (snapshot) => {
     const data = snapshot.val();
     subs = data ? Object.values(data) : [];
     
     let savedUser = localStorage.getItem('ali_active_portal_user');
+    
     if (savedUser) {
-        let currentSub = subs.find(s => s.name.trim().toLowerCase() === savedUser.trim().toLowerCase());
+        // التحقق مما إذا كان اليوزر المسجل ما زال موجوداً في عقدة السيرفر
+        let currentSub = subs.find(s => s.name && s.name.trim().toLowerCase() === savedUser.trim().toLowerCase());
         
-        // إذا كان المشترك موجوداً، يتم تحديث بياناته، وإن كان محذوفاً يُطرد فوراً
         if (currentSub) {
             foundSubscriber = currentSub;
             showSubscriberDashboard();
             checkExpiryAlerts();
         } else {
+            // اليوزر تم حذفه من قبل الأدمن -> طرد فورياً ومسح الجلسة
             logoutClient(true);
         }
     }
@@ -361,7 +363,7 @@ function loginClient() {
     }
 
     foundSubscriber = subs.find(s => {
-        let matchName = s.name.trim().toLowerCase() === username || s.name.trim().toLowerCase().includes(username);
+        let matchName = s.name && (s.name.trim().toLowerCase() === username || s.name.trim().toLowerCase().includes(username));
         let matchPhone = s.phone && s.phone.trim() === password;
         return matchName && matchPhone;
     });
@@ -390,7 +392,7 @@ function showSubscriberDashboard() {
     lastChatLength = chats.length;
 }
 
-// دالة خروج العميل القسرية والتلقائية
+// دالة تسجيل الخروج وطرد المحذوفين بمسح الذاكرة المؤقتة تماماً
 function logoutClient(isAuto = false) {
     localStorage.removeItem('ali_active_portal_user');
     sessionStorage.clear();
