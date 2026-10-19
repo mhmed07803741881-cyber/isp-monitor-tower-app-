@@ -12,13 +12,15 @@
         navigator.serviceWorker.register('sw.js');
       }
     </script>
+    <!-- مكتبات Firebase السحابية -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <style>
         body { background-color: #0d1526; color: #fff; font-family: Tahoma, sans-serif; margin: 0; padding: 15px; box-sizing: border-box; display: flex; justify-content: center; align-items: center; min-height: 100vh; flex-direction: column; }
         .top-nav { width: 100%; max-width: 380px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .notif-bell-btn { background: #131d31; color: #f59e0b; border: 1px solid #1e293b; padding: 6px 10px; border-radius: 8px; font-size: 12px; cursor: pointer; position: relative; }
         .broadcast-banner { background: #06b6d4; color: #090d16; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; width: 100%; max-width: 380px; font-size: 12px; font-weight: bold; text-align: center; display: none; box-sizing: border-box; animation: pulse 2s infinite; }
         
-        /* شريط إشعار الرسائل المنبثق مثل الماسنجر */
         .messenger-pop-banner { background: #ec4899; color: #ffffff; padding: 10px 15px; border-radius: 8px; margin-bottom: 12px; width: 100%; max-width: 380px; font-size: 12px; font-weight: bold; text-align: center; display: none; box-sizing: border-box; cursor: pointer; border: 1px solid #f472b6; box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4); animation: slideDown 0.4s ease-out; }
         @keyframes slideDown { from { transform: translateY(-15px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
@@ -54,13 +56,11 @@
         .router-box-label { font-size: 10px; color: #94a3b8; margin-bottom: 4px; }
         .router-box-val { font-size: 14px; font-weight: bold; color: #38bdf8; letter-spacing: 1px; }
 
-        /* شارات الرسائل الجديدة */
         .msg-badge { background: #ef4444; color: #ffffff; border-radius: 50%; padding: 2px 6px; font-size: 10px; margin-right: 5px; animation: pulse 1s infinite; }
     </style>
 </head>
 <body>
 
-<!-- صوت جرس تنبيه ماسنجر للرسائل الواردة -->
 <audio id="clientNotifSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
 
 <div class="top-nav">
@@ -68,15 +68,12 @@
     <button class="notif-bell-btn" onclick="openClientNotifModal()">🔔 الإشعارات <span id="bellBadgeArea"></span></button>
 </div>
 
-<!-- شريط تنبيه إشعار الماسنجر المنبثق عند وصول رسالة جديدة -->
 <div id="messengerPopBanner" class="messenger-pop-banner" onclick="openTicketModal()">
     💬 <span id="messengerPopText">لديك رد جديد من الدعم الفني!</span>
 </div>
 
-<!-- شريط التنبيه بانتهاء الاشتراك -->
 <div id="expiryWarningBanner" class="expiry-warning-banner"></div>
 
-<!-- شريط الإشعارات العام -->
 <div id="broadcastBanner" class="broadcast-banner">
     📢 <span id="broadcastTextContent"></span>
 </div>
@@ -84,7 +81,6 @@
 <div class="portal-container">
     <h2>بوابة زبائن مهندس علي</h2>
 
-    <!-- واجهة تسجيل الدخول -->
     <div id="loginFormArea">
         <p>سجل الدخول باستخدام اسم المستخدم وكلمة المرور (رقم الهاتف)</p>
         <input type="text" id="clientUsernameInput" placeholder="اسم المستخدم (اليوزر)">
@@ -92,14 +88,12 @@
         <button class="btn btn-search" onclick="loginClient()">تسجيل الدخول</button>
     </div>
 
-    <!-- واجهة بيانات المشترك بعد الدخول -->
     <div id="clientInfoBox" class="info-box">
         <div class="info-row"><span class="info-label">اسم المشترك:</span><span class="info-val" id="cName" style="color:#38bdf8"></span></div>
         <div class="info-row"><span class="info-label">حالة الاشتراك:</span><span class="info-val" id="cStatus"></span></div>
         <div class="info-row"><span class="info-label">تاريخ الانتهاء:</span><span class="info-val" id="cEnd"></span></div>
         <div class="info-row"><span class="info-label">مبلغ الاشتراك:</span><span class="info-val" id="cPrice"></span></div>
 
-        <!-- أزرار الخدمات والتحويل والدعم -->
         <button class="btn btn-pay" onclick="copyMasterNumber()">💳 نسخ رقم التحويل (07724850876)</button>
         <button class="btn btn-wa" onclick="sendWhatsAppReceipt()">💬 إرسال إشعار التحويل واتساب</button>
         <button class="btn btn-agel" onclick="requestAgel()">⏳ طلب تفعيل مؤجل (أجل)</button>
@@ -112,33 +106,27 @@
             <span id="ticketBadgeArea"></span>🎫 إرسال تكت دعم فني ومتابعة الردود
         </button>
         
-        <!-- زر تسجيل الخروج -->
         <button class="btn btn-logout" onclick="logoutClient()">🚪 تسجيل الخروج</button>
     </div>
 
-    <!-- أرقام الصيانة الظاهرة في التطبيق -->
     <div class="support-phones">
         📞 هواتف الصيانة والمكتب:<br>
         <b>07818627764 - 07724850876</b>
     </div>
 </div>
 
-<!-- نافذة مركز الإشعارات الموحد الشامل -->
 <div id="clientNotifModal" class="modal">
     <div class="modal-content">
         <h3 style="margin-top:0; color:#f59e0b; text-align:center; font-size:15px;">🔔 مركز إشعارات المشترك</h3>
         <p style="font-size:10px; color:#94a3b8; text-align:center; margin-bottom:10px;">جميع إشعارات الشبكة، تكتات الدعم الفني، وتنبيهات الانتهاء:</p>
         
-        <div id="unifiedNotificationsContainer" style="max-height: 220px; overflow-y: auto; background:#0d1526; padding:8px; border-radius:6px; font-size:11px; color:#cbd5e1; text-align:right; margin-bottom:12px; border:1px solid #1e293b;">
-            <!-- يتم تعبئتها برمجياً -->
-        </div>
+        <div id="unifiedNotificationsContainer" style="max-height: 220px; overflow-y: auto; background:#0d1526; padding:8px; border-radius:6px; font-size:11px; color:#cbd5e1; text-align:right; margin-bottom:12px; border:1px solid #1e293b;"></div>
 
         <button class="btn btn-search" onclick="clearUnifiedNotifications()" style="background:#ef4444; color:#fff; margin-bottom:6px;">🗑️ مسح وإفريغ سجل الإشعارات</button>
         <button class="btn" onclick="closeClientNotifModal()" style="background:#1e293b; color:#38bdf8;">إغلاق</button>
     </div>
 </div>
 
-<!-- نافذة كلمات دخول الراوتر (الثلاث مربعات) -->
 <div id="routerPassModal" class="modal">
     <div class="modal-content" style="border-color: #8b5cf6; max-width: 300px;">
         <h3 style="margin-top:0; color:#8b5cf6; text-align:center; font-size:15px;">🔑 كلمات دخول الراوتر الشائعة</h3>
@@ -163,7 +151,6 @@
     </div>
 </div>
 
-<!-- نافذة المحادثة والتكتات -->
 <div id="ticketModal" class="modal">
     <div class="modal-content">
         <h3 style="margin-top:0; color:#ec4899; text-align:center; font-size:15px;">🎫 تكتات الدعم الفني والمحادثة</h3>
@@ -172,15 +159,29 @@
         <button class="btn btn-ticket" onclick="submitTicket()" style="margin-bottom:10px;">إرسال التكت للإدارة</button>
 
         <div style="font-size:11px; color:#94a3b8; margin-bottom:4px; text-align:right;">سجل المحادثة وتحديثات الأقسام:</div>
-        <div id="ticketChatHistory" style="max-height: 160px; overflow-y: auto; background:#0d1526; padding:8px; border-radius:6px; font-size:11px; color:#cbd5e1; text-align:right; margin-bottom:10px;">
-            لا توجد رسائل.
-        </div>
+        <div id="ticketChatHistory" style="max-height: 160px; overflow-y: auto; background:#0d1526; padding:8px; border-radius:6px; font-size:11px; color:#cbd5e1; text-align:right; margin-bottom:10px;">لا توجد رسائل.</div>
 
         <button class="btn" onclick="closeTicketModal()" style="background:#1e293b; color:#38bdf8;">إغلاق</button>
     </div>
 </div>
 
 <script>
+// إعدادات الاتصال الكاملة بالسيرفر السحابي (Firebase)
+const firebaseConfig = {
+    apiKey: "AIzaSyA2FMY9ZsJHO-9eCJzWPyT5NVJ7C36k94Y",
+    authDomain: "ali-isp-system.firebaseapp.com",
+    databaseURL: "https://ali-isp-system-default-rtdb.firebaseio.com",
+    projectId: "ali-isp-system",
+    storageBucket: "ali-isp-system.firebasestorage.app",
+    messagingSenderId: "765763121547",
+    appId: "1:765763121547:web:fd66cee15a8e412c357f8e",
+    measurementId: "G-DQPH354WEF"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+let subs = [];
 let foundSubscriber = null;
 const adminPhone = "9647724850876";
 let lastChatLength = 0;
@@ -189,9 +190,31 @@ function playNotificationSound() {
     let sound = document.getElementById('clientNotifSound');
     if(sound) { 
         sound.currentTime = 0;
-        sound.play().catch(e => console.log("Audio play blocked by browser policy until interaction")); 
+        sound.play().catch(e => console.log("Audio play allowed")); 
     }
 }
+
+// قراءة البيانات من السحابة تلقائياً لحظة بـ لحظة
+db.ref('ali_isp_subscribers').on('value', (snapshot) => {
+    const data = snapshot.val();
+    if (data) {
+        subs = Object.values(data);
+    } else {
+        subs = [];
+    }
+    
+    let savedUser = localStorage.getItem('ali_active_portal_user');
+    if (savedUser && subs.length > 0) {
+        let currentSub = subs.find(s => s.name.toLowerCase() === savedUser.toLowerCase());
+        if (currentSub) {
+            foundSubscriber = currentSub;
+            showSubscriberDashboard();
+            checkExpiryAlerts();
+        } else {
+            logoutClient(true);
+        }
+    }
+});
 
 window.onload = function() {
     let savedMsg = localStorage.getItem('ali_app_broadcast_msg');
@@ -202,18 +225,9 @@ window.onload = function() {
     checkSavedSession();
 };
 
-// فحص دوري مستمر كل ثانيتين لضمان استجابة وتفعيل الإشعارات فوراً
 setInterval(() => {
-    // تحديث بيانات المشترك تلقائياً من التخزين لمعرفة أي تغييرات من الإدارة
-    let savedUser = localStorage.getItem('ali_active_portal_user');
-    if(!savedUser) return;
+    if(!foundSubscriber) return;
 
-    let subs = JSON.parse(localStorage.getItem('ali_isp_final_v23')) || [];
-    let currentSub = subs.find(s => s.name.toLowerCase() === savedUser.toLowerCase());
-    if(!currentSub) return;
-    foundSubscriber = currentSub;
-
-    // 1. فحص ردود المحادثة الجديدة والتكتات
     let chats = JSON.parse(localStorage.getItem(`ticket_chat_${foundSubscriber.name}`)) || [];
     if(chats.length > lastChatLength) {
         let lastMsg = chats[chats.length - 1];
@@ -222,16 +236,13 @@ setInterval(() => {
         if(lastMsg.sender !== foundSubscriber.name) {
             playNotificationSound();
             
-            // إظهار شريط إشعار ماسنجر المنبثق
             let messengerBanner = document.getElementById('messengerPopBanner');
             document.getElementById('messengerPopText').innerText = `💬 رد جديد من (${lastMsg.sender}): "${lastMsg.text}"`;
             messengerBanner.style.display = 'block';
 
-            // إضافة شارات الإشعارات
             document.getElementById('ticketBadgeArea').innerHTML = '<span class="msg-badge">جديد</span>';
             document.getElementById('bellBadgeArea').innerHTML = '<span class="msg-badge">!</span>';
             
-            // حفظ الإشعار في السجل الموحد للمشترك
             saveToCustomNotifLog(`💬 رسالة جديدة في الدعم الفني من (${lastMsg.sender})`);
         }
         
@@ -240,7 +251,6 @@ setInterval(() => {
         }
     }
 
-    // 2. فحص إشعار التفعيل المباشر أو التسديد من لوحة الإدارة
     let directActivationMsg = localStorage.getItem(`client_activation_notif_${foundSubscriber.name}`);
     if(directActivationMsg) {
         playNotificationSound();
@@ -254,7 +264,6 @@ setInterval(() => {
     }
 }, 2000);
 
-// حفظ إشعار في سجل التنبيهات المخصص للمشترك
 function saveToCustomNotifLog(text) {
     if(!foundSubscriber) return;
     let userNotifs = JSON.parse(localStorage.getItem(`client_custom_notifs_${foundSubscriber.name}`)) || [];
@@ -263,7 +272,6 @@ function saveToCustomNotifLog(text) {
     document.getElementById('bellBadgeArea').innerHTML = '<span class="msg-badge">!</span>';
 }
 
-// تجميع وعرض جميع الإشعارات في النافذة العلوية الموحدة
 function renderUnifiedNotifications() {
     if(!foundSubscriber) {
         document.getElementById('unifiedNotificationsContainer').innerHTML = "يرجى تسجيل الدخول أولاً لعرض الإشعارات.";
@@ -272,13 +280,11 @@ function renderUnifiedNotifications() {
 
     let htmlContent = "";
 
-    // أ. إشعارات البث العام للشبكة
     let savedBroadcast = localStorage.getItem('ali_app_broadcast_msg');
     if(savedBroadcast) {
         htmlContent += `<div style="margin-bottom:8px; border-bottom:1px solid #1e293b; padding-bottom:6px;"><b style="color:#06b6d4;">📢 إعلان الشبكة العام:</b> ${savedBroadcast}</div>`;
     }
 
-    // ب. تنبيهات حالة الاشتراك والانتهاء
     let now = new Date();
     let endDate = new Date(foundSubscriber.endDate + "T23:59:59");
     let diffHours = (endDate - now) / (1000 * 60 * 60);
@@ -288,7 +294,6 @@ function renderUnifiedNotifications() {
         htmlContent += `<div style="margin-bottom:8px; border-bottom:1px solid #1e293b; padding-bottom:6px;"><b style="color:#ef4444;">🚨 تنبيه عاجل:</b> اشتراكك منتهي حالياً يرجى المبادرة بالتجديد.</div>`;
     }
 
-    // ج. سجل التكتات والردود الخاصة بالمشترك
     let chats = JSON.parse(localStorage.getItem(`ticket_chat_${foundSubscriber.name}`)) || [];
     if(chats.length > 0) {
         htmlContent += `<div style="margin-top:6px; margin-bottom:4px;"><b style="color:#ec4899;">🎫 سجل تكتات الدعم الفني:</b></div>`;
@@ -297,7 +302,6 @@ function renderUnifiedNotifications() {
         });
     }
 
-    // د. الإشعارات الإدارية الخاصة (تفعيل، تسديد)
     let customNotifs = JSON.parse(localStorage.getItem(`client_custom_notifs_${foundSubscriber.name}`)) || [];
     if(customNotifs.length > 0) {
         htmlContent += `<div style="margin-top:6px; margin-bottom:4px;"><b style="color:#38bdf8;">📌 التنبيهات الإدارية الخاصة:</b></div>`;
@@ -355,14 +359,14 @@ function checkSavedSession() {
     let savedUser = localStorage.getItem('ali_active_portal_user');
     if(!savedUser) return;
 
-    let subs = JSON.parse(localStorage.getItem('ali_isp_final_v23')) || [];
-    foundSubscriber = subs.find(s => s.name.toLowerCase() === savedUser.toLowerCase());
-
-    if(foundSubscriber) {
-        showSubscriberDashboard();
-        checkExpiryAlerts();
-    } else {
-        logoutClient(true);
+    if (subs.length > 0) {
+        foundSubscriber = subs.find(s => s.name.toLowerCase() === savedUser.toLowerCase());
+        if(foundSubscriber) {
+            showSubscriberDashboard();
+            checkExpiryAlerts();
+        } else {
+            logoutClient(true);
+        }
     }
 }
 
@@ -375,8 +379,6 @@ function loginClient() {
         return;
     }
 
-    let subs = JSON.parse(localStorage.getItem('ali_isp_final_v23')) || [];
-    
     foundSubscriber = subs.find(s => {
         let matchName = s.name.toLowerCase() === username || s.name.toLowerCase().includes(username);
         let matchPhone = s.phone.trim() === password;
@@ -429,7 +431,7 @@ function logoutClient(isAuto = false) {
 function openClientNotifModal() { 
     playNotificationSound();
     renderUnifiedNotifications();
-    document.getElementById('bellBadgeArea').innerHTML = ''; // إزالة الشارة عند الفتح
+    document.getElementById('bellBadgeArea').innerHTML = '';
     document.getElementById('clientNotifModal').style.display = 'flex'; 
 }
 function closeClientNotifModal() { document.getElementById('clientNotifModal').style.display = 'none'; }
@@ -511,9 +513,13 @@ function sendWhatsAppReceipt() {
 function requestAgel() {
     if(!foundSubscriber) return;
     foundSubscriber.payStatus = 'أجل';
-    let subs = JSON.parse(localStorage.getItem('ali_isp_final_v23')) || [];
-    subs = subs.map(s => s.id === foundSubscriber.id ? foundSubscriber : s);
-    localStorage.setItem('ali_isp_final_v23', JSON.stringify(subs));
+    
+    let subsObj = {};
+    subs.forEach(s => {
+        if(s.id === foundSubscriber.id) s.payStatus = 'أجل';
+        subsObj[s.id] = s;
+    });
+    db.ref('ali_isp_subscribers').set(subsObj);
 
     pushAdminNotification(`⏳ طلب تفعيل مؤجل (أجل) جديد للمشترك: ${foundSubscriber.name}`);
 
