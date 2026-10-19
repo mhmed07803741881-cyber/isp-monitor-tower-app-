@@ -17,6 +17,10 @@
         .top-nav { width: 100%; max-width: 380px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .notif-bell-btn { background: #131d31; color: #f59e0b; border: 1px solid #1e293b; padding: 6px 10px; border-radius: 8px; font-size: 12px; cursor: pointer; }
         .broadcast-banner { background: #06b6d4; color: #090d16; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; width: 100%; max-width: 380px; font-size: 12px; font-weight: bold; text-align: center; display: none; box-sizing: border-box; animation: pulse 2s infinite; }
+        .expiry-warning-banner { padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; width: 100%; max-width: 380px; font-size: 11px; font-weight: bold; text-align: center; display: none; box-sizing: border-box; animation: pulse 1.5s infinite; }
+        .expiry-warning-banner.day-warn { background: #f59e0b; color: #090d16; }
+        .expiry-warning-banner.hour-warn { background: #ef4444; color: #ffffff; }
+
         @keyframes pulse { 0% { opacity: 0.8; } 50% { opacity: 1; } 100% { opacity: 0.8; } }
         .portal-container { background: #131d31; border: 1px solid #1e293b; padding: 20px; border-radius: 12px; width: 100%; max-width: 380px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); box-sizing: border-box; }
         h2 { color: #38bdf8; text-align: center; margin-top: 0; font-size: 17px; }
@@ -41,16 +45,9 @@
         .modal-content { background: #131d31; padding: 20px; border-radius: 12px; width: 90%; max-width: 320px; border: 1px solid #ec4899; box-sizing: border-box; }
         .support-phones { background: #0d1526; border: 1px solid #1e293b; padding: 8px; border-radius: 8px; text-align: center; font-size: 11px; margin-top: 15px; color: #38bdf8; }
         
-        /* تصميم مربعات كلمات مرور الراوتر */
         .router-box-item { background: #0d1526; border: 1px solid #38bdf8; padding: 10px; border-radius: 8px; margin-bottom: 8px; text-align: center; }
         .router-box-label { font-size: 10px; color: #94a3b8; margin-bottom: 4px; }
         .router-box-val { font-size: 14px; font-weight: bold; color: #38bdf8; letter-spacing: 1px; }
-
-        /* تنسيق فقرات المحادثة وتحديثات الأقسام */
-        .chat-msg-item { margin-bottom: 8px; border-bottom: 1px solid #1e293b; padding-bottom: 6px; }
-        .chat-sender-admin { color: #38bdf8; font-weight: bold; }
-        .chat-sender-system { color: #10b981; font-weight: bold; }
-        .chat-sender-user { color: #f59e0b; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -62,6 +59,9 @@
     <div style="font-size:12px; color:#38bdf8; font-weight:bold;">مكتب مهندس علي</div>
     <button class="notif-bell-btn" onclick="openClientNotifModal()">🔔 الإشعارات</button>
 </div>
+
+<!-- شريط التنبيه بانتهاء الاشتراك -->
+<div id="expiryWarningBanner" class="expiry-warning-banner"></div>
 
 <!-- شريط الإشعارات العام -->
 <div id="broadcastBanner" class="broadcast-banner">
@@ -122,19 +122,16 @@
         <h3 style="margin-top:0; color:#8b5cf6; text-align:center; font-size:15px;">🔑 كلمات دخول الراوتر الشائعة</h3>
         <p style="font-size:10px; color:#94a3b8; margin-bottom:10px;">استخدم إحدى الكلمات التالية لفتح صفحة الراوتر:</p>
         
-        <!-- المربع الأول -->
         <div class="router-box-item">
             <div class="router-box-label">الاحتمال الأول:</div>
             <div class="router-box-val">admin</div>
         </div>
 
-        <!-- المربع الثاني -->
         <div class="router-box-item">
             <div class="router-box-label">الاحتمال الثاني:</div>
             <div class="router-box-val">admin</div>
         </div>
 
-        <!-- المربع الثالث -->
         <div class="router-box-item">
             <div class="router-box-label">الاحتمال الثالث:</div>
             <div class="router-box-val">admin1</div>
@@ -144,7 +141,7 @@
     </div>
 </div>
 
-<!-- نافذة المحادثة والتكتات وتحديثات الأقسام -->
+<!-- نافذة المحادثة والتكتات -->
 <div id="ticketModal" class="modal">
     <div class="modal-content">
         <h3 style="margin-top:0; color:#ec4899; text-align:center; font-size:15px;">🎫 تكتات الدعم الفني والمحادثة</h3>
@@ -152,9 +149,9 @@
         <textarea id="ticketMessageText" rows="3" placeholder="اكتب مشكلتك أو استفسارك هنا..."></textarea>
         <button class="btn btn-ticket" onclick="submitTicket()" style="margin-bottom:10px;">إرسال التكت للإدارة</button>
 
-        <div style="font-size:11px; color:#94a3b8; margin-bottom:4px; text-align:right;">📜 سجل المحادثة وتحديثات الأقسام:</div>
-        <div id="ticketChatHistory" style="max-height: 180px; overflow-y: auto; background:#0d1526; padding:8px; border-radius:6px; font-size:11px; color:#cbd5e1; text-align:right; margin-bottom:10px;">
-            لا توجد رسائل أو تحديثات.
+        <div style="font-size:11px; color:#94a3b8; margin-bottom:4px; text-align:right;">سجل المحادثة وتحديثات الأقسام:</div>
+        <div id="ticketChatHistory" style="max-height: 150px; overflow-y: auto; background:#0d1526; padding:8px; border-radius:6px; font-size:11px; color:#cbd5e1; text-align:right; margin-bottom:10px;">
+            لا توجد رسائل.
         </div>
 
         <button class="btn" onclick="closeTicketModal()" style="background:#1e293b; color:#38bdf8;">إغلاق</button>
@@ -164,10 +161,11 @@
 <script>
 let foundSubscriber = null;
 const adminPhone = "9647724850876";
+let lastChatLength = 0;
 
 function playNotificationSound() {
     let sound = document.getElementById('clientNotifSound');
-    if(sound) { sound.play().catch(e => console.log("Audio play allowed on user action")); }
+    if(sound) { sound.play().catch(e => console.log("Audio play allowed on user interaction")); }
 }
 
 window.onload = function() {
@@ -178,42 +176,60 @@ window.onload = function() {
         document.getElementById('clientNotifText').innerText = savedMsg;
     }
     checkSavedSession();
-
-    // مراقبة فورية مستمرة للردود وتحديثات الأقسام والإشعارات كل ثانيتين
-    setInterval(listenForIncomingMessagesAndNotifs, 2000);
 };
 
-// فحص واستلام الرسائل وتحديثات الأقسام مع صوت التنبيه المباشر
-function listenForIncomingMessagesAndNotifs() {
+// فحص الرسائل والتنبيهات القادمة من الإدارة كل 3 ثوانٍ
+setInterval(() => {
     if(!foundSubscriber) return;
 
-    // 1. مراقبة سجل المحادثة وتحديثات الأقسام
+    // 1. فحص ردود المحادثة الجديدة من الإدارة
     let chats = JSON.parse(localStorage.getItem(`ticket_chat_${foundSubscriber.name}`)) || [];
-    let lastChatCount = parseInt(localStorage.getItem(`last_chat_count_${foundSubscriber.name}`) || '0');
-
-    if(chats.length > lastChatCount) {
+    if(chats.length > lastChatLength) {
+        lastChatLength = chats.length;
         playNotificationSound();
-        localStorage.setItem(`last_chat_count_${foundSubscriber.name}`, chats.length);
-        
-        // التحديث الفوري لسجل المحادثة والتكتات
         refreshChatHistory();
     }
 
-    // 2. مراقبة إشعارات التفعيل التلقائي
-    let actNotif = localStorage.getItem(`client_activation_notif_${foundSubscriber.name}`);
-    if(actNotif) {
+    // 2. فحص إشعار التفعيل المباشر من الإدارة
+    let directActivationMsg = localStorage.getItem(`client_activation_notif_${foundSubscriber.name}`);
+    if(directActivationMsg) {
         playNotificationSound();
-        document.getElementById('clientNotifText').innerText = actNotif;
-        document.getElementById('clientNotifModal').style.display = 'flex';
+        alert(directActivationMsg);
         localStorage.removeItem(`client_activation_notif_${foundSubscriber.name}`);
+        checkSavedSession(); // تحديث بيانات الشاشة
+    }
+}, 3000);
 
-        // تحديث البيانات على الشاشة
-        let subs = JSON.parse(localStorage.getItem('ali_isp_final_v23')) || [];
-        let updatedSub = subs.find(s => s.name.toLowerCase() === foundSubscriber.name.toLowerCase());
-        if(updatedSub) {
-            foundSubscriber = updatedSub;
-            showSubscriberDashboard();
+// فحص وقت الانتهاء وإرسال التنبيهات الاوتوماتيكية (قبل يوم وقبل ساعة)
+function checkExpiryAlerts() {
+    if(!foundSubscriber || !foundSubscriber.endDate) return;
+
+    let now = new Date();
+    let endDate = new Date(foundSubscriber.endDate + "T23:59:59");
+    let diffHours = (endDate - now) / (1000 * 60 * 60);
+
+    let warningBanner = document.getElementById('expiryWarningBanner');
+
+    if(diffHours > 0 && diffHours <= 1) {
+        // تنبيه متبقي ساعة واحدة
+        warningBanner.innerText = "🚨 تنبيه عاجل: متبقي أقل من ساعة واحدة على انتهاء اشتراكك! يرجى التجديد لتجنب انقطاع الخدمة.";
+        warningBanner.className = "expiry-warning-banner hour-warn";
+        warningBanner.style.display = "block";
+        if(!sessionStorage.getItem('hourAlertPlayed')) {
+            playNotificationSound();
+            sessionStorage.setItem('hourAlertPlayed', 'true');
         }
+    } else if(diffHours > 1 && diffHours <= 24) {
+        // تنبيه متبقي يوم واحد (24 ساعة)
+        warningBanner.innerText = "⏳ تنبيه: ينتهي اشتراكك خلال أقل من 24 ساعة (غداً). يرجى المبادرة بالتسديد.";
+        warningBanner.className = "expiry-warning-banner day-warn";
+        warningBanner.style.display = "block";
+        if(!sessionStorage.getItem('dayAlertPlayed')) {
+            playNotificationSound();
+            sessionStorage.setItem('dayAlertPlayed', 'true');
+        }
+    } else {
+        warningBanner.style.display = "none";
     }
 }
 
@@ -226,6 +242,7 @@ function checkSavedSession() {
 
     if(foundSubscriber) {
         showSubscriberDashboard();
+        checkExpiryAlerts();
     } else {
         logoutClient(true);
     }
@@ -252,9 +269,7 @@ function loginClient() {
         localStorage.setItem('ali_active_portal_user', foundSubscriber.name);
         showSubscriberDashboard();
         playNotificationSound();
-
-        let chats = JSON.parse(localStorage.getItem(`ticket_chat_${foundSubscriber.name}`)) || [];
-        localStorage.setItem(`last_chat_count_${foundSubscriber.name}`, chats.length);
+        checkExpiryAlerts();
     } else {
         alert("خطأ في تسجيل الدخول!\nاسم المستخدم أو كلمة المرور (رقم الهاتف) غير صحيحة.");
     }
@@ -269,12 +284,18 @@ function showSubscriberDashboard() {
     
     document.getElementById('loginFormArea').style.display = 'none';
     document.getElementById('clientInfoBox').style.display = 'block';
+
+    let chats = JSON.parse(localStorage.getItem(`ticket_chat_${foundSubscriber.name}`)) || [];
+    lastChatLength = chats.length;
 }
 
 function logoutClient(isAuto = false) {
     localStorage.removeItem('ali_active_portal_user');
+    sessionStorage.removeItem('hourAlertPlayed');
+    sessionStorage.removeItem('dayAlertPlayed');
     foundSubscriber = null;
     document.getElementById('clientInfoBox').style.display = 'none';
+    document.getElementById('expiryWarningBanner').style.display = 'none';
     document.getElementById('loginFormArea').style.display = 'block';
     document.getElementById('clientUsernameInput').value = '';
     document.getElementById('clientPasswordInput').value = '';
@@ -302,26 +323,10 @@ function openTicketModal() {
 }
 function closeTicketModal() { document.getElementById('ticketModal').style.display = 'none'; }
 
-// عرض وتحديث سجل المحادثة وتحديثات الأقسام بالألوان
 function refreshChatHistory() {
     let chats = JSON.parse(localStorage.getItem(`ticket_chat_${foundSubscriber.name}`)) || [];
-    
-    if(chats.length === 0) {
-        document.getElementById('ticketChatHistory').innerHTML = "لا توجد رسائل أو تحديثات سابقة.";
-    } else {
-        let chatHtml = chats.map(c => {
-            let senderClass = "chat-sender-user";
-            if(c.sender.includes("النظام")) senderClass = "chat-sender-system";
-            else if(c.sender.includes("مكتب") || c.sender.includes("الدعم")) senderClass = "chat-sender-admin";
-
-            return `
-                <div class="chat-msg-item">
-                    <span class="${senderClass}">${c.sender}:</span> ${c.text}
-                </div>
-            `;
-        }).join('');
-        document.getElementById('ticketChatHistory').innerHTML = chatHtml;
-    }
+    let chatHtml = chats.length === 0 ? "لا توجد ردود سابقة." : chats.map(c => `<div style="margin-bottom:6px; border-bottom:1px solid #1e293b; padding-bottom:4px;"><b>${c.sender}:</b> ${c.text}</div>`).join('');
+    document.getElementById('ticketChatHistory').innerHTML = chatHtml;
 }
 
 function submitTicket() {
@@ -338,8 +343,6 @@ function submitTicket() {
     let chats = JSON.parse(localStorage.getItem(`ticket_chat_${foundSubscriber.name}`)) || [];
     chats.push(chatItem);
     localStorage.setItem(`ticket_chat_${foundSubscriber.name}`, JSON.stringify(chats));
-
-    localStorage.setItem(`last_chat_count_${foundSubscriber.name}`, chats.length);
 
     let notifs = JSON.parse(localStorage.getItem('ali_admin_notifications')) || [];
     notifs.push(`${new Date().toLocaleTimeString()} - 🎫 تكت جديد (${ticketNum}) من المشترك: ${foundSubscriber.name}`);
