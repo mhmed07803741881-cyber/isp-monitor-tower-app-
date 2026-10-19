@@ -17,6 +17,11 @@
         .top-nav { width: 100%; max-width: 380px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .notif-bell-btn { background: #131d31; color: #f59e0b; border: 1px solid #1e293b; padding: 6px 10px; border-radius: 8px; font-size: 12px; cursor: pointer; }
         .broadcast-banner { background: #06b6d4; color: #090d16; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; width: 100%; max-width: 380px; font-size: 12px; font-weight: bold; text-align: center; display: none; box-sizing: border-box; animation: pulse 2s infinite; }
+        
+        /* شريط إشعار الرسائل المنبثق مثل الماسنجر */
+        .messenger-pop-banner { background: #ec4899; color: #ffffff; padding: 10px 15px; border-radius: 8px; margin-bottom: 12px; width: 100%; max-width: 380px; font-size: 12px; font-weight: bold; text-align: center; display: none; box-sizing: border-box; cursor: pointer; border: 1px solid #f472b6; box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4); animation: slideDown 0.4s ease-out; }
+        @keyframes slideDown { from { transform: translateY(-15px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
         .expiry-warning-banner { padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; width: 100%; max-width: 380px; font-size: 11px; font-weight: bold; text-align: center; display: none; box-sizing: border-box; animation: pulse 1.5s infinite; }
         .expiry-warning-banner.day-warn { background: #f59e0b; color: #090d16; }
         .expiry-warning-banner.hour-warn { background: #ef4444; color: #ffffff; }
@@ -35,7 +40,7 @@
         .btn-router { background: #0284c7; color: #fff; }
         .btn-speed { background: #10b981; color: #fff; }
         .btn-router-pass { background: #8b5cf6; color: #fff; }
-        .btn-ticket { background: #ec4899; color: #fff; }
+        .btn-ticket { background: #ec4899; color: #fff; position: relative; }
         .btn-logout { background: #ef4444; color: #fff; }
         .info-box { background: #0d1526; border: 1px solid #1e293b; padding: 12px; border-radius: 8px; margin-top: 12px; display: none; }
         .info-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; }
@@ -48,16 +53,24 @@
         .router-box-item { background: #0d1526; border: 1px solid #38bdf8; padding: 10px; border-radius: 8px; margin-bottom: 8px; text-align: center; }
         .router-box-label { font-size: 10px; color: #94a3b8; margin-bottom: 4px; }
         .router-box-val { font-size: 14px; font-weight: bold; color: #38bdf8; letter-spacing: 1px; }
+
+        /* شارات الرسائل الجديدة */
+        .msg-badge { background: #ef4444; color: #ffffff; border-radius: 50%; padding: 2px 6px; font-size: 10px; margin-right: 5px; animation: pulse 1s infinite; }
     </style>
 </head>
 <body>
 
-<!-- صوت التنبيه التفاعلي للإشعارات والتكتات -->
+<!-- صوت جرس تنبيه ماسنجر للرسائل الواردة -->
 <audio id="clientNotifSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
 
 <div class="top-nav">
     <div style="font-size:12px; color:#38bdf8; font-weight:bold;">مكتب مهندس علي</div>
     <button class="notif-bell-btn" onclick="openClientNotifModal()">🔔 الإشعارات</button>
+</div>
+
+<!-- شريط تنبيه إشعار الماسنجر المنبثق عند وصول رسالة جديدة -->
+<div id="messengerPopBanner" class="messenger-pop-banner" onclick="openTicketModal()">
+    💬 <span id="messengerPopText">لديك رد جديد من الدعم الفني!</span>
 </div>
 
 <!-- شريط التنبيه بانتهاء الاشتراك -->
@@ -94,7 +107,10 @@
         <a href="http://192.168.0.1" target="_blank" class="btn btn-router">⚙️ تغيير رمز الراوتر (192.168.0.1)</a>
         <button class="btn btn-router-pass" onclick="openRouterPassModal()">🔑 كلمات دخول الراوتر</button>
         <a href="https://www.fast.com" target="_blank" class="btn btn-speed">🚀 فحص السرعة (Fast.com)</a>
-        <button class="btn btn-ticket" onclick="openTicketModal()">🎫 إرسال تكت دعم فني ومتابعة الردود</button>
+        
+        <button class="btn btn-ticket" onclick="openTicketModal()">
+            <span id="ticketBadgeArea"></span>🎫 إرسال تكت دعم فني ومتابعة الردود
+        </button>
         
         <!-- زر تسجيل الخروج -->
         <button class="btn btn-logout" onclick="logoutClient()">🚪 تسجيل الخروج</button>
@@ -150,7 +166,7 @@
         <button class="btn btn-ticket" onclick="submitTicket()" style="margin-bottom:10px;">إرسال التكت للإدارة</button>
 
         <div style="font-size:11px; color:#94a3b8; margin-bottom:4px; text-align:right;">سجل المحادثة وتحديثات الأقسام:</div>
-        <div id="ticketChatHistory" style="max-height: 150px; overflow-y: auto; background:#0d1526; padding:8px; border-radius:6px; font-size:11px; color:#cbd5e1; text-align:right; margin-bottom:10px;">
+        <div id="ticketChatHistory" style="max-height: 160px; overflow-y: auto; background:#0d1526; padding:8px; border-radius:6px; font-size:11px; color:#cbd5e1; text-align:right; margin-bottom:10px;">
             لا توجد رسائل.
         </div>
 
@@ -165,7 +181,7 @@ let lastChatLength = 0;
 
 function playNotificationSound() {
     let sound = document.getElementById('clientNotifSound');
-    if(sound) { sound.play().catch(e => console.log("Audio play allowed on user interaction")); }
+    if(sound) { sound.play().catch(e => console.log("Audio play permitted")); }
 }
 
 window.onload = function() {
@@ -185,12 +201,26 @@ setInterval(() => {
     // 1. فحص ردود المحادثة الجديدة من الإدارة
     let chats = JSON.parse(localStorage.getItem(`ticket_chat_${foundSubscriber.name}`)) || [];
     if(chats.length > lastChatLength) {
+        let lastMsg = chats[chats.length - 1];
         lastChatLength = chats.length;
-        playNotificationSound();
+
+        // تشغيل صوت التنبيه فوراً إذا كانت الرسالة من الإدارة أو النظام
+        if(lastMsg.sender !== foundSubscriber.name) {
+            playNotificationSound();
+            
+            // إظهار شريط إشعار ماسنجر المنبثق
+            let messengerBanner = document.getElementById('messengerPopBanner');
+            document.getElementById('messengerPopText').innerText = `💬 رسالة جديدة من (${lastMsg.sender}): "${lastMsg.text}"`;
+            messengerBanner.style.display = 'block';
+
+            // إضافة شارة حمراء على زر التكت
+            document.getElementById('ticketBadgeArea').innerHTML = '<span class="msg-badge">جديد</span>';
+        }
+        
         refreshChatHistory();
     }
 
-    // 2. فحص إشعار التفعيل المباشر من الإدارة
+    // 2. فحص إشعار التفعيل المباشر أو التسديد من الإدارة
     let directActivationMsg = localStorage.getItem(`client_activation_notif_${foundSubscriber.name}`);
     if(directActivationMsg) {
         playNotificationSound();
@@ -211,7 +241,6 @@ function checkExpiryAlerts() {
     let warningBanner = document.getElementById('expiryWarningBanner');
 
     if(diffHours > 0 && diffHours <= 1) {
-        // تنبيه متبقي ساعة واحدة
         warningBanner.innerText = "🚨 تنبيه عاجل: متبقي أقل من ساعة واحدة على انتهاء اشتراكك! يرجى التجديد لتجنب انقطاع الخدمة.";
         warningBanner.className = "expiry-warning-banner hour-warn";
         warningBanner.style.display = "block";
@@ -220,7 +249,6 @@ function checkExpiryAlerts() {
             sessionStorage.setItem('hourAlertPlayed', 'true');
         }
     } else if(diffHours > 1 && diffHours <= 24) {
-        // تنبيه متبقي يوم واحد (24 ساعة)
         warningBanner.innerText = "⏳ تنبيه: ينتهي اشتراكك خلال أقل من 24 ساعة (غداً). يرجى المبادرة بالتسديد.";
         warningBanner.className = "expiry-warning-banner day-warn";
         warningBanner.style.display = "block";
@@ -296,6 +324,7 @@ function logoutClient(isAuto = false) {
     foundSubscriber = null;
     document.getElementById('clientInfoBox').style.display = 'none';
     document.getElementById('expiryWarningBanner').style.display = 'none';
+    document.getElementById('messengerPopBanner').style.display = 'none';
     document.getElementById('loginFormArea').style.display = 'block';
     document.getElementById('clientUsernameInput').value = '';
     document.getElementById('clientPasswordInput').value = '';
@@ -319,14 +348,26 @@ function closeRouterPassModal() { document.getElementById('routerPassModal').sty
 function openTicketModal() {
     if(!foundSubscriber) return;
     refreshChatHistory();
+    
+    // إخفاء شريط وشارات الرسائل الجديدة عند فتح نافذة المحادثة
+    document.getElementById('messengerPopBanner').style.display = 'none';
+    document.getElementById('ticketBadgeArea').innerHTML = '';
+    
     document.getElementById('ticketModal').style.display = 'flex';
 }
 function closeTicketModal() { document.getElementById('ticketModal').style.display = 'none'; }
 
 function refreshChatHistory() {
     let chats = JSON.parse(localStorage.getItem(`ticket_chat_${foundSubscriber.name}`)) || [];
-    let chatHtml = chats.length === 0 ? "لا توجد ردود سابقة." : chats.map(c => `<div style="margin-bottom:6px; border-bottom:1px solid #1e293b; padding-bottom:4px;"><b>${c.sender}:</b> ${c.text}</div>`).join('');
-    document.getElementById('ticketChatHistory').innerHTML = chatHtml;
+    let chatHtml = chats.length === 0 ? "لا توجد ردود سابقة." : chats.map(c => `
+        <div style="margin-bottom:6px; border-bottom:1px solid #1e293b; padding-bottom:4px;">
+            <b style="color:${c.sender === foundSubscriber.name ? '#38bdf8' : '#ec4899'}">${c.sender}:</b> ${c.text}
+        </div>
+    `).join('');
+    
+    let container = document.getElementById('ticketChatHistory');
+    container.innerHTML = chatHtml;
+    container.scrollTop = container.scrollHeight; // التمرير التلقائي لآخر رسالة
 }
 
 function submitTicket() {
