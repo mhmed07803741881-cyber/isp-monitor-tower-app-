@@ -458,13 +458,28 @@ function sendInAppNotificationToSubscriber(subName, endDate, payStatus) {
     let statusText = payStatus === 'واصل' ? 'واصل ✅' : 'أجل ⏳';
     let notifMsg = `🎉 تم تفعيل اشتراكك بنجاح!\nالحالة: ${statusText}\nينتهي بتاريخ: ${endDate}`;
     
-    // حفظ الإشعار المباشر الخاص بالحساب
     localStorage.setItem(`client_activation_notif_${subName}`, notifMsg);
 
-    // إضافة الإشعار أيضاً إلى سجل التكتات والمحادثة الخاصة به
     let chats = JSON.parse(localStorage.getItem(`ticket_chat_${subName}`)) || [];
     chats.push({ sender: "النظام (تفعيل تلقائي)", text: `✅ تم تفعيل الاشتراك بنجاح حتى تاريخ (${endDate}) - حالة الدفع: ${statusText}` });
     localStorage.setItem(`ticket_chat_${subName}`, JSON.stringify(chats));
+}
+
+// إرسال إشعار تسديد الدين داخل تطبيق المشترك وعبر الواتساب
+function sendPaymentSuccessWhatsAppAndInApp(phone, name) {
+    let notifMsg = `💵 تم استلام مبلغ التسديد بنجاح وتم تغيير حالتك إلى (واصل ✅).\nشكراً لتعاملكم مع مكتب مهندس علي.`;
+    localStorage.setItem(`client_activation_notif_${name}`, notifMsg);
+
+    let chats = JSON.parse(localStorage.getItem(`ticket_chat_${name}`)) || [];
+    chats.push({ sender: "النظام (تسديد الدين)", text: `💵 تم تثبيت تسديد المبلغ بنجاح وأصبح الحساب (واصل ✅).` });
+    localStorage.setItem(`ticket_chat_${name}`, JSON.stringify(chats));
+
+    if(phone && phone.trim() !== "") {
+        let cleanPhone = phone.replace(/\D/g, '');
+        if(cleanPhone.startsWith('0')) cleanPhone = '964' + cleanPhone.substring(1);
+        let msg = `عزيزنا المشترك (${name}) 💵\nتم تسديد مبلغ الاشتراك بنجاح وتم تغيير حالتك في النظام إلى (واصل ✅).\nشكراً لالتزامكم وسرعة تسديدكم.\nمكتب مهندس علي لخدمات الإنترنت\nهواتف المكتب: 07818627764 - 07724850876`;
+        window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`, '_blank');
+    }
 }
 
 // فتح نافذة اختيار نوع التفعيل (نقد أو أجل)
@@ -500,10 +515,7 @@ function confirmRenewSubscription() {
         renderSubs();
         closeRenewModal();
 
-        // 1. إرسال إشعار تلقائي مباشر إلى برنامج المشترك
         sendInAppNotificationToSubscriber(s.name, s.endDate, s.payStatus);
-
-        // 2. إرسال رسالة تفعيل عبر الواتساب للمشترك
         sendActivationWhatsApp(s.phone, s.name, s.endDate, s.payStatus);
 
         if(s.payStatus === 'واصل') {
@@ -673,7 +685,6 @@ function saveSub() {
     closeModal();
     renderSubs();
 
-    // إرسال إشعار داخلي لتطبيق المشترك
     sendInAppNotificationToSubscriber(name, endDate, payStatus);
 
     if(phone) {
@@ -688,6 +699,10 @@ function payDebt(id) {
             s.payStatus = 'واصل';
             localStorage.setItem('ali_isp_final_v23', JSON.stringify(subs));
             renderSubs();
+
+            // إرسال إشعار داخلي لتطبيق المشترك + فتح رسالة واتساب بالتسديد
+            sendPaymentSuccessWhatsAppAndInApp(s.phone, s.name);
+
             printReceipt(s.name, s.price || 0, s.startDate, s.endDate, 'واصل (تم التسديد)', 'وصل قبض تسديد دين');
         }
     }
