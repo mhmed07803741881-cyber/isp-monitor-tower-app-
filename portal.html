@@ -166,7 +166,6 @@
 </div>
 
 <script>
-// إعدادات الاتصال الكاملة بالسيرفر السحابي (Firebase)
 const firebaseConfig = {
     apiKey: "AIzaSyA2FMY9ZsJHO-9eCJzWPyT5NVJ7C36k94Y",
     authDomain: "ali-isp-system.firebaseapp.com",
@@ -194,18 +193,15 @@ function playNotificationSound() {
     }
 }
 
-// قراءة البيانات من السحابة تلقائياً لحظة بـ لحظة
+// المزامنة اللحظية مع السحابة للتأكد من وجود الحساب
 db.ref('ali_isp_subscribers').on('value', (snapshot) => {
     const data = snapshot.val();
-    if (data) {
-        subs = Object.values(data);
-    } else {
-        subs = [];
-    }
+    subs = data ? Object.values(data) : [];
     
     let savedUser = localStorage.getItem('ali_active_portal_user');
-    if (savedUser && subs.length > 0) {
+    if (savedUser) {
         let currentSub = subs.find(s => s.name.toLowerCase() === savedUser.toLowerCase());
+        // إذا قام الأدمن بحذف المشترك، يتم إخراجه فوراً
         if (currentSub) {
             foundSubscriber = currentSub;
             showSubscriberDashboard();
@@ -391,7 +387,7 @@ function loginClient() {
         playNotificationSound();
         checkExpiryAlerts();
     } else {
-        alert("خطأ في تسجيل الدخول!\nاسم المستخدم أو كلمة المرور (رقم الهاتف) غير صحيحة.");
+        alert("خطأ في تسجيل الدخول!\nاسم المستخدم أو كلمة المرور (رقم الهاتف) غير صحيحة، أو تم إلغاء الحساب من الإدارة.");
     }
 }
 
@@ -422,7 +418,7 @@ function logoutClient(isAuto = false) {
     document.getElementById('clientPasswordInput').value = '';
     
     if(isAuto) {
-        alert("⚠️ تم إلغاء حساب الاشتراك الخاص بك من قبل الإدارة.");
+        alert("⚠️ تم إلغاء/حذف حساب الاشتراك الخاص بك من قبل الإدارة.");
     } else {
         alert("تم تسجيل الخروج بنجاح.");
     }
