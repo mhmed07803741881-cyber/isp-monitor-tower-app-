@@ -187,7 +187,10 @@ let lastChatLength = 0;
 
 function playNotificationSound() {
     let sound = document.getElementById('clientNotifSound');
-    if(sound) { sound.play().catch(e => console.log("Audio play permitted")); }
+    if(sound) { 
+        sound.currentTime = 0;
+        sound.play().catch(e => console.log("Audio play blocked by browser policy until interaction")); 
+    }
 }
 
 window.onload = function() {
@@ -199,11 +202,18 @@ window.onload = function() {
     checkSavedSession();
 };
 
-// فحص الرسائل والتنبيهات والقادمة من الإدارة كل 3 ثوانٍ
+// فحص دوري مستمر كل ثانيتين لضمان استجابة وتفعيل الإشعارات فوراً
 setInterval(() => {
-    if(!foundSubscriber) return;
+    // تحديث بيانات المشترك تلقائياً من التخزين لمعرفة أي تغييرات من الإدارة
+    let savedUser = localStorage.getItem('ali_active_portal_user');
+    if(!savedUser) return;
 
-    // 1. فحص ردود المحادثة الجديدة من الإدارة
+    let subs = JSON.parse(localStorage.getItem('ali_isp_final_v23')) || [];
+    let currentSub = subs.find(s => s.name.toLowerCase() === savedUser.toLowerCase());
+    if(!currentSub) return;
+    foundSubscriber = currentSub;
+
+    // 1. فحص ردود المحادثة الجديدة والتكتات
     let chats = JSON.parse(localStorage.getItem(`ticket_chat_${foundSubscriber.name}`)) || [];
     if(chats.length > lastChatLength) {
         let lastMsg = chats[chats.length - 1];
@@ -217,30 +227,35 @@ setInterval(() => {
             document.getElementById('messengerPopText').innerText = `💬 رد جديد من (${lastMsg.sender}): "${lastMsg.text}"`;
             messengerBanner.style.display = 'block';
 
-            // إضافة شارة حمراء
+            // إضافة شارات الإشعارات
             document.getElementById('ticketBadgeArea').innerHTML = '<span class="msg-badge">جديد</span>';
             document.getElementById('bellBadgeArea').innerHTML = '<span class="msg-badge">!</span>';
+            
+            // حفظ الإشعار في السجل الموحد للمشترك
+            saveToCustomNotifLog(`💬 رسالة جديدة في الدعم الفني من (${lastMsg.sender})`);
         }
         
-        refreshChatHistory();
+        if(document.getElementById('ticketModal').style.display === 'flex') {
+            refreshChatHistory();
+        }
     }
 
-    // 2. فحص إشعار التفعيل المباشر أو التسديد من الإدارة
+    // 2. فحص إشعار التفعيل المباشر أو التسديد من لوحة الإدارة
     let directActivationMsg = localStorage.getItem(`client_activation_notif_${foundSubscriber.name}`);
     if(directActivationMsg) {
         playNotificationSound();
         alert(directActivationMsg);
         
-        // حفظ الإشعار في سجل المشترك الموحد
-        addCustomNotificationToLog(`🎉 التفعيل/التسديد: ${directActivationMsg}`);
-
+        saveToCustomNotifLog(`🎉 تنبيه إداري: ${directActivationMsg}`);
         localStorage.removeItem(`client_activation_notif_${foundSubscriber.name}`);
-        checkSavedSession();
+        
+        showSubscriberDashboard();
+        checkExpiryAlerts();
     }
-}, 3000);
+}, 2000);
 
-// إضافة إشعار جديد إلى سجل الإشعارات المحلي للمشترك
-function addCustomNotificationToLog(text) {
+// حفظ إشعار في سجل التنبيهات المخصص للمشترك
+function saveToCustomNotifLog(text) {
     if(!foundSubscriber) return;
     let userNotifs = JSON.parse(localStorage.getItem(`client_custom_notifs_${foundSubscriber.name}`)) || [];
     userNotifs.push({ time: new Date().toLocaleTimeString(), text: text });
@@ -248,7 +263,7 @@ function addCustomNotificationToLog(text) {
     document.getElementById('bellBadgeArea').innerHTML = '<span class="msg-badge">!</span>';
 }
 
-// دالة تجميع وعرض جميع الإشعارات في النافذة العلوية الموحدة
+// تجميع وعرض جميع الإشعارات في النافذة العلوية الموحدة
 function renderUnifiedNotifications() {
     if(!foundSubscriber) {
         document.getElementById('unifiedNotificationsContainer').innerHTML = "يرجى تسجيل الدخول أولاً لعرض الإشعارات.";
@@ -268,7 +283,7 @@ function renderUnifiedNotifications() {
     let endDate = new Date(foundSubscriber.endDate + "T23:59:59");
     let diffHours = (endDate - now) / (1000 * 60 * 60);
     if(diffHours > 0 && diffHours <= 24) {
-        htmlContent += `<div style="margin-bottom:8px; border-bottom:1px solid #1e293b; padding-bottom:6px;"><b style="color:#f59e0b;">⏳ تنبيه انتهاء الاشتراك:</b> اشتراكك سينتهي خلال ساعات قادمة (${foundSubscriber.endDate}). يرجى التسديد.</div>`;
+        htmlContent += `<div style="margin-bottom:8px; border-bottom:1px solid #1e293b; padding-bottom:6px;"><b style="color:#f59e0b;">⏳ تنبيه انتهاء الاشتراك:</b> اشتراكك سينتهي خلال ساعات (${foundSubscriber.endDate}). يرجى التسديد.</div>`;
     } else if(diffHours <= 0) {
         htmlContent += `<div style="margin-bottom:8px; border-bottom:1px solid #1e293b; padding-bottom:6px;"><b style="color:#ef4444;">🚨 تنبيه عاجل:</b> اشتراكك منتهي حالياً يرجى المبادرة بالتجديد.</div>`;
     }
@@ -282,7 +297,7 @@ function renderUnifiedNotifications() {
         });
     }
 
-    // د. الإشعارات والتنبيهات المخصصة الأخرى (مثل التسديد والتفعيل)
+    // د. الإشعارات الإدارية الخاصة (تفعيل، تسديد)
     let customNotifs = JSON.parse(localStorage.getItem(`client_custom_notifs_${foundSubscriber.name}`)) || [];
     if(customNotifs.length > 0) {
         htmlContent += `<div style="margin-top:6px; margin-bottom:4px;"><b style="color:#38bdf8;">📌 التنبيهات الإدارية الخاصة:</b></div>`;
@@ -307,14 +322,12 @@ function clearUnifiedNotifications() {
     alert("تم مسح سجل إشعارات المشترك بنجاح!");
 }
 
-// فحص وقت الانتهاء وإرسال التنبيهات الاوتوماتيكية
 function checkExpiryAlerts() {
     if(!foundSubscriber || !foundSubscriber.endDate) return;
 
     let now = new Date();
     let endDate = new Date(foundSubscriber.endDate + "T23:59:59");
     let diffHours = (endDate - now) / (1000 * 60 * 60);
-
     let warningBanner = document.getElementById('expiryWarningBanner');
 
     if(diffHours > 0 && diffHours <= 1) {
@@ -416,7 +429,7 @@ function logoutClient(isAuto = false) {
 function openClientNotifModal() { 
     playNotificationSound();
     renderUnifiedNotifications();
-    document.getElementById('bellBadgeArea').innerHTML = ''; // إزالة شارة التنبيه عند الفتح
+    document.getElementById('bellBadgeArea').innerHTML = ''; // إزالة الشارة عند الفتح
     document.getElementById('clientNotifModal').style.display = 'flex'; 
 }
 function closeClientNotifModal() { document.getElementById('clientNotifModal').style.display = 'none'; }
