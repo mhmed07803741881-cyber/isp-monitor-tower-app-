@@ -193,15 +193,16 @@ function playNotificationSound() {
     }
 }
 
-// المزامنة اللحظية مع السحابة للتأكد من وجود الحساب
+// المزامنة اللحظية الفورية مع السحابة للتأكد من وجود المشترك وطرد المحذوفين فوراً
 db.ref('ali_isp_subscribers').on('value', (snapshot) => {
     const data = snapshot.val();
     subs = data ? Object.values(data) : [];
     
     let savedUser = localStorage.getItem('ali_active_portal_user');
     if (savedUser) {
-        let currentSub = subs.find(s => s.name.toLowerCase() === savedUser.toLowerCase());
-        // إذا قام الأدمن بحذف المشترك، يتم إخراجه فوراً
+        let currentSub = subs.find(s => s.name.trim().toLowerCase() === savedUser.trim().toLowerCase());
+        
+        // إذا كان المشترك موجوداً، يتم تحديث بياناته، وإن كان محذوفاً يُطرد فوراً
         if (currentSub) {
             foundSubscriber = currentSub;
             showSubscriberDashboard();
@@ -218,7 +219,6 @@ window.onload = function() {
         document.getElementById('broadcastTextContent').innerText = savedMsg;
         document.getElementById('broadcastBanner').style.display = 'block';
     }
-    checkSavedSession();
 };
 
 setInterval(() => {
@@ -351,21 +351,6 @@ function checkExpiryAlerts() {
     }
 }
 
-function checkSavedSession() {
-    let savedUser = localStorage.getItem('ali_active_portal_user');
-    if(!savedUser) return;
-
-    if (subs.length > 0) {
-        foundSubscriber = subs.find(s => s.name.toLowerCase() === savedUser.toLowerCase());
-        if(foundSubscriber) {
-            showSubscriberDashboard();
-            checkExpiryAlerts();
-        } else {
-            logoutClient(true);
-        }
-    }
-}
-
 function loginClient() {
     let username = document.getElementById('clientUsernameInput').value.trim().toLowerCase();
     let password = document.getElementById('clientPasswordInput').value.trim();
@@ -376,8 +361,8 @@ function loginClient() {
     }
 
     foundSubscriber = subs.find(s => {
-        let matchName = s.name.toLowerCase() === username || s.name.toLowerCase().includes(username);
-        let matchPhone = s.phone.trim() === password;
+        let matchName = s.name.trim().toLowerCase() === username || s.name.trim().toLowerCase().includes(username);
+        let matchPhone = s.phone && s.phone.trim() === password;
         return matchName && matchPhone;
     });
 
@@ -405,14 +390,16 @@ function showSubscriberDashboard() {
     lastChatLength = chats.length;
 }
 
+// دالة خروج العميل القسرية والتلقائية
 function logoutClient(isAuto = false) {
     localStorage.removeItem('ali_active_portal_user');
-    sessionStorage.removeItem('hourAlertPlayed');
-    sessionStorage.removeItem('dayAlertPlayed');
+    sessionStorage.clear();
     foundSubscriber = null;
+    
     document.getElementById('clientInfoBox').style.display = 'none';
-    document.getElementById('expiryWarningBanner').style.display = 'none';
-    document.getElementById('messengerPopBanner').style.display = 'none';
+    if(document.getElementById('expiryWarningBanner')) document.getElementById('expiryWarningBanner').style.display = 'none';
+    if(document.getElementById('messengerPopBanner')) document.getElementById('messengerPopBanner').style.display = 'none';
+    
     document.getElementById('loginFormArea').style.display = 'block';
     document.getElementById('clientUsernameInput').value = '';
     document.getElementById('clientPasswordInput').value = '';
