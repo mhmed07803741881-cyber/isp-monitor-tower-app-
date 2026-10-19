@@ -256,21 +256,21 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 let subs = [];
-let deletedSubs = []; // قائمة المشتركين المحذوفين
+let deletedSubs = [];
 let currentPin = localStorage.getItem('app_pin') || '1234';
 let isAllSelected = false;
 let currentFilter = 'all';
 let activeReplySubscriber = "";
 let selectedRenewId = null;
 
-// الاستماع للمشتركين النشطين
+// الاستماع المباشر للمشتركين النشطين بالسحابة
 db.ref('ali_isp_subscribers').on('value', (snapshot) => {
     const data = snapshot.val();
     subs = data ? Object.values(data) : [];
     renderSubs();
 });
 
-// الاستماع للمشتركين المحذوفين (سلة المحذوفات)
+// الاستماع لسلة المحذوفات بالسحابة
 db.ref('ali_isp_deleted_subs').on('value', (snapshot) => {
     const data = snapshot.val();
     deletedSubs = data ? Object.values(data) : [];
@@ -290,7 +290,6 @@ function syncToCloud() {
     db.ref('ali_isp_deleted_subs').set(deletedObj);
 }
 
-// دالة فتح نافذة سلة المحذوفات
 function openTrashModal() {
     renderTrashList();
     document.getElementById('trashModal').style.display = 'flex';
@@ -314,7 +313,6 @@ function renderTrashList() {
     }
 }
 
-// استرجاع مشترك من السلة إلى القائمة الفعالة
 function restoreSubscriber(id) {
     let target = deletedSubs.find(item => item.id === id);
     if(target) {
@@ -326,7 +324,6 @@ function restoreSubscriber(id) {
     }
 }
 
-// تفريغ السلة نهائياً
 function emptyTrashCompletely() {
     if(deletedSubs.length === 0) return;
     if(confirm("هل أنت تأكد من مسح جميع العناصر في السلة نهائياً؟")) {
@@ -673,6 +670,7 @@ function closeModal() {
     document.getElementById('subPhone').value = '';
     document.getElementById('subPrice').value = '';
 }
+
 function setFilter(filterType) {
     currentFilter = filterType;
     document.querySelectorAll('.filter-tab').forEach(tab => tab.classList.remove('active'));
@@ -743,7 +741,6 @@ function updateSelectedCount() {
     document.getElementById('selectedCount').innerText = document.querySelectorAll('.sub-checkbox:checked').length;
 }
 
-// نقل العناصر المحددة لسلة المحذوفات بدلاً من حذفها نهائياً
 function deleteSelectedSubs() {
     let selectedBoxes = document.querySelectorAll('.sub-checkbox:checked');
     if(selectedBoxes.length === 0) { alert("يرجى تحديد مشترك واحد على الأقل للحذف!"); return; }
@@ -815,7 +812,6 @@ function printReceipt(name, price, start, end, payStatus, title = 'وصل قبض
     window.print();
 }
 
-// نقل مشترك واحد إلى سلة المحذوفات
 function deleteSub(id) {
     let target = subs.find(s => s.id === id);
     if(target && confirm(`نقل المشترك (${target.name}) إلى سلة المحذوفات؟`)) {
