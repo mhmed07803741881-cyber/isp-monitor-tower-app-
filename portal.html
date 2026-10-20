@@ -193,7 +193,13 @@ function playNotificationSound() {
     }
 }
 
-// الاستماع المباشر للسحابة ومزامنة الحالات فورياً
+// دالة تنظيف النصوص لتوحيد المقارنة بين اللوحة والبوابة
+function cleanStr(str) {
+    if (!str) return "";
+    return String(str).replace(/\s+/g, '').toLowerCase().trim();
+}
+
+// الاستماع المباشر للتغيرات في قاعدة البيانات وطرد اليوزرات غير الموجودة
 db.ref('ali_isp_subscribers').on('value', (snapshot) => {
     const data = snapshot.val();
     subs = data ? Object.values(data) : [];
@@ -201,14 +207,15 @@ db.ref('ali_isp_subscribers').on('value', (snapshot) => {
     let savedUser = localStorage.getItem('ali_active_portal_user');
     
     if (savedUser) {
-        let currentSub = subs.find(s => s && s.name && String(s.name).trim().toLowerCase() === String(savedUser).trim().toLowerCase());
+        // التحقق الدقيق من وجود اليوزر المخزن في السحابة
+        let currentSub = subs.find(s => s && s.name && cleanStr(s.name) === cleanStr(savedUser));
         
         if (currentSub) {
             foundSubscriber = currentSub;
             showSubscriberDashboard();
             checkExpiryAlerts();
         } else {
-            // المشترك محذوف من السيرفر -> طرد فوري ومسح الجلسة
+            // اليوزر غير موجود في اللوحة السحابية (مثل admin@hilla51) -> طرد فوراً ومسح الذاكرة
             logoutClient(true);
         }
     }
@@ -352,26 +359,25 @@ function checkExpiryAlerts() {
     }
 }
 
-// دالة تسجيل الدخول المحدثة والمصححة لمنع أخطاء المطابقة
+// دالة تسجيل الدخول المرنة والدقيقة التي تضمن فتح اليوزر ali بسهولة
 function loginClient() {
-    let usernameInput = document.getElementById('clientUsernameInput').value.trim().toLowerCase();
-    let passwordInput = document.getElementById('clientPasswordInput').value.trim();
+    let inputUsername = cleanStr(document.getElementById('clientUsernameInput').value);
+    let inputPassword = cleanStr(document.getElementById('clientPasswordInput').value);
 
-    if(!usernameInput || !passwordInput) {
+    if(!inputUsername || !inputPassword) {
         alert("يرجى كتابة اسم المستخدم وكلمة المرور (رقم الهاتف)");
         return;
     }
 
-    // مطابقة دقيقة بتحويل المدخلات إلى نصوص برمجية وتنظيف المسافات
+    // البحث مع معالجة وتنظيف جميع الأحرف والمسافات
     foundSubscriber = subs.find(s => {
         if (!s || !s.name) return false;
         
-        let dbName = String(s.name).trim().toLowerCase();
-        let dbPhone = s.phone ? String(s.phone).trim() : "";
+        let dbName = cleanStr(s.name);
+        let dbPhone = cleanStr(s.phone);
 
-        // مطابقة اليوزر تماماً مع رقم الهاتف المخزن
-        let matchName = (dbName === usernameInput);
-        let matchPhone = (dbPhone === passwordInput);
+        let matchName = (dbName === inputUsername);
+        let matchPhone = (dbPhone === inputPassword);
 
         return matchName && matchPhone;
     });
@@ -382,7 +388,7 @@ function loginClient() {
         playNotificationSound();
         checkExpiryAlerts();
     } else {
-        alert("❌ خطأ في تسجيل الدخول!\nاسم المستخدم أو كلمة المرور (رقم الهاتف) غير صحيحة، أو تم إلغاء الحساب من الإدارة.");
+        alert("❌ تعذر تسجيل الدخول!\nيرجى التأكد من كتابة اسم المستخدم (اليوزر) ورقم الهاتف بدقة كما هما في اللوحة الرئيسية.");
     }
 }
 
@@ -400,8 +406,9 @@ function showSubscriberDashboard() {
     lastChatLength = chats.length;
 }
 
+// دالة تسجيل الخروج القسرية للتطبيقات والمحذوفين
 function logoutClient(isAuto = false) {
-    localStorage.removeItem('ali_active_portal_user');
+    localStorage.clear();
     sessionStorage.clear();
     foundSubscriber = null;
     
@@ -414,7 +421,7 @@ function logoutClient(isAuto = false) {
     document.getElementById('clientPasswordInput').value = '';
     
     if(isAuto) {
-        alert("⚠️ تم إلغاء/حذف حساب الاشتراك الخاص بك من قبل الإدارة.");
+        alert("⚠️ تم تسجيل الخروج تلقائياً لأن هذا الحساب غير موجود في اللوحة الرئيسية.");
     } else {
         alert("تم تسجيل الخروج بنجاح.");
     }
