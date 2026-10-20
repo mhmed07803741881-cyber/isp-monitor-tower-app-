@@ -4,15 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>بوابة المشترك - مكتب مهندس علي لخدمات الإنترنت</title>
-    <!-- ربط الـ PWA -->
-    <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0d1526">
     <script>
+      // إلغاء الـ Service Worker القديم فوراً لإجبار الهاتف على تحميل الكود الجديد وعدم القراءة من الكاش
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js');
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          for(let registration of registrations) {
+            registration.unregister();
+          }
+        });
       }
     </script>
-    <!-- مكتبات Firebase السحابية (نفس نسخة البرنامج الرئيسي) -->
+    <!-- مكتبات Firebase السحابية المطابقة للرئيسي -->
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <style>
@@ -144,7 +147,7 @@
 
         <div class="router-box-item">
             <div class="router-box-label">الاحتمال الثالث:</div>
-            <div class="router-box-val">admin1</div>
+            . <div class="router-box-val">admin1</div>
         </div>
 
         <button class="btn" onclick="closeRouterPassModal()" style="background:#1e293b; color:#38bdf8; margin-top:15px;">إغلاق</button>
@@ -166,7 +169,6 @@
 </div>
 
 <script>
-// مطابقة تامة لإعدادات Firebase الخاصة بالبرنامج الرئيسي
 const firebaseConfig = {
     apiKey: "AIzaSyA2FMY9ZsJHO-9eCJzWPyT5NVJ7C36k94Y",
     authDomain: "ali-isp-system.firebaseapp.com",
@@ -185,7 +187,7 @@ let subs = [];
 let foundSubscriber = null;
 const adminPhone = "9647724850876";
 let lastChatLength = 0;
-const SESSION_KEY = "ali_client_portal_master_session";
+const SESSION_KEY = "ali_client_portal_final_session_v4";
 
 function cleanStr(str) {
     if (!str) return "";
@@ -200,7 +202,7 @@ function playNotificationSound() {
     }
 }
 
-// الاستماع المباشر لنفس عقدة البرنامج الرئيسي ali_isp_subscribers
+// الاستماع المباشر للسحابة من اللوحة الرئيسية
 db.ref('ali_isp_subscribers').on('value', (snapshot) => {
     const data = snapshot.val();
     subs = data ? Object.values(data) : [];
@@ -215,7 +217,6 @@ db.ref('ali_isp_subscribers').on('value', (snapshot) => {
             showSubscriberDashboard();
             checkExpiryAlerts();
         } else {
-            // المشترك تم حذفه من البرنامج الرئيسي -> طرد فوري
             logoutClient(true);
         }
     } else {
@@ -349,7 +350,7 @@ function checkExpiryAlerts() {
     }
 }
 
-// دالة الدخول التي تطابق تماماً اليوزر (Ali) ورقم الهاتف المسجل في اللوحة
+// دالة المطابقة
 function loginClient() {
     let inputUser = document.getElementById('clientUsernameInput').value.trim();
     let inputPass = document.getElementById('clientPasswordInput').value.trim();
@@ -359,7 +360,6 @@ function loginClient() {
         return;
     }
 
-    // مطابقة ذكية تقبل الحروف الكبيرة والصغيرة (مثل Ali و ali)
     foundSubscriber = subs.find(s => {
         if (!s || !s.name) return false;
         
@@ -375,7 +375,7 @@ function loginClient() {
         playNotificationSound();
         checkExpiryAlerts();
     } else {
-        alert("❌ تعذر تسجيل الدخول!\n\nيرجى التأكد من كتابة اليوزر (مثل Ali) ورقم الهاتف بدقة كما هما في البرنامج الرئيسي.");
+        alert("❌ تعذر تسجيل الدخول!\n\nيرجى التأكد من كتابة اليوزر (مثل Ali) ورقم الهاتف بدقة.");
     }
 }
 
@@ -394,7 +394,7 @@ function showSubscriberDashboard() {
 }
 
 function logoutClient(isAuto = false) {
-    localStorage.removeItem(SESSION_KEY);
+    localStorage.clear();
     sessionStorage.clear();
     foundSubscriber = null;
     
@@ -407,7 +407,7 @@ function logoutClient(isAuto = false) {
     document.getElementById('clientPasswordInput').value = '';
     
     if(isAuto) {
-        alert("⚠️ تم تسجيل الخروج تلقائياً لتحديث النظام أو حذف الحساب.");
+        alert("⚠️ تم تحديث النظام ومسح البيانات القديمة.");
     } else {
         alert("تم تسجيل الخروج بنجاح.");
     }
@@ -487,7 +487,6 @@ function requestAgel() {
     if(!foundSubscriber) return;
     foundSubscriber.payStatus = 'أجل';
     
-    // تحديث الحالة في السيرفر الرئيسي مباشرة
     let subsObj = {};
     subs.forEach(s => {
         if(s.id === foundSubscriber.id) s.payStatus = 'أجل';
