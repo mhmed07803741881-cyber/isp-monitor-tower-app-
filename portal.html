@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>بوابة المشترك - مكتب مهندس علي لخدمات الإنترنت</title>
     <meta name="theme-color" content="#0d1526">
-    <!-- إلغاء أي خدمة تخزين مؤقت قديمة لمنع تعليق التحديثات -->
     <script>
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.getRegistrations().then(function(registrations) {
@@ -18,11 +17,12 @@
     <style>
         body { background-color: #0d1526; color: #fff; font-family: Tahoma, sans-serif; margin: 0; padding: 15px; box-sizing: border-box; display: flex; justify-content: center; align-items: center; min-height: 100vh; flex-direction: column; }
         .top-nav { width: 100%; max-width: 380px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .notif-bell-btn { background: #131d31; color: #f59e0b; border: 1px solid #1e293b; padding: 6px 10px; border-radius: 8px; font-size: 12px; cursor: pointer; position: relative; }
         .portal-container { background: #131d31; border: 1px solid #1e293b; padding: 20px; border-radius: 12px; width: 100%; max-width: 380px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); box-sizing: border-box; }
         h2 { color: #38bdf8; text-align: center; margin-top: 0; font-size: 17px; }
         p { color: #94a3b8; font-size: 11px; text-align: center; margin-bottom: 15px; }
         input { width: 100%; padding: 10px; margin: 6px 0 12px 0; background: #0d1526; border: 1px solid #1e293b; color: white; border-radius: 8px; box-sizing: border-box; font-size: 13px; text-align: center; }
+        .checkbox-container { display: flex; align-items: center; justify-content: right; font-size: 11px; color: #cbd5e1; margin-bottom: 12px; gap: 6px; cursor: pointer; }
+        .checkbox-container input { width: auto; margin: 0; cursor: pointer; accent-color: #38bdf8; }
         .btn { width: 100%; padding: 11px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; margin-top: 6px; text-align: center; display: block; box-sizing: border-box; }
         .btn-search { background: #38bdf8; color: #090d16; }
         .btn-pay { background: #6366f1; color: #fff; }
@@ -33,18 +33,9 @@
         .info-label { color: #94a3b8; }
         .info-val { font-weight: bold; }
         .support-phones { background: #0d1526; border: 1px solid #1e293b; padding: 8px; border-radius: 8px; text-align: center; font-size: 11px; margin-top: 15px; color: #38bdf8; }
-        
-        /* شاشة التحميل والتحديث */
-        #updateOverlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(13,21,38,0.95); z-index:99999; justify-content:center; align-items:center; flex-direction:column; color:#38bdf8; font-weight:bold; text-align:center; padding:20px; }
     </style>
 </head>
 <body>
-
-<div id="updateOverlay">
-    <div style="font-size:24px; margin-bottom:10px;">🔄</div>
-    <div>جاري تحديث التطبيق إلى أحدث نسخة...</div>
-    <div style="font-size:11px; color:#94a3b8; margin-top:5px;">يرجى الانتظار ثوانٍ معدودة</div>
-</div>
 
 <div class="top-nav">
     <div style="font-size:12px; color:#38bdf8; font-weight:bold;">مكتب مهندس علي</div>
@@ -57,6 +48,11 @@
         <p>سجل الدخول باستخدام اليوزر ورقم الهاتف</p>
         <input type="text" id="clientUsernameInput" placeholder="اسم المستخدم (اليوزر)">
         <input type="password" id="clientPasswordInput" placeholder="كلمة المرور (رقم الهاتف)">
+        
+        <label class="checkbox-container">
+            <input type="checkbox" id="rememberMeCheck" checked> إبقاء تسجيل الدخول دائماً
+        </label>
+
         <button class="btn btn-search" onclick="loginClient()">تسجيل الدخول</button>
     </div>
 
@@ -78,9 +74,6 @@
 </div>
 
 <script>
-// رقم الإصدار الحالي لتطبيق المشترك
-const CURRENT_APP_VERSION = "v1.0.5";
-
 const firebaseConfig = {
     apiKey: "AIzaSyA2FMY9ZsJHO-9eCJzWPyT5NVJ7C36k94Y",
     authDomain: "ali-isp-system.firebaseapp.com",
@@ -94,18 +87,6 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-
-// فحص التحديث الذاتي من السحابة فوراً عند فتح التطبيق
-db.ref('ali_app_version').on('value', (snapshot) => {
-    let cloudVersion = snapshot.val();
-    if (cloudVersion && cloudVersion !== CURRENT_APP_VERSION) {
-        document.getElementById('updateOverlay').style.display = 'flex';
-        setTimeout(() => {
-            localStorage.clear();
-            location.reload(true);
-        }, 1500);
-    }
-});
 
 let subs = [];
 let foundSubscriber = null;
@@ -125,7 +106,7 @@ db.ref('ali_isp_subscribers').on('value', (snapshot) => {
         subs = [];
     }
 
-    let savedUser = localStorage.getItem(SESSION_KEY);
+    let savedUser = localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY);
     if (savedUser) {
         let currentSub = subs.find(s => s && s.name && cleanStr(s.name) === cleanStr(savedUser));
         if (currentSub) {
@@ -142,6 +123,7 @@ db.ref('ali_isp_subscribers').on('value', (snapshot) => {
 function loginClient() {
     let inputUser = cleanStr(document.getElementById('clientUsernameInput').value);
     let inputPass = cleanStr(document.getElementById('clientPasswordInput').value);
+    let rememberMe = document.getElementById('rememberMeCheck').checked;
 
     if(!inputUser || !inputPass) {
         alert("يرجى كتابة اسم المستخدم وكلمة المرور");
@@ -156,7 +138,11 @@ function loginClient() {
     });
 
     if(foundSubscriber) {
-        localStorage.setItem(SESSION_KEY, foundSubscriber.name);
+        if (rememberMe) {
+            localStorage.setItem(SESSION_KEY, foundSubscriber.name);
+        } else {
+            sessionStorage.setItem(SESSION_KEY, foundSubscriber.name);
+        }
         showDashboard();
     } else {
         alert("❌ تعذر تسجيل الدخول! التأكد من تطابق اليوزر ورقم الهاتف.");
@@ -180,13 +166,16 @@ function showLogin() {
 
 function logoutClient(isAuto = false) {
     localStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem(SESSION_KEY);
     foundSubscriber = null;
     showLogin();
     document.getElementById('clientUsernameInput').value = '';
     document.getElementById('clientPasswordInput').value = '';
     
     if(isAuto) {
-        alert("⚠️ تم تسجيل الخروج تلقائياً لتحديث البيانات.");
+        alert("⚠️ تم تسجيل الخروج تلقائياً لأن الحساب غير مسجل باللوحة.");
+    } else {
+        alert("تم تسجيل الخروج بنجاح.");
     }
 }
 
