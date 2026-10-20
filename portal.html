@@ -12,7 +12,7 @@
         navigator.serviceWorker.register('sw.js');
       }
     </script>
-    <!-- مكتبات Firebase السحابية -->
+    <!-- مكتبات Firebase السحابية (نفس نسخة البرنامج الرئيسي) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <style>
@@ -166,7 +166,7 @@
 </div>
 
 <script>
-// إعدادات Firebase الموحدة مع لوحة التحكم الإدارية
+// مطابقة تامة لإعدادات Firebase الخاصة بالبرنامج الرئيسي
 const firebaseConfig = {
     apiKey: "AIzaSyA2FMY9ZsJHO-9eCJzWPyT5NVJ7C36k94Y",
     authDomain: "ali-isp-system.firebaseapp.com",
@@ -185,9 +185,7 @@ let subs = [];
 let foundSubscriber = null;
 const adminPhone = "9647724850876";
 let lastChatLength = 0;
-
-// مفتاح جلسة جديد ومباشر
-const SESSION_KEY = "ali_client_portal_session_v1";
+const SESSION_KEY = "ali_client_portal_master_session";
 
 function cleanStr(str) {
     if (!str) return "";
@@ -198,11 +196,11 @@ function playNotificationSound() {
     let sound = document.getElementById('clientNotifSound');
     if(sound) { 
         sound.currentTime = 0;
-        sound.play().catch(e => console.log("Audio play allowed")); 
+        sound.play().catch(e => console.log(e)); 
     }
 }
 
-// المزامنة الحية المباشرة مع عقدة ali_isp_subscribers باللوحة الرئيسية
+// الاستماع المباشر لنفس عقدة البرنامج الرئيسي ali_isp_subscribers
 db.ref('ali_isp_subscribers').on('value', (snapshot) => {
     const data = snapshot.val();
     subs = data ? Object.values(data) : [];
@@ -210,7 +208,6 @@ db.ref('ali_isp_subscribers').on('value', (snapshot) => {
     let savedUser = localStorage.getItem(SESSION_KEY);
     
     if (savedUser) {
-        // فحص وجود المشترك مباشرة داخل السيرفر السحابي
         let currentSub = subs.find(s => s && s.name && cleanStr(s.name) === cleanStr(savedUser));
         
         if (currentSub) {
@@ -218,7 +215,7 @@ db.ref('ali_isp_subscribers').on('value', (snapshot) => {
             showSubscriberDashboard();
             checkExpiryAlerts();
         } else {
-            // غير موجود في البرنامج الرئيسي (مثل اليوزر المحذوف) -> طرد فوراً
+            // المشترك تم حذفه من البرنامج الرئيسي -> طرد فوري
             logoutClient(true);
         }
     } else {
@@ -245,14 +242,12 @@ setInterval(() => {
 
         if(lastMsg.sender !== foundSubscriber.name) {
             playNotificationSound();
-            
             let messengerBanner = document.getElementById('messengerPopBanner');
             document.getElementById('messengerPopText').innerText = `💬 رد جديد من (${lastMsg.sender}): "${lastMsg.text}"`;
             messengerBanner.style.display = 'block';
 
             document.getElementById('ticketBadgeArea').innerHTML = '<span class="msg-badge">جديد</span>';
             document.getElementById('bellBadgeArea').innerHTML = '<span class="msg-badge">!</span>';
-            
             saveToCustomNotifLog(`💬 رسالة جديدة في الدعم الفني من (${lastMsg.sender})`);
         }
         
@@ -265,10 +260,8 @@ setInterval(() => {
     if(directActivationMsg) {
         playNotificationSound();
         alert(directActivationMsg);
-        
         saveToCustomNotifLog(`🎉 تنبيه إداري: ${directActivationMsg}`);
         localStorage.removeItem(`client_activation_notif_${foundSubscriber.name}`);
-        
         showSubscriberDashboard();
         checkExpiryAlerts();
     }
@@ -289,7 +282,6 @@ function renderUnifiedNotifications() {
     }
 
     let htmlContent = "";
-
     let savedBroadcast = localStorage.getItem('ali_app_broadcast_msg');
     if(savedBroadcast) {
         htmlContent += `<div style="margin-bottom:8px; border-bottom:1px solid #1e293b; padding-bottom:6px;"><b style="color:#06b6d4;">📢 إعلان الشبكة العام:</b> ${savedBroadcast}</div>`;
@@ -348,40 +340,33 @@ function checkExpiryAlerts() {
         warningBanner.innerText = "🚨 تنبيه عاجل: متبقي أقل من ساعة واحدة على انتهاء اشتراكك! يرجى التجديد لتجنب انقطاع الخدمة.";
         warningBanner.className = "expiry-warning-banner hour-warn";
         warningBanner.style.display = "block";
-        if(!sessionStorage.getItem('hourAlertPlayed')) {
-            playNotificationSound();
-            sessionStorage.setItem('hourAlertPlayed', 'true');
-        }
     } else if(diffHours > 1 && diffHours <= 24) {
         warningBanner.innerText = "⏳ تنبيه: ينتهي اشتراكك خلال أقل من 24 ساعة (غداً). يرجى المبادرة بالتسديد.";
         warningBanner.className = "expiry-warning-banner day-warn";
         warningBanner.style.display = "block";
-        if(!sessionStorage.getItem('dayAlertPlayed')) {
-            playNotificationSound();
-            sessionStorage.setItem('dayAlertPlayed', 'true');
-        }
     } else {
         warningBanner.style.display = "none";
     }
 }
 
-// دالة المطابقة الحرة والدقيقة لـ ali و 07818627764
+// دالة الدخول التي تطابق تماماً اليوزر (Ali) ورقم الهاتف المسجل في اللوحة
 function loginClient() {
-    let inputUser = cleanStr(document.getElementById('clientUsernameInput').value);
-    let inputPass = cleanStr(document.getElementById('clientPasswordInput').value);
+    let inputUser = document.getElementById('clientUsernameInput').value.trim();
+    let inputPass = document.getElementById('clientPasswordInput').value.trim();
 
     if(!inputUser || !inputPass) {
         alert("يرجى كتابة اسم المستخدم وكلمة المرور (رقم الهاتف)");
         return;
     }
 
+    // مطابقة ذكية تقبل الحروف الكبيرة والصغيرة (مثل Ali و ali)
     foundSubscriber = subs.find(s => {
         if (!s || !s.name) return false;
         
-        let dbUser = cleanStr(s.name);
-        let dbPass = cleanStr(s.phone);
+        let dbUser = String(s.name).trim();
+        let dbPass = String(s.phone || "").trim();
 
-        return (dbUser === inputUser) && (dbPass === inputPass);
+        return (dbUser.toLowerCase() === inputUser.toLowerCase()) && (dbPass === inputPass);
     });
 
     if(foundSubscriber) {
@@ -390,7 +375,7 @@ function loginClient() {
         playNotificationSound();
         checkExpiryAlerts();
     } else {
-        alert("❌ تعذر تسجيل الدخول!\n\nيرجى التأكد من أن المشترك موجود في برنامج الإدارة الرئيسي بنفس اليوزر ورقم الهاتف.");
+        alert("❌ تعذر تسجيل الدخول!\n\nيرجى التأكد من كتابة اليوزر (مثل Ali) ورقم الهاتف بدقة كما هما في البرنامج الرئيسي.");
     }
 }
 
@@ -408,9 +393,8 @@ function showSubscriberDashboard() {
     lastChatLength = chats.length;
 }
 
-// دالة الخروج ومسح الذاكرة بالكامل
 function logoutClient(isAuto = false) {
-    localStorage.clear();
+    localStorage.removeItem(SESSION_KEY);
     sessionStorage.clear();
     foundSubscriber = null;
     
@@ -423,7 +407,7 @@ function logoutClient(isAuto = false) {
     document.getElementById('clientPasswordInput').value = '';
     
     if(isAuto) {
-        alert("⚠️ تم تسجيل الخروج بنجاح وتحديث النظام.");
+        alert("⚠️ تم تسجيل الخروج تلقائياً لتحديث النظام أو حذف الحساب.");
     } else {
         alert("تم تسجيل الخروج بنجاح.");
     }
@@ -443,10 +427,8 @@ function closeRouterPassModal() { document.getElementById('routerPassModal').sty
 function openTicketModal() {
     if(!foundSubscriber) return;
     refreshChatHistory();
-    
     document.getElementById('messengerPopBanner').style.display = 'none';
     document.getElementById('ticketBadgeArea').innerHTML = '';
-    
     document.getElementById('ticketModal').style.display = 'flex';
 }
 function closeTicketModal() { document.getElementById('ticketModal').style.display = 'none'; }
@@ -469,7 +451,6 @@ function submitTicket() {
     if(!msg) { alert("يرجى كتابة رسالة التكت"); return; }
 
     let ticketNum = `#${Math.floor(1000 + Math.random() * 9000)}`;
-    
     let allTickets = JSON.parse(localStorage.getItem('all_client_tickets')) || [];
     allTickets.push({ subName: foundSubscriber.name, ticketNum: ticketNum, message: msg, status: 'جديد (بانتظار المراجعة)' });
     localStorage.setItem('all_client_tickets', JSON.stringify(allTickets));
@@ -484,29 +465,20 @@ function submitTicket() {
     localStorage.setItem('ali_admin_notifications', JSON.stringify(notifs));
 
     playNotificationSound();
-    alert("✅ تم إرسال التكت بنجاح! سيتم مراجعته وتحويله للأقسام المختصة.");
+    alert("✅ تم إرسال التكت بنجاح إلى الإدارة!");
     document.getElementById('ticketMessageText').value = '';
     refreshChatHistory();
 }
 
 function copyMasterNumber() {
     navigator.clipboard.writeText("07724850876").then(() => {
-        alert("📋 تم نسخ رقم التحويل (07724850876) بنجاح!\nالرجاء التحويل من تطبيق الماستر ثم إرسال إشعار الواتساب.");
-    }).catch(err => {
-        alert("رقم التحويل الخاص بك هو: 07724850876");
+        alert("📋 تم نسخ رقم التحويل (07724850876) بنجاح!");
     });
-}
-
-function pushAdminNotification(text) {
-    let notifs = JSON.parse(localStorage.getItem('ali_admin_notifications')) || [];
-    notifs.push(`${new Date().toLocaleTimeString()} - ${text}`);
-    localStorage.setItem('ali_admin_notifications', JSON.stringify(notifs));
 }
 
 function sendWhatsAppReceipt() {
     if(!foundSubscriber) return;
     let priceVal = foundSubscriber.price || 30000;
-    pushAdminNotification(`💳 طلب تفعيل وتحويل ماستر للمشترك: ${foundSubscriber.name} (${priceVal} د.ع)`);
     let msg = `مرحباً مهندس علي 📡\nلقد قمت بتحويل مبلغ الاشتراك (${priceVal} د.ع) عبر ماستر كارد إلى رقمك (${adminPhone}).\nاسم المشترك: ${foundSubscriber.name}`;
     window.open(`https://api.whatsapp.com/send?phone=${adminPhone}&text=${encodeURIComponent(msg)}`, '_blank');
 }
@@ -515,14 +487,13 @@ function requestAgel() {
     if(!foundSubscriber) return;
     foundSubscriber.payStatus = 'أجل';
     
+    // تحديث الحالة في السيرفر الرئيسي مباشرة
     let subsObj = {};
     subs.forEach(s => {
         if(s.id === foundSubscriber.id) s.payStatus = 'أجل';
         subsObj[s.id] = s;
     });
     db.ref('ali_isp_subscribers').set(subsObj);
-
-    pushAdminNotification(`⏳ طلب تفعيل مؤجل (أجل) جديد للمشترك: ${foundSubscriber.name}`);
 
     let agelMsg = `⏳ طلب تفعيل مؤجل (أجل) جديد!\nالمشترك (${foundSubscriber.name}) يطلب تفعيل حسابه كأجل.`;
     window.open(`https://api.whatsapp.com/send?phone=${adminPhone}&text=${encodeURIComponent(agelMsg)}`, '_blank');
