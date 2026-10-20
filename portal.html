@@ -185,6 +185,9 @@ let foundSubscriber = null;
 const adminPhone = "9647724850876";
 let lastChatLength = 0;
 
+// مفتاح الجلسة الجديد لإجبار الهواتف على الخروج من اليوزرات القديمة
+const SESSION_KEY = "ali_portal_session_v2";
+
 function playNotificationSound() {
     let sound = document.getElementById('clientNotifSound');
     if(sound) { 
@@ -193,31 +196,38 @@ function playNotificationSound() {
     }
 }
 
-// دالة تنظيف النصوص لتوحيد المقارنة بين اللوحة والبوابة
-function cleanStr(str) {
+// دالة تنظيف النصوص لتطبيق مطابقة دقيقة
+function cleanVal(str) {
     if (!str) return "";
     return String(str).replace(/\s+/g, '').toLowerCase().trim();
 }
 
-// الاستماع المباشر للتغيرات في قاعدة البيانات وطرد اليوزرات غير الموجودة
+// مسح بقايا الذاكرة القديمة فوراً
+if (localStorage.getItem('ali_active_portal_user')) {
+    localStorage.removeItem('ali_active_portal_user');
+}
+
+// الاستماع المباشر للسحابة
 db.ref('ali_isp_subscribers').on('value', (snapshot) => {
     const data = snapshot.val();
     subs = data ? Object.values(data) : [];
     
-    let savedUser = localStorage.getItem('ali_active_portal_user');
+    let savedUser = localStorage.getItem(SESSION_KEY);
     
     if (savedUser) {
-        // التحقق الدقيق من وجود اليوزر المخزن في السحابة
-        let currentSub = subs.find(s => s && s.name && cleanStr(s.name) === cleanStr(savedUser));
+        let currentSub = subs.find(s => s && s.name && cleanVal(s.name) === cleanVal(savedUser));
         
         if (currentSub) {
             foundSubscriber = currentSub;
             showSubscriberDashboard();
             checkExpiryAlerts();
         } else {
-            // اليوزر غير موجود في اللوحة السحابية (مثل admin@hilla51) -> طرد فوراً ومسح الذاكرة
             logoutClient(true);
         }
+    } else {
+        // إذا لم توجد جلسة حديثة، تأكد من أن الواجهة تظهر صفحة تسجيل الدخول
+        document.getElementById('clientInfoBox').style.display = 'none';
+        document.getElementById('loginFormArea').style.display = 'block';
     }
 });
 
@@ -359,36 +369,32 @@ function checkExpiryAlerts() {
     }
 }
 
-// دالة تسجيل الدخول المرنة والدقيقة التي تضمن فتح اليوزر ali بسهولة
+// دالة الدخول الفعالة لمطابقة ali و07818627764
 function loginClient() {
-    let inputUsername = cleanStr(document.getElementById('clientUsernameInput').value);
-    let inputPassword = cleanStr(document.getElementById('clientPasswordInput').value);
+    let inputUser = cleanVal(document.getElementById('clientUsernameInput').value);
+    let inputPass = cleanVal(document.getElementById('clientPasswordInput').value);
 
-    if(!inputUsername || !inputPassword) {
+    if(!inputUser || !inputPass) {
         alert("يرجى كتابة اسم المستخدم وكلمة المرور (رقم الهاتف)");
         return;
     }
 
-    // البحث مع معالجة وتنظيف جميع الأحرف والمسافات
     foundSubscriber = subs.find(s => {
         if (!s || !s.name) return false;
         
-        let dbName = cleanStr(s.name);
-        let dbPhone = cleanStr(s.phone);
+        let dbUser = cleanVal(s.name);
+        let dbPass = cleanVal(s.phone);
 
-        let matchName = (dbName === inputUsername);
-        let matchPhone = (dbPhone === inputPassword);
-
-        return matchName && matchPhone;
+        return (dbUser === inputUser) && (dbPass === inputPass);
     });
 
     if(foundSubscriber) {
-        localStorage.setItem('ali_active_portal_user', foundSubscriber.name);
+        localStorage.setItem(SESSION_KEY, foundSubscriber.name);
         showSubscriberDashboard();
         playNotificationSound();
         checkExpiryAlerts();
     } else {
-        alert("❌ تعذر تسجيل الدخول!\nيرجى التأكد من كتابة اسم المستخدم (اليوزر) ورقم الهاتف بدقة كما هما في اللوحة الرئيسية.");
+        alert("❌ تعذر تسجيل الدخول!\nيرجى إدخال اليوزر (ali) ورقم الهاتف (07818627764) بدقة.");
     }
 }
 
@@ -406,9 +412,9 @@ function showSubscriberDashboard() {
     lastChatLength = chats.length;
 }
 
-// دالة تسجيل الخروج القسرية للتطبيقات والمحذوفين
 function logoutClient(isAuto = false) {
-    localStorage.clear();
+    localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem('ali_active_portal_user');
     sessionStorage.clear();
     foundSubscriber = null;
     
@@ -421,7 +427,7 @@ function logoutClient(isAuto = false) {
     document.getElementById('clientPasswordInput').value = '';
     
     if(isAuto) {
-        alert("⚠️ تم تسجيل الخروج تلقائياً لأن هذا الحساب غير موجود في اللوحة الرئيسية.");
+        alert("⚠️ تم تسجيل الخروج تلقائياً لأن الحساب القديم غير مسجل في اللوحة.");
     } else {
         alert("تم تسجيل الخروج بنجاح.");
     }
