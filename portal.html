@@ -193,7 +193,7 @@ function playNotificationSound() {
     }
 }
 
-// الاستماع المباشر للسحابة وتطبيق الطرد الفوري القسري للمحذوفين
+// الاستماع المباشر للسحابة ومزامنة الحالات فورياً
 db.ref('ali_isp_subscribers').on('value', (snapshot) => {
     const data = snapshot.val();
     subs = data ? Object.values(data) : [];
@@ -201,15 +201,14 @@ db.ref('ali_isp_subscribers').on('value', (snapshot) => {
     let savedUser = localStorage.getItem('ali_active_portal_user');
     
     if (savedUser) {
-        // التحقق مما إذا كان اليوزر المسجل ما زال موجوداً في عقدة السيرفر
-        let currentSub = subs.find(s => s.name && s.name.trim().toLowerCase() === savedUser.trim().toLowerCase());
+        let currentSub = subs.find(s => s && s.name && String(s.name).trim().toLowerCase() === String(savedUser).trim().toLowerCase());
         
         if (currentSub) {
             foundSubscriber = currentSub;
             showSubscriberDashboard();
             checkExpiryAlerts();
         } else {
-            // اليوزر تم حذفه من قبل الأدمن -> طرد فورياً ومسح الجلسة
+            // المشترك محذوف من السيرفر -> طرد فوري ومسح الجلسة
             logoutClient(true);
         }
     }
@@ -353,18 +352,27 @@ function checkExpiryAlerts() {
     }
 }
 
+// دالة تسجيل الدخول المحدثة والمصححة لمنع أخطاء المطابقة
 function loginClient() {
-    let username = document.getElementById('clientUsernameInput').value.trim().toLowerCase();
-    let password = document.getElementById('clientPasswordInput').value.trim();
+    let usernameInput = document.getElementById('clientUsernameInput').value.trim().toLowerCase();
+    let passwordInput = document.getElementById('clientPasswordInput').value.trim();
 
-    if(!username || !password) {
+    if(!usernameInput || !passwordInput) {
         alert("يرجى كتابة اسم المستخدم وكلمة المرور (رقم الهاتف)");
         return;
     }
 
+    // مطابقة دقيقة بتحويل المدخلات إلى نصوص برمجية وتنظيف المسافات
     foundSubscriber = subs.find(s => {
-        let matchName = s.name && (s.name.trim().toLowerCase() === username || s.name.trim().toLowerCase().includes(username));
-        let matchPhone = s.phone && s.phone.trim() === password;
+        if (!s || !s.name) return false;
+        
+        let dbName = String(s.name).trim().toLowerCase();
+        let dbPhone = s.phone ? String(s.phone).trim() : "";
+
+        // مطابقة اليوزر تماماً مع رقم الهاتف المخزن
+        let matchName = (dbName === usernameInput);
+        let matchPhone = (dbPhone === passwordInput);
+
         return matchName && matchPhone;
     });
 
@@ -374,7 +382,7 @@ function loginClient() {
         playNotificationSound();
         checkExpiryAlerts();
     } else {
-        alert("خطأ في تسجيل الدخول!\nاسم المستخدم أو كلمة المرور (رقم الهاتف) غير صحيحة، أو تم إلغاء الحساب من الإدارة.");
+        alert("❌ خطأ في تسجيل الدخول!\nاسم المستخدم أو كلمة المرور (رقم الهاتف) غير صحيحة، أو تم إلغاء الحساب من الإدارة.");
     }
 }
 
@@ -392,7 +400,6 @@ function showSubscriberDashboard() {
     lastChatLength = chats.length;
 }
 
-// دالة تسجيل الخروج وطرد المحذوفين بمسح الذاكرة المؤقتة تماماً
 function logoutClient(isAuto = false) {
     localStorage.removeItem('ali_active_portal_user');
     sessionStorage.clear();
