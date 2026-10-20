@@ -71,14 +71,14 @@
         <button class="btn btn-logout" onclick="logoutClient()">🚪 تسجيل الخروج</button>
     </div>
 
-<div class="support-phones">
+    <div class="support-phones">
         📞 هواتف المكتب:<br>
         <b>07818627764 - 07724850876</b>
     </div>
 </div>
 
 <script>
-// رقم الإصدار الحالي للتطبيق (قم بتغييره إلى v2, v3... كلما أحدثت تعديلاً مهماً)
+// رقم الإصدار الحالي لتطبيق المشترك
 const CURRENT_APP_VERSION = "v1.0.5";
 
 const firebaseConfig = {
@@ -99,11 +99,10 @@ const db = firebase.database();
 db.ref('ali_app_version').on('value', (snapshot) => {
     let cloudVersion = snapshot.val();
     if (cloudVersion && cloudVersion !== CURRENT_APP_VERSION) {
-        // ظهر تحديث جديد بالسيرفر!
         document.getElementById('updateOverlay').style.display = 'flex';
         setTimeout(() => {
-            localStorage.clear(); // مسح الذاكرة القديمة لتجنب التعارض
-            location.reload(true); // إعادة تحميل اجبارية لجلب الكود الجديد من GitHub
+            localStorage.clear();
+            location.reload(true);
         }, 1500);
     }
 });
