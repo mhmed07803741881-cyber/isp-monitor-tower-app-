@@ -30,6 +30,7 @@
         .action-btn.notify-btn { background: #8b5cf6; color: #fff; font-weight: bold; border-color: #7c3aed; }
         .action-btn.broadcast-btn { background: #06b6d4; color: #090d16; font-weight: bold; border-color: #0891b2; grid-column: span 2; }
         .action-btn.tickets-btn { background: #ec4899; color: #fff; font-weight: bold; border-color: #db2777; grid-column: span 2; }
+        .action-btn.update-publish-btn { background: #8b5cf6; color: #fff; font-weight: bold; border-color: #7c3aed; grid-column: span 2; }
 
         .search-box { width: 100%; padding: 10px; margin-bottom: 8px; background: #131d31; border: 1px solid #1e293b; color: white; border-radius: 8px; box-sizing: border-box; font-size: 12px; }
 
@@ -103,6 +104,7 @@
     <button class="action-btn restore-btn" onclick="openTrashModal()">♻️ سلة المحذوفات (<span id="deletedCount">0</span>)</button>
     <button class="action-btn broadcast-btn" onclick="openBroadcastModal()">📣 إرسال إشعار عام للكل</button>
     <button class="action-btn tickets-btn" onclick="openTicketsManagerModal()">🎫 إدارة والرد المباشر على التكتات</button>
+    <button class="action-btn update-publish-btn" onclick="publishAppUpdate()">🔄 إرسال تحديث عام لتطبيق المشتركين</button>
     <button class="action-btn" onclick="toggleSelectAll()" id="selectAllBtn" style="background:#475569; color:#fff;">☑️ تحديد الكل</button>
     <button class="action-btn delete-btn" onclick="deleteSelectedSubs()">🗑️ حذف المحدد (<span id="selectedCount">0</span>)</button>
     <button class="action-btn" onclick="exportData()" style="background:#10b981; color:#fff; grid-column: span 2;">💾 حفظ نسخة احتياطية</button>
@@ -113,7 +115,7 @@
     <div style="text-align: center; color: #64748b; padding: 30px;">جاري الاتصال بالسيرفر السحابي...</div>
 </div>
 
-<!-- نافذة سلة المحذوفات لاسترجاع المشتركين -->
+<!-- النافذة الخاصة بسلة المحذوفات -->
 <div id="trashModal" class="modal">
     <div class="modal-content" style="border-color: #10b981; max-width: 380px;">
         <h3 style="margin-top:0; color:#10b981; text-align:center;">♻️ سلة المشتركين المحذوفين</h3>
@@ -124,11 +126,10 @@
     </div>
 </div>
 
-<!-- نافذة إدارة التكتات -->
+<!-- النافذة الخاصة بإدارة التكتات -->
 <div id="ticketsManagerModal" class="modal">
     <div class="modal-content" style="border-color: #ec4899; max-width: 380px;">
         <h3 style="margin-top:0; color:#ec4899; text-align:center;">🎫 تكتات المشتركين الواردة</h3>
-        <p style="font-size:10px; color:#94a3b8; text-align:center;">اضغط على (تم المشاهدة والتحويل) لتحديث الحالة، ثم (رد) لكتابة الرد للمشترك:</p>
         <div id="adminTicketsContainer" style="max-height: 250px; overflow-y: auto; margin-bottom: 10px;"></div>
         <button class="cancel-btn" onclick="closeTicketsManagerModal()">إغلاق</button>
     </div>
@@ -266,7 +267,11 @@ let selectedRenewId = null;
 // الاستماع المباشر للمشتركين النشطين بالسحابة
 db.ref('ali_isp_subscribers').on('value', (snapshot) => {
     const data = snapshot.val();
-    subs = data ? Object.values(data) : [];
+    if(data) {
+        subs = Array.isArray(data) ? data.filter(item => item !== null) : Object.values(data);
+    } else {
+        subs = [];
+    }
     renderSubs();
 });
 
@@ -282,12 +287,24 @@ db.ref('ali_isp_deleted_subs').on('value', (snapshot) => {
 
 function syncToCloud() {
     let subsObj = {};
-    subs.forEach(s => { subsObj[s.id] = s; });
+    subs.forEach(s => { if(s && s.id) subsObj[s.id] = s; });
     db.ref('ali_isp_subscribers').set(subsObj);
 
     let deletedObj = {};
-    deletedSubs.forEach(s => { deletedObj[s.id] = s; });
+    deletedSubs.forEach(s => { if(s && s.id) deletedObj[s.id] = s; });
     db.ref('ali_isp_deleted_subs').set(deletedObj);
+}
+
+// دالة نشر تحديث جديد للتطبيق
+function publishAppUpdate() {
+    let newVersion = prompt("أدخل رقم الإصدار الجديد للتطبيق (مثلاً: v1.0.6 أو v1.1.0):", "v1.0.6");
+    if (newVersion && newVersion.trim() !== "") {
+        db.ref('ali_app_version').set(newVersion.trim()).then(() => {
+            alert("✅ تم نشر التحديث بنجاح! سيقوم تطبيق المشترك بتحديث نفسه تلقائياً عند فتحه.");
+        }).catch(err => {
+            alert("❌ حدث خطأ أثناء نشر التحديث: " + err.message);
+        });
+    }
 }
 
 function openTrashModal() {
@@ -685,6 +702,7 @@ function renderSubs() {
     let today = new Date().toISOString().split('T')[0];
 
     subs.forEach(s => {
+        if(!s) return;
         let isExp = s.endDate < today;
         if(isExp) expiredCount++;
         if(s.payStatus === 'أجل') agelCount++; else paidCount++;
@@ -692,7 +710,7 @@ function renderSubs() {
         if(currentFilter === 'agel' && s.payStatus !== 'أجل') return;
         if(currentFilter === 'expired' && !isExp) return;
         
-        let matchName = s.name.toLowerCase().includes(query);
+        let matchName = (s.name || '').toLowerCase().includes(query);
         let matchFullName = (s.fullName || '').toLowerCase().includes(query);
         let matchPhone = (s.phone || '').includes(query);
         if(query && !matchName && !matchFullName && !matchPhone) return;
