@@ -166,6 +166,7 @@
 </div>
 
 <script>
+// إعدادات Firebase الموحدة مع لوحة التحكم الإدارية
 const firebaseConfig = {
     apiKey: "AIzaSyA2FMY9ZsJHO-9eCJzWPyT5NVJ7C36k94Y",
     authDomain: "ali-isp-system.firebaseapp.com",
@@ -185,8 +186,13 @@ let foundSubscriber = null;
 const adminPhone = "9647724850876";
 let lastChatLength = 0;
 
-// مفتاح الجلسة الجديد لإجبار الهواتف على الخروج من اليوزرات القديمة
-const SESSION_KEY = "ali_portal_session_v2";
+// مفتاح جلسة جديد ومباشر
+const SESSION_KEY = "ali_client_portal_session_v1";
+
+function cleanStr(str) {
+    if (!str) return "";
+    return String(str).replace(/\s+/g, '').toLowerCase().trim();
+}
 
 function playNotificationSound() {
     let sound = document.getElementById('clientNotifSound');
@@ -196,18 +202,7 @@ function playNotificationSound() {
     }
 }
 
-// دالة تنظيف النصوص لتطبيق مطابقة دقيقة
-function cleanVal(str) {
-    if (!str) return "";
-    return String(str).replace(/\s+/g, '').toLowerCase().trim();
-}
-
-// مسح بقايا الذاكرة القديمة فوراً
-if (localStorage.getItem('ali_active_portal_user')) {
-    localStorage.removeItem('ali_active_portal_user');
-}
-
-// الاستماع المباشر للسحابة
+// المزامنة الحية المباشرة مع عقدة ali_isp_subscribers باللوحة الرئيسية
 db.ref('ali_isp_subscribers').on('value', (snapshot) => {
     const data = snapshot.val();
     subs = data ? Object.values(data) : [];
@@ -215,17 +210,18 @@ db.ref('ali_isp_subscribers').on('value', (snapshot) => {
     let savedUser = localStorage.getItem(SESSION_KEY);
     
     if (savedUser) {
-        let currentSub = subs.find(s => s && s.name && cleanVal(s.name) === cleanVal(savedUser));
+        // فحص وجود المشترك مباشرة داخل السيرفر السحابي
+        let currentSub = subs.find(s => s && s.name && cleanStr(s.name) === cleanStr(savedUser));
         
         if (currentSub) {
             foundSubscriber = currentSub;
             showSubscriberDashboard();
             checkExpiryAlerts();
         } else {
+            // غير موجود في البرنامج الرئيسي (مثل اليوزر المحذوف) -> طرد فوراً
             logoutClient(true);
         }
     } else {
-        // إذا لم توجد جلسة حديثة، تأكد من أن الواجهة تظهر صفحة تسجيل الدخول
         document.getElementById('clientInfoBox').style.display = 'none';
         document.getElementById('loginFormArea').style.display = 'block';
     }
@@ -369,10 +365,10 @@ function checkExpiryAlerts() {
     }
 }
 
-// دالة الدخول الفعالة لمطابقة ali و07818627764
+// دالة المطابقة الحرة والدقيقة لـ ali و 07818627764
 function loginClient() {
-    let inputUser = cleanVal(document.getElementById('clientUsernameInput').value);
-    let inputPass = cleanVal(document.getElementById('clientPasswordInput').value);
+    let inputUser = cleanStr(document.getElementById('clientUsernameInput').value);
+    let inputPass = cleanStr(document.getElementById('clientPasswordInput').value);
 
     if(!inputUser || !inputPass) {
         alert("يرجى كتابة اسم المستخدم وكلمة المرور (رقم الهاتف)");
@@ -382,8 +378,8 @@ function loginClient() {
     foundSubscriber = subs.find(s => {
         if (!s || !s.name) return false;
         
-        let dbUser = cleanVal(s.name);
-        let dbPass = cleanVal(s.phone);
+        let dbUser = cleanStr(s.name);
+        let dbPass = cleanStr(s.phone);
 
         return (dbUser === inputUser) && (dbPass === inputPass);
     });
@@ -394,7 +390,7 @@ function loginClient() {
         playNotificationSound();
         checkExpiryAlerts();
     } else {
-        alert("❌ تعذر تسجيل الدخول!\nيرجى إدخال اليوزر (ali) ورقم الهاتف (07818627764) بدقة.");
+        alert("❌ تعذر تسجيل الدخول!\n\nيرجى التأكد من أن المشترك موجود في برنامج الإدارة الرئيسي بنفس اليوزر ورقم الهاتف.");
     }
 }
 
@@ -412,9 +408,9 @@ function showSubscriberDashboard() {
     lastChatLength = chats.length;
 }
 
+// دالة الخروج ومسح الذاكرة بالكامل
 function logoutClient(isAuto = false) {
-    localStorage.removeItem(SESSION_KEY);
-    localStorage.removeItem('ali_active_portal_user');
+    localStorage.clear();
     sessionStorage.clear();
     foundSubscriber = null;
     
@@ -427,7 +423,7 @@ function logoutClient(isAuto = false) {
     document.getElementById('clientPasswordInput').value = '';
     
     if(isAuto) {
-        alert("⚠️ تم تسجيل الخروج تلقائياً لأن الحساب القديم غير مسجل في اللوحة.");
+        alert("⚠️ تم تسجيل الخروج بنجاح وتحديث النظام.");
     } else {
         alert("تم تسجيل الخروج بنجاح.");
     }
