@@ -98,7 +98,7 @@
         <button class="btn btn-search" onclick="loginClient()">تسجيل الدخول</button>
     </div>
 
-    <!-- كارت المشترك المكتمل بكافة الأزرار المطابقة لصورتك -->
+    <!-- كارت المشترك -->
     <div id="clientInfoBox" class="info-box">
         <div class="info-row"><span class="info-label">اسم المشترك:</span><span class="info-val" id="cName" style="color:#38bdf8"></span></div>
         <div class="info-row"><span class="info-label">حالة الاشتراك:</span><span class="info-val" id="cStatus"></span></div>
@@ -213,6 +213,23 @@ function playNotificationSound() {
     }
 }
 
+// دالة إرسال شارة التواجد أونلاين إلى السيرفر الرئيسي
+function sendClientOnlinePresence() {
+    let currentSubName = localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY);
+    
+    if (currentSubName) {
+        let safeKey = currentSubName.replace(/[.#$\[\]]/g, "_");
+        let currentObj = subs.find(s => s && s.name && cleanStr(s.name) === cleanStr(currentSubName));
+        let usernameVal = currentObj ? (currentObj.username || '') : '';
+
+        db.ref('ali_online_clients/' + safeKey).set({
+            name: currentSubName,
+            username: usernameVal,
+            lastSeen: Date.now()
+        });
+    }
+}
+
 // المزامنة المباشرة لقاعدة البيانات السحابية
 db.ref('ali_isp_subscribers').on('value', (snapshot) => {
     const data = snapshot.val();
@@ -230,6 +247,7 @@ db.ref('ali_isp_subscribers').on('value', (snapshot) => {
             foundSubscriber = currentSub;
             showSubscriberDashboard();
             checkExpiryAlerts();
+            sendClientOnlinePresence(); // إرسال التواجد فور فتح التطبيق
         } else {
             logoutClient(true);
         }
@@ -248,6 +266,9 @@ window.onload = function() {
 
 setInterval(() => {
     if(!foundSubscriber) return;
+
+    // تحديث التواجد أونلاين كل دقيقة طالما التطبيق مفتوح
+    sendClientOnlinePresence();
 
     let chats = JSON.parse(localStorage.getItem(`ticket_chat_${foundSubscriber.name}`)) || [];
     if(chats.length > lastChatLength) {
@@ -389,6 +410,7 @@ function loginClient() {
         showSubscriberDashboard();
         playNotificationSound();
         checkExpiryAlerts();
+        sendClientOnlinePresence(); // إرسال التواجد فور تسجيل الدخول
     } else {
         alert("❌ تعذر تسجيل الدخول!\nيرجى التأكد من كتابة اليوزر ورقم الهاتف بدقة مطابقة للوحة الإدارة.");
     }
@@ -413,6 +435,11 @@ function showLoginForm() {
 }
 
 function logoutClient(isAuto = false) {
+    if (foundSubscriber) {
+        let safeKey = foundSubscriber.name.replace(/[.#$\[\]]/g, "_");
+        db.ref('ali_online_clients/' + safeKey).remove(); // إزالة حالة التواجد فور تسجيل الخروج
+    }
+
     localStorage.removeItem(SESSION_KEY);
     sessionStorage.removeItem(SESSION_KEY);
     foundSubscriber = null;
