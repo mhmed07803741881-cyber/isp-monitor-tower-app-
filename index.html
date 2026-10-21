@@ -36,7 +36,6 @@
         .sub-card.expired { border-right-color: #ef4444; }
         .sub-card.agel { border-right-color: #f59e0b; }
 
-        .select-checkbox { width: 18px; height: 18px; margin-left: 10px; cursor: pointer; accent-color: #38bdf8; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; z-index: 99999; }
         .modal-content { background: #131d31; padding: 20px; border-radius: 12px; width: 90%; max-width: 360px; border: 1px solid #38bdf8; box-sizing: border-box; }
 
@@ -114,7 +113,6 @@
     <div style="text-align: center; color: #64748b; padding: 30px;">جاري الاتصال بالسيرفر السحابي...</div>
 </div>
 
-<!-- النافذة الخاصة بسلة المحذوفات -->
 <div id="trashModal" class="modal">
     <div class="modal-content" style="border-color: #10b981; max-width: 380px;">
         <h3 style="margin-top:0; color:#10b981; text-align:center;">♻️ سلة المشتركين المحذوفين</h3>
@@ -124,7 +122,6 @@
     </div>
 </div>
 
-<!-- نافذة إدارة التكتات -->
 <div id="ticketsManagerModal" class="modal">
     <div class="modal-content" style="border-color: #ec4899; max-width: 380px;">
         <h3 style="margin-top:0; color:#ec4899; text-align:center;">🎫 تكتات المشتركين الواردة</h3>
@@ -133,17 +130,6 @@
     </div>
 </div>
 
-<!-- نافذة الرد الفردي -->
-<div id="singleReplyModal" class="modal">
-    <div class="modal-content" style="border-color: #38bdf8; max-width: 350px;">
-        <h3 style="margin-top:0; color:#38bdf8; text-align:center;">💬 الرد على المشترك: <span id="replyTargetName"></span></h3>
-        <textarea id="singleAdminReplyText" rows="3" placeholder="اكتب رد الأقسام المختصة هنا..."></textarea>
-        <button class="submit-btn" onclick="submitSingleReply()" style="background:#10b981; color:#fff; margin-bottom:6px;">إرسال الرد</button>
-        <button class="cancel-btn" onclick="closeSingleReplyModal()">إغلاق</button>
-    </div>
-</div>
-
-<!-- نافذة الإشعارات -->
 <div id="notificationsModal" class="modal">
     <div class="modal-content" style="border-color: #f59e0b;">
         <h3 style="margin-top:0; color:#f59e0b; text-align:center;">🔔 سجل إشعارات النظام</h3>
@@ -153,18 +139,15 @@
     </div>
 </div>
 
-<!-- نافذة الإشعار العام -->
 <div id="broadcastModal" class="modal">
     <div class="modal-content" style="border-color: #06b6d4;">
         <h3 style="margin-top:0; color:#06b6d4; text-align:center;">📣 إرسال إشعار عام</h3>
         <textarea id="broadcastText" rows="4" style="background:#0d1526; color:#fff; border:1px solid #1e293b; border-radius:6px; padding:8px; width:100%; font-size:12px;">عزيزنا المشترك، نود إعلامكم بوجود تحديثات وصيانة عامة للشبكة.</textarea>
         <button class="submit-btn" onclick="saveAppBroadcast()" style="background:#06b6d4; color:#090d16; margin-bottom:6px;">نشر في تطبيق المشتركين</button>
-        <button class="submit-btn" onclick="sendWhatsAppBroadcast()" style="background:#25d366; color:#fff;">إرسال واتساب للكل</button>
         <button class="cancel-btn" onclick="closeBroadcastModal()">إغلاق</button>
     </div>
 </div>
 
-<!-- نافذة التفاصيل المعدلة والمصلحة -->
 <div id="subDetailsModal" class="modal">
     <div class="modal-content" style="border-color: #10b981;">
         <h3 style="margin-top:0; color:#38bdf8; text-align:center;" id="dName">تفاصيل المشترك</h3>
@@ -178,7 +161,6 @@
     </div>
 </div>
 
-<!-- نافذة إضافة مشترك -->
 <div id="addSubModal" class="modal">
     <div class="modal-content">
         <h3 style="margin-top:0; color:#38bdf8;">اشتراك جديد (30 يوماً)</h3>
@@ -192,12 +174,11 @@
         </select>
         <input type="date" id="startDate" onchange="calcEnd()">
         <input type="date" id="endDate">
-        <button class="submit-btn" onclick="saveSub()">حفظ وإرسال واتساب</button>
+        <button class="submit-btn" onclick="saveSub()">حفظ وإرسال واتساب وتنبيه</button>
         <button class="cancel-btn" onclick="closeModal()">إغلاق</button>
     </div>
 </div>
 
-<!-- نافذة التجديد -->
 <div id="renewModal" class="modal">
     <div class="modal-content" style="border-color: #0284c7; max-width: 320px;">
         <h3 style="margin-top:0; color:#38bdf8; text-align:center;">🔄 تفعيل اشتراك جديد</h3>
@@ -206,12 +187,11 @@
             <option value="واصل">✅ واصل (نقداً)</option>
             <option value="أجل">⏳ أجل (معلق)</option>
         </select>
-        <button class="submit-btn" onclick="confirmRenewSubscription()" style="background:#0284c7; color:#fff; margin-top:10px;">تأكيد التفعيل (30 يوماً)</button>
+        <button class="submit-btn" onclick="confirmRenewSubscription()" style="background:#0284c7; color:#fff; margin-top:10px;">تأكيد وتنبيه المشترك</button>
         <button class="cancel-btn" onclick="closeRenewModal()">إغلاق</button>
     </div>
 </div>
 
-<!-- نافذة تغيير رمز الدخول -->
 <div id="pinModal" class="modal">
     <div class="modal-content">
         <h3 style="margin-top:0; color:#38bdf8;">تغيير رمز الدخول</h3>
@@ -222,7 +202,6 @@
     </div>
 </div>
 
-<!-- طباعة الوصل -->
 <div id="printArea">
     <div style="text-align: center; border-bottom: 2px dashed #000; padding-bottom: 8px; margin-bottom: 8px;">
         <h3 style="margin:0; font-size:13px;">مكتب مهندس علي لخدمات الإنترنت</h3>
@@ -256,9 +235,7 @@ const db = firebase.database();
 let subs = [];
 let deletedSubs = [];
 let currentPin = localStorage.getItem('app_pin') || '1234';
-let isAllSelected = false;
 let currentFilter = 'all';
-let activeReplySubscriber = "";
 let selectedRenewId = null;
 
 db.ref('ali_isp_subscribers').on('value', (snapshot) => {
@@ -288,7 +265,7 @@ function syncToCloud() {
 }
 
 function publishAppUpdate() {
-    let newVersion = prompt("أدخل رقم الإصدار الجديد لتطبيق المشتركين (مثلاً: v1.0.6):", "v1.0.6");
+    let newVersion = prompt("أدخل رقم الإصدار الجديد لتطبيق المشتركين:", "v1.0.6");
     if (newVersion && newVersion.trim() !== "") {
         db.ref('ali_app_version').set(newVersion.trim()).then(() => {
             alert("✅ تم نشر التحديث بنجاح وسيتم تحديثه لدى المشتركين تلقائياً.");
@@ -333,7 +310,56 @@ window.onload = function() {
     if(startInput) { startInput.value = today; calcEnd(); }
 };
 
-// إصلاح دالة عرض التفاصيل لإظهار كافة البيانات بدقة
+// الدوال الخاصة بإرسال إشعارات التطبيق الداخلي والواتساب
+function sendInAppNotification(subName, messageText) {
+    localStorage.setItem(`client_activation_notif_${subName}`, messageText);
+}
+
+function sendWhatsAppMessage(phone, messageText) {
+    if(!phone || phone.trim() === "") return;
+    let cleanPhone = phone.replace(/\D/g, '');
+    if(cleanPhone.startsWith('0')) cleanPhone = '964' + cleanPhone.substring(1);
+    window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(messageText)}`, '_blank');
+}
+
+// 1. عند تفعيل أو تجديد الاشتراك
+function notifyActivation(subName, phone, endDate, payStatus) {
+    let statusText = payStatus === 'واصل' ? 'واصل ✅ (مدفوع)' : 'أجل ⏳ (غير مدفوع)';
+    let msgApp = `🎉 تم تفعيل/تجديد اشتراكك بنجاح!\nالحالة: ${statusText}\nينتهي بتاريخ: ${endDate}`;
+    sendInAppNotification(subName, msgApp);
+
+    let msgWa = `عزيزنا المشترك (${subName}) 📡\nتم تفعيل/تجديد اشتراكك بنجاح في مكتب مهندس علي لخدمات الإنترنت ✅\nالحالة: ${statusText}\nتاريخ انتهاء الاشتراك: ${endDate}\nشكراً لاختياركم خدماتنا.\nهواتف المكتب: 07818627764 - 07724850876`;
+    sendWhatsAppMessage(phone, msgWa);
+}
+
+// 2. عند تسديد الدين (تحويل من أجل إلى واصل)
+function notifyPaymentSuccess(subName, phone) {
+    let msgApp = `💵 تم استلام مبلغ التسديد بنجاح وأصبح حسابك (واصل ✅).\nشكراً لتعاملكم مع مكتب مهندس علي.`;
+    sendInAppNotification(subName, msgApp);
+
+    let msgWa = `عزيزنا المشترك (${subName}) 💵\nتم تسديد مبلغ الاشتراك بنجاح وتم تغيير حالتك في النظام إلى (واصل ✅).\nشكراً لالتزامكم وسرعة تسديدكم.\nمكتب مهندس علي لخدمات الإنترنت\nهواتف المكتب: 07818627764 - 07724850876`;
+    sendWhatsAppMessage(phone, msgWa);
+}
+
+// 3. تنبيه المتأخرين عن التسديد (غير المسددين / الأجل)
+function sendGroupDebtReminder() {
+    let unPaidSubs = subs.filter(s => s.payStatus === 'أجل' && s.phone && s.phone.trim() !== "");
+    if(unPaidSubs.length === 0) { alert("لا توجد ديون معلقة بأرقام هواتف مسجلة."); return; }
+    
+    if(confirm(`هل تريد إرسال تنبيه تأخر عن التسديد عبر الواتساب والتطبيق إلى (${unPaidSubs.length}) مشترك؟`)) {
+        unPaidSubs.forEach((s, index) => {
+            setTimeout(() => {
+                let msgApp = `⚠️ تنبيه تأخر في التسديد:عزيزنا المشترك، يرجى المبادرة بتسديد مبلغ الاشتراك المعلق (أجل) لتجنب انقطاع الخدمة.`;
+                sendInAppNotification(s.name, msgApp);
+
+                let msgWa = `عزيزنا المشترك (${s.name}) ⏳\nنود تذكيركم بوجود مبلغ اشتراك معلق (أجل) متأخر في مكتب مهندس علي لخدمات الإنترنت.\nيرجى المبادرة بالتسديد في أقرب وقت.\nهواتف المكتب: 07818627764 - 07724850876`;
+                sendWhatsAppMessage(s.phone, msgWa);
+            }, index * 1200);
+        });
+        alert("✅ تم إرسال تنبيهات التأخر في التسديد بنجاح!");
+    }
+}
+
 function showSubDetails(id) {
     let s = subs.find(item => String(item.id) === String(id));
     if(!s) return;
@@ -458,9 +484,6 @@ function saveAppBroadcast() {
     closeBroadcastModal();
 }
 
-function sendWhatsAppBroadcast() { window.open("https://api.whatsapp.com", "_blank"); }
-function sendGroupDebtReminder() { alert("تم إرسال تنبيهات الديون عبر الواتساب"); }
-
 function openRenewModal(id) {
     selectedRenewId = id;
     let s = subs.find(item => String(item.id) === String(id));
@@ -480,6 +503,11 @@ function confirmRenewSubscription() {
         syncToCloud();
         closeRenewModal();
         renderSubs();
+
+        notifyActivation(s.name, s.phone, s.endDate, s.payStatus);
+        if(s.payStatus === 'واصل') {
+            printReceipt(s.name, s.price || 30000, s.startDate, s.endDate, 'واصل (تم التجديد نقداً)', 'وصل قبض تجديد اشتراك');
+        }
     }
 }
 
@@ -567,22 +595,41 @@ function saveSub() {
     let name = document.getElementById('subName').value.trim();
     let fullName = document.getElementById('subFullName').value.trim();
     let phone = document.getElementById('subPhone').value.trim();
-    let price = document.getElementById('subPrice').value.trim() || "0";
+    let price = document.getElementById('subPrice').value.trim() || "30000";
     let payStatus = document.getElementById('subStatus').value;
     let startDate = document.getElementById('startDate').value;
     let endDate = document.getElementById('endDate').value;
     
     if(!name || !startDate || !endDate) { alert("يرجى إدخال اسم المشترك والتواريخ"); return; }
     
-    subs.push({ id: Date.now(), name, fullName, phone, price, payStatus, startDate, endDate });
+    let newSub = { id: Date.now(), name, fullName, phone, price, payStatus, startDate, endDate };
+    subs.push(newSub);
     syncToCloud();
     closeModal();
     renderSubs();
+
+    notifyActivation(name, phone, endDate, payStatus);
 }
 
 function payDebt(id) {
     let s = subs.find(item => String(item.id) === String(id));
-    if(s) { s.payStatus = 'واصل'; syncToCloud(); renderSubs(); }
+    if(s) {
+        s.payStatus = 'واصل';
+        syncToCloud();
+        renderSubs();
+        notifyPaymentSuccess(s.name, s.phone);
+        printReceipt(s.name, s.price || 30000, s.startDate, s.endDate, 'واصل (تم التسديد)', 'وصل قبض تسديد دين');
+    }
+}
+
+function printReceipt(name, price, start, end, payStatus, title = 'وصل قبض اشتراك') {
+    document.getElementById('receiptTitle').innerText = title;
+    document.getElementById('pName').innerText = name;
+    document.getElementById('pPrice').innerText = price;
+    document.getElementById('pPayStatus').innerText = payStatus;
+    document.getElementById('pStart').innerText = start;
+    document.getElementById('pEnd').innerText = end;
+    window.print();
 }
 
 function deleteSub(id) {
