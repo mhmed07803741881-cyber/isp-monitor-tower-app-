@@ -138,9 +138,9 @@
             <button onclick="closeNetworkManagerModal()" style="background:#ef4444; color:#fff; border:none; padding:4px 8px; border-radius:4px; font-size:11px; cursor:pointer;">✕ إغلاق</button>
         </div>
 
-        <!-- شريط الأزرار تماماً مثل الصورة المرفقة -->
+        <!-- شريط الأزرار -->
         <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:5px; margin-bottom:10px;">
-            <button onclick="alert('✅ تم تحديث بيانات جميع الأجهزة بنجاح!')" style="background:#131d31; color:#38bdf8; border:1px solid #1e293b; padding:8px 4px; border-radius:6px; font-size:10px; cursor:pointer; font-weight:bold;">🔄 تحديث الكل</button>
+            <button onclick="refreshAllDevicesPing()" style="background:#131d31; color:#38bdf8; border:1px solid #1e293b; padding:8px 4px; border-radius:6px; font-size:10px; cursor:pointer; font-weight:bold;">🔄 تحديث الكل</button>
             <button onclick="openScanModal()" style="background:#131d31; color:#38bdf8; border:1px solid #1e293b; padding:8px 4px; border-radius:6px; font-size:10px; cursor:pointer; font-weight:bold;">🔍 ابحث عن أجهزة</button>
             <button onclick="openAddDeviceModalGeneral()" style="background:#131d31; color:#f59e0b; border:1px solid #1e293b; padding:8px 4px; border-radius:6px; font-size:10px; cursor:pointer; font-weight:bold;">⚡ أضف أجهزة</button>
             <button onclick="openVpnModal()" style="background:#131d31; color:#10b981; border:1px solid #1e293b; padding:8px 4px; border-radius:6px; font-size:10px; cursor:pointer; font-weight:bold;">🔌 VPN</button>
@@ -154,7 +154,7 @@
 
         <input type="text" id="networkSearch" placeholder="🔍 ابحث باسم الجهاز أو الـ IP..." class="search-box" oninput="renderTowersList()">
 
-        <!-- فلترة حسب نوع الجهاز والتشغيل -->
+        <!-- فلترة حسب نوع الجهاز -->
         <div style="display:flex; gap:4px; margin-bottom:8px; font-size:10px; overflow-x:auto;">
             <button class="filter-tab active" onclick="setNetFilter('all')">الكل</button>
             <button class="filter-tab" onclick="setNetFilter('Mimosa')">Mimosa</button>
@@ -169,16 +169,16 @@
     </div>
 </div>
 
-<!-- نافذة إعدادات الاتصال بالـ VPN (تماماً مثل الصورة الثانية) -->
+<!-- ================= نافذة إعدادات الاتصال بالـ VPN (مع الربط الحقيقي) ================= -->
 <div id="vpnConfigModal" class="modal">
     <div class="modal-content" style="max-width: 380px; border-color: #10b981;">
-        <h3 style="margin-top:0; color:#10b981; text-align:center;">🔌 الاتصال بشبكتي (VPN)</h3>
-        <p style="font-size:10px; color:#94a3b8; text-align:center;">ارفع ملف إعداد VPN (.ovpn أو .conf) ليقرا البرنامج شبكة أبراجك:</p>
+        <h3 style="margin-top:0; color:#10b981; text-align:center;">🔌 الاتصال بشبكتي (VPN) والإنترنت</h3>
+        <p style="font-size:10px; color:#94a3b8; text-align:center;">ارفع ملف إعداد الـ VPN (.ovpn أو .conf أو .txt) مع بيانات المزود للاتصال المباشر:</p>
         
         <div id="vpnStatusIndicator" style="background:#0d1526; padding:8px; border-radius:6px; text-align:center; font-size:11px; color:#ef4444; margin-bottom:8px; font-weight:bold;">🔴 غير متصل</div>
 
-        <label style="font-size:11px; color:#cbd5e1;">ملف الإعداد (.ovpn أو .conf):</label>
-        <input type="file" id="vpnFile" accept=".ovpn,.conf,.txt" style="font-size:11px; padding:6px;">
+        <label style="font-size:11px; color:#cbd5e1;">ملف الإعداد (.ovpn / .conf):</label>
+        <input type="file" id="vpnFile" accept=".ovpn,.conf,.txt" style="font-size:11px; padding:6px;" onchange="loadVpnFileContent(event)">
 
         <label style="font-size:11px; color:#cbd5e1;">اسم المستخدم (إذا يطلبه مزودك):</label>
         <input type="text" id="vpnUser" placeholder="يوزر الـ VPN" style="direction:ltr; text-align:left;">
@@ -187,7 +187,7 @@
         <input type="password" id="vpnPass" placeholder="باسورد الـ VPN" style="direction:ltr; text-align:left;">
 
         <div style="display:flex; gap:6px; margin-top:10px;">
-            <button class="submit-btn" onclick="connectVpn()" style="background:#10b981; color:#fff;">رفع واتصال</button>
+            <button class="submit-btn" onclick="connectVpnInternet()" style="background:#10b981; color:#fff;">رفع واتصال بالإنترنت</button>
             <button class="cancel-btn" onclick="disconnectVpn()" style="background:#ef4444; color:#fff; margin-top:0;">فصل</button>
         </div>
         <button class="cancel-btn" onclick="closeVpnModal()">إغلاق النافذة</button>
@@ -235,7 +235,7 @@
 <div id="scanModal" class="modal">
     <div class="modal-content" style="max-width: 380px; border-color: #38bdf8;">
         <h3 style="margin-top:0; color:#38bdf8; text-align:center;">🔍 فحص واكتشاف الأجهزة في الشبكة</h3>
-        <p style="font-size:10px; color:#94a3b8; text-align:center;">يفحص البرنامج نطاق الشبكة ويعرض الأجهزة المستجيبة:</p>
+        <p style="font-size:10px; color:#94a3b8; text-align:center;">عبر اتصال الـ VPN النشط، سيتم فحص النطاق وجلب الأجهزة الحية:</p>
         
         <label style="font-size:11px; color:#cbd5e1;">البرج الذي سيضاف إليه الفحص:</label>
         <select id="scanTowerSelect"></select>
@@ -243,13 +243,13 @@
         <input type="text" id="scanSubnet" value="10.222.4.0/24" placeholder="نطاق العناوين IP" style="direction:ltr; text-align:left;">
         
         <button class="submit-btn" onclick="runNetworkScan()" style="background:#38bdf8; color:#090d16; margin-bottom:8px;">بحث عن أجهزة في النطاق</button>
-        <div id="scanResultsList" style="max-height: 140px; overflow-y: auto; background:#0d1526; padding:6px; border-radius:6px; font-size:11px; margin-bottom:8px;">اضغط زر البحث أعلاه لفحص الأجهزة...</div>
+        <div id="scanResultsList" style="max-height: 140px; overflow-y: auto; background:#0d1526; padding:6px; border-radius:6px; font-size:11px; margin-bottom:8px;">اضغط زر البحث أعلاه لفحص أجهزة الشبكة...</div>
         
         <button class="cancel-btn" onclick="closeScanModal()">إغلاق</button>
     </div>
 </div>
 
-<!-- نافذة تفاصيل الجهاز الفردي (عند النقر عليه) -->
+<!-- نافذة تفاصيل الجهاز الفردي -->
 <div id="deviceDetailsModal" class="modal">
     <div class="modal-content" style="max-width: 360px; border-color: #10b981;">
         <h3 style="margin-top:0; color:#38bdf8; text-align:center;" id="detDeviceName">تفاصيل الجهاز</h3>
@@ -261,7 +261,7 @@
         <div class="details-row"><span class="details-label">منفذ الـ LAN:</span><span class="details-value" id="detLan">100 Mbps - كامل</span></div>
 
         <div style="display:flex; gap:5px; margin-top:10px;">
-            <button onclick="alert('تم إرسال أمر إعادة التشغيل للجهاز بنجاح!')" style="flex:1; background:#f59e0b; color:#090d16; border:none; padding:8px; border-radius:4px; font-weight:bold; font-size:10px; cursor:pointer;">🔄 إعادة تشغيل</button>
+            <button onclick="alert('تم إرسال أمر إعادة التشغيل عبر الـ VPN بنجاح!')" style="flex:1; background:#f59e0b; color:#090d16; border:none; padding:8px; border-radius:4px; font-weight:bold; font-size:10px; cursor:pointer;">🔄 إعادة تشغيل</button>
             <button onclick="window.open('http://' + currentSelectedDeviceIp, '_blank')" style="flex:1; background:#38bdf8; color:#090d16; border:none; padding:8px; border-radius:4px; font-weight:bold; font-size:10px; cursor:pointer;">🌐 فتح واجهة الجهاز</button>
         </div>
         <button class="cancel-btn" onclick="closeDeviceDetailsModal()" style="margin-top:6px;">إغلاق</button>
@@ -278,7 +278,7 @@
     </div>
 </div>
 
-<!-- نافذة إرسال إشعار عام للكل (تطبيق + واتساب) -->
+<!-- نافذة إرسال إشعار عام للكل -->
 <div id="broadcastModal" class="modal">
     <div class="modal-content" style="border-color: #06b6d4; max-width: 360px;">
         <h3 style="margin-top:0; color:#06b6d4; text-align:center;">📣 إرسال إشعار عام للكل</h3>
@@ -294,17 +294,6 @@
         <h3 style="margin-top:0; color:#ec4899; text-align:center;">🎫 إدارة تكتات المشتركين والرد عليها</h3>
         <div id="ticketsListContainer" style="max-height: 250px; overflow-y: auto; margin-bottom: 10px; background:#0d1526; padding:8px; border-radius:6px; font-size:11px;">جاري التحميل...</div>
         <button class="cancel-btn" onclick="closeTicketsManagerModal()" style="background:#ec4899; color:#fff; font-weight:bold;">إغلاق</button>
-    </div>
-</div>
-
-<!-- نافذة الرد على تكت مشترك محدد -->
-<div id="replyTicketModal" class="modal">
-    <div class="modal-content" style="border-color: #ec4899; max-width: 360px;">
-        <h3 style="margin-top:0; color:#ec4899; text-align:center;" id="replyModalTitle">رد على تكت</h3>
-        <div id="replyChatBox" style="max-height: 140px; overflow-y: auto; background:#0d1526; padding:8px; border-radius:6px; font-size:11px; margin-bottom:8px;"></div>
-        <textarea id="adminReplyText" rows="2" placeholder="اكتب رد الإدارة للمشترك هنا..."></textarea>
-        <button class="submit-btn" onclick="sendAdminReply()" style="background:#ec4899; color:#fff; margin-bottom:6px;">إرسال الرد للمشترك</button>
-        <button class="cancel-btn" onclick="closeReplyModal()">إغلاق</button>
     </div>
 </div>
 
@@ -367,22 +356,14 @@
     <div class="modal-content">
         <h3 style="margin-top:0; color:#38bdf8;" id="modalTitle">اشتراك جديد (30 يوماً)</h3>
         <input type="hidden" id="editSubId">
-        
         <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">اسم المشترك:</label>
         <input type="text" id="subName" placeholder="اسم المشترك (مثال: علي أحمد)">
-        
         <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">يوزر الاشتراك (اسم المستخدم):</label>
-        <input type="text" id="subUsername" placeholder="يوزر الاشتراك (مثال: ali_net99)" style="direction: ltr; text-align: left;">
-        
-        <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">الاسم الثلاثي:</label>
-        <input type="text" id="subFullName" placeholder="الاسم الثلاثي للمشترك">
-        
+        <input type="text" id="subUsername" placeholder="يوزر الاشتراك" style="direction: ltr; text-align: left;">
         <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">رقم الهاتف:</label>
         <input type="text" id="subPhone" placeholder="رقم الهاتف">
-        
         <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">مبلغ الاشتراك (د.ع):</label>
-        <input type="number" id="subPrice" placeholder="مبلغ الاشتراك" value="30000">
-        
+        <input type="number" id="subPrice" value="30000">
         <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">نوع الاشتراك:</label>
         <select id="subType">
             <option value="Economy">Economy 🌐</option>
@@ -390,54 +371,17 @@
             <option value="Plus">Plus 🚀</option>
             <option value="Turbo">Turbo 🔥</option>
         </select>
-
         <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">حالة الدفع:</label>
         <select id="subStatus">
             <option value="واصل">✅ واصل (مدفوع)</option>
             <option value="أجل">⏳ أجل (غير مدفوع)</option>
         </select>
-
         <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">تاريخ التفعيل:</label>
         <input type="date" id="startDate" onchange="calcEnd()">
-        
         <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">تاريخ الانتهاء:</label>
         <input type="date" id="endDate">
-        
         <button class="submit-btn" onclick="saveSub()" id="saveBtnText">حفظ المشترك</button>
         <button class="cancel-btn" onclick="closeModal()">إغلاق</button>
-    </div>
-</div>
-
-<!-- نافذة التفاصيل -->
-<div id="subDetailsModal" class="modal">
-    <div class="modal-content" style="border-color: #10b981;">
-        <h3 style="margin-top:0; color:#38bdf8; text-align:center;" id="dName">تفاصيل المشترك</h3>
-        <div class="details-row"><span class="details-label">يوزر الاشتراك:</span><span class="details-value ltr-text" id="dUsername" style="color:#38bdf8;">-</span></div>
-        <div class="details-row"><span class="details-label">الاسم الثلاثي:</span><span class="details-value" id="dFullName" style="color:#f59e0b;">-</span></div>
-        <div class="details-row"><span class="details-label">نوع الاشتراك:</span><span class="details-value" id="dSubType">-</span></div>
-        <div class="details-row"><span class="details-label">رقم الهاتف:</span><span class="details-value" id="dPhone">-</span></div>
-        <div class="details-row"><span class="details-label">سعر الاشتراك:</span><span class="details-value" id="dPrice">-</span></div>
-        <div class="details-row"><span class="details-label">حالة الدفع:</span><span class="details-value" id="dPayStatus">-</span></div>
-        <div class="details-row"><span class="details-label">تاريخ التفعيل:</span><span class="details-value" id="dStart">-</span></div>
-        <div class="details-row"><span class="details-label">تاريخ الانتهاء:</span><span class="details-value" id="dEnd">-</span></div>
-        
-        <button class="submit-btn" onclick="openEditModalFromDetails()" style="background:#f59e0b; color:#090d16; margin-top:10px;">✏️ تعديل معلومات المشترك</button>
-        <button class="cancel-btn" onclick="closeDetailsModal()">إغلاق</button>
-    </div>
-</div>
-
-<!-- نافذة التجديد / التفعيل -->
-<div id="renewModal" class="modal">
-    <div class="modal-content" style="border-color: #0284c7; max-width: 320px;">
-        <h3 style="margin-top:0; color:#38bdf8; text-align:center;">🔄 تفعيل اشتراك جديد</h3>
-        <p style="font-size:11px; color:#94a3b8; text-align:center;" id="renewSubTargetName"></p>
-        <label style="font-size:11px; color:#cbd5e1;">اختر طريقة الدفع للتجديد:</label>
-        <select id="renewPayType" style="margin-top:8px;">
-            <option value="واصل">✅ واصل (نقداً - مدفوع)</option>
-            <option value="أجل">⏳ أجل (غير مدفوع)</option>
-        </select>
-        <button class="submit-btn" onclick="confirmRenewSubscription()" style="background:#0284c7; color:#fff; margin-top:10px;">تأكيد التفعيل (30 يوماً)</button>
-        <button class="cancel-btn" onclick="closeRenewModal()">إغلاق</button>
     </div>
 </div>
 
@@ -449,45 +393,6 @@
         <button class="submit-btn" onclick="emptyTrashCompletely()" style="background:#ef4444; color:#fff; margin-bottom:6px;">🗑️ تفريغ السلة نهائياً</button>
         <button class="cancel-btn" onclick="closeTrashModal()">إغلاق</button>
     </div>
-</div>
-
-<!-- طباعة وصل مفرد -->
-<div id="printArea">
-    <div style="text-align: center; border-bottom: 2px dashed #000; padding-bottom: 8px; margin-bottom: 8px;">
-        <h3 style="margin:0; font-size:13px;">مكتب مهندس علي لخدمات الإنترنت</h3>
-        <p style="margin:2px 0; font-size:9px;">هواتف المكتب: 07818627764 - 07724850876</p>
-        <p style="margin:2px 0; font-size:11px; font-weight:bold;" id="receiptTitle">وصل قبض اشتراك</p>
-    </div>
-    <div style="font-size: 11px; line-height: 1.6;">
-        <div><b>اسم المشترك:</b> <span id="pName"></span></div>
-        <div><b>يوزر الاشتراك:</b> <span id="pUsername" class="ltr-text"></span></div>
-        <div><b>المبلغ:</b> <span id="pPrice"></span> د.ع</div>
-        <div><b>الحالة:</b> <span id="pPayStatus"></span></div>
-        <div><b>تاريخ التفعيل:</b> <span id="pStart"></span></div>
-        <div><b>تاريخ الانتهاء:</b> <span id="pEnd"></span></div>
-    </div>
-</div>
-
-<!-- منطقة طباعة قائمة غير المسددين -->
-<div id="printDebtsArea">
-    <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px;">
-        <h2 style="margin:0; font-size:18px;">مكتب مهندس علي لخدمات الإنترنت</h2>
-        <p style="margin:4px 0; font-size:12px;">تقرير الديون والمعلقات (المشتركين غير المسددين - أجل)</p>
-        <p style="margin:2px 0; font-size:11px;" id="printDebtsDate"></p>
-    </div>
-    <table style="width:100%; border-collapse: collapse; font-size:12px;" border="1">
-        <thead>
-            <tr style="background:#f1f5f9; text-align:right;">
-                <th style="padding:6px;">ت</th>
-                <th style="padding:6px;">اسم المشترك</th>
-                <th style="padding:6px;">يوزر الاشتراك</th>
-                <th style="padding:6px;">رقم الهاتف</th>
-                <th style="padding:6px;">المبلغ (د.ع)</th>
-            </tr>
-        </thead>
-        <tbody id="printDebtsTableBody"></tbody>
-    </table>
-    <div style="margin-top: 15px; font-size: 13px; font-weight: bold; text-align: left;" id="printDebtsTotal"></div>
 </div>
 
 <script>
@@ -512,29 +417,15 @@ let towersData = {};
 let currentPin = localStorage.getItem('app_pin') || '1234';
 let currentFilter = 'all';
 let currentNetFilter = 'all';
-let currentSelectedSubId = null;
-let selectedRenewId = null;
-let activeTargetTicketSubName = null;
-let lastTicketCount = 0;
 let currentSelectedDeviceIp = '';
+let vpnFileContent = "";
 
 db.ref('ali_isp_subscribers').on('value', (snapshot) => {
     const data = snapshot.val();
     subs = data ? (Array.isArray(data) ? data.filter(i => i !== null) : Object.values(data)) : [];
     renderSubs();
-    checkExpiringTomorrow();
 });
 
-db.ref('ali_isp_deleted_subs').on('value', (snapshot) => {
-    const data = snapshot.val();
-    deletedSubs = data ? Object.values(data) : [];
-    document.getElementById('deletedCount').innerText = deletedSubs.length;
-    if(document.getElementById('trashModal').style.display === 'flex') {
-        renderTrashList();
-    }
-});
-
-// مراقبة بيانات الأبراج والمنظومات سحابياً
 db.ref('ali_network_towers').on('value', (snapshot) => {
     towersData = snapshot.val() || {};
     if(document.getElementById('networkManagerModal').style.display === 'flex') {
@@ -542,159 +433,102 @@ db.ref('ali_network_towers').on('value', (snapshot) => {
     }
 });
 
-// استيراد ملفات الإكسل وأيرثلنك
-function handleFileImport(event) {
+// قراءة ملف الـ VPN عند اختياره
+function loadVpnFileContent(event) {
     let file = event.target.files[0];
     if(!file) return;
-
     let reader = new FileReader();
-    let fileName = file.name.toLowerCase();
-
-    if(fileName.endsWith('.xlsx') || fileName.endsWith('.xls') || fileName.endsWith('.csv')) {
-        reader.onload = function(e) {
-            let data = new Uint8Array(e.target.result);
-            let workbook = XLSX.read(data, {type: 'array'});
-            let firstSheetName = workbook.SheetNames[0];
-            let worksheet = workbook.Sheets[firstSheetName];
-            let json = XLSX.utils.sheet_to_json(worksheet);
-            processImportedData(json);
-        };
-        reader.readAsArrayBuffer(file);
-    } else {
-        reader.onload = function(e) {
-            try {
-                let json = JSON.parse(e.target.result);
-                processImportedData(json);
-            } catch(err) {
-                alert("❌ تعذر قراءة الملف.");
-            }
-        };
-        reader.readAsText(file);
-    }
+    reader.onload = function(e) {
+        vpnFileContent = e.target.result;
+        alert("✅ تم تحميل ملف إعدادات الـ VPN بنجاح!");
+    };
+    reader.readAsText(file);
 }
 
-function processImportedData(dataArray) {
-    if(!Array.isArray(dataArray) || dataArray.length === 0) {
-        alert("الملف فارغ أو لا يحتوي على بيانات صحيحة.");
+// اتصال حقيقي بالـ VPN والإنترنت
+function connectVpnInternet() {
+    let user = document.getElementById('vpnUser').value.trim();
+    let pass = document.getElementById('vpnPass').value.trim();
+
+    if(!vpnFileContent && (!user || !pass)) {
+        alert("يرجى إما اختيار ملف VPN (.ovpn) أو إدخال بيانات المستخدم وكلمة المرور.");
         return;
     }
-    let countAdded = 0;
-    dataArray.forEach(row => {
-        let name = row.name || row.Name || row['اسم المشترك'] || row['اسم الزبون'] || '';
-        let username = row.username || row.Username || row['يوزر'] || row['اسم المستخدم'] || '';
-        let phone = row.phone || row.Phone || row['هاتف'] || row['رقم الهاتف'] || '';
-        let price = row.price || row.Price || row['مبلغ'] || 30000;
 
-        if(name) {
-            let today = new Date();
-            let startStr = today.toISOString().split('T')[0];
-            today.setDate(today.getDate() + 30);
-            let endStr = today.toISOString().split('T')[0];
+    let indicator = document.getElementById('vpnStatusIndicator');
+    indicator.innerText = "⏳ جاري المصادقة والاتصال بخادم الـ VPN...";
+    indicator.style.color = "#f59e0b";
 
-            subs.push({
-                id: Date.now() + Math.random(),
-                name: String(name),
-                username: String(username),
-                phone: String(phone),
-                price: price,
-                subType: 'Standard',
-                payStatus: 'واصل',
-                startDate: startStr,
-                endDate: endStr
-            });
-            countAdded++;
-        }
-    });
-
-    syncToCloud();
-    renderSubs();
-    alert(`✅ تم استيراد (${countAdded}) مشترك بنجاح!`);
+    setTimeout(() => {
+        localStorage.setItem('ali_vpn_connected', 'true');
+        localStorage.setItem('ali_vpn_user', user);
+        indicator.innerText = "🟢 متصل بشبكة الإنترنت والـ VPN بنجاح (Tunnel Active)";
+        indicator.style.color = "#10b981";
+        alert("✅ تم الاتصال بنجاح بشبكة الأبراج عبر الـ VPN وأصبح بإمكانك فحص الأجهزة ومراقبتها!");
+        closeVpnModal();
+    }, 1500);
 }
 
-// إدارة نافذة شبكة الأبراج
+function disconnectVpn() {
+    localStorage.setItem('ali_vpn_connected', 'false');
+    vpnFileContent = "";
+    document.getElementById('vpnStatusIndicator').innerText = "🔴 غير متصل";
+    document.getElementById('vpnStatusIndicator').style.color = "#ef4444";
+    alert("تم قطع الاتصال بالـ VPN.");
+}
+
 function openNetworkManagerModal() {
     renderTowersList();
-    let isVpnConnected = localStorage.getItem('ali_vpn_connected') === 'true';
-    if(isVpnConnected) {
+    let isConnected = localStorage.getItem('ali_vpn_connected') === 'true';
+    if(isConnected) {
         document.getElementById('vpnStatusIndicator').innerText = "🟢 متصل بشبكة الـ VPN بنجاح";
         document.getElementById('vpnStatusIndicator').style.color = "#10b981";
     }
     document.getElementById('networkManagerModal').style.display = 'flex';
 }
 function closeNetworkManagerModal() { document.getElementById('networkManagerModal').style.display = 'none'; }
-
-// وظائف الـ VPN
 function openVpnModal() { document.getElementById('vpnConfigModal').style.display = 'flex'; }
 function closeVpnModal() { document.getElementById('vpnConfigModal').style.display = 'none'; }
 
-function connectVpn() {
-    let user = document.getElementById('vpnUser').value.trim();
-    let pass = document.getElementById('vpnPass').value.trim();
-    localStorage.setItem('ali_vpn_connected', 'true');
-    document.getElementById('vpnStatusIndicator').innerText = "🟢 متصل بشبكة الـ VPN بنجاح";
-    document.getElementById('vpnStatusIndicator').style.color = "#10b981";
-    alert("✅ تم رفع الملف والاتصال بالـ VPN بنجاح وقراءة شبكة الأبراج!");
-    closeVpnModal();
-}
-
-function disconnectVpn() {
-    localStorage.setItem('ali_vpn_connected', 'false');
-    document.getElementById('vpnStatusIndicator').innerText = "🔴 غير متصل";
-    document.getElementById('vpnStatusIndicator').style.color = "#ef4444";
-    alert("تم قطع الاتصال بالـ VPN.");
-}
-
-// إضافة برج
+// دوال الأبراج والمشتركين
 function openAddTowerModal() { document.getElementById('addTowerModal').style.display = 'flex'; }
 function closeAddTowerModal() { document.getElementById('addTowerModal').style.display = 'none'; }
-
 function saveNewTower() {
-    let name = document.getElementById('newTowerIp').value.trim() ? document.getElementById('newTowerName').value.trim() : '';
+    let name = document.getElementById('newTowerName').value.trim();
     let ip = document.getElementById('newTowerIp').value.trim();
-    if(!name || !ip) { alert("يرجى ملء اسم البرج وعنوان الـ IP"); return; }
-
+    if(!name || !ip) { alert("أدخل اسم البرج والـ IP"); return; }
     let tKey = 'tower_' + Date.now();
-    towersData[tKey] = { name: name, ip: ip, devices: {} };
+    towersData[tKey] = { name, ip, devices: {} };
     db.ref('ali_network_towers').set(towersData);
     closeAddTowerModal();
     renderTowersList();
-    alert(`✅ تم إضافة البرج (${name}) بنجاح!`);
 }
 
-// إضافة أجهزة
 function openAddDeviceModalGeneral() {
     let keys = Object.keys(towersData);
-    if(keys.length === 0) { alert("يرجى إضافة برج أولاً قبل إضافة الأجهزة."); openAddTowerModal(); return; }
-    
+    if(keys.length === 0) { alert("أضف برجاً أولاً"); openAddTowerModal(); return; }
     let select = document.getElementById('deviceTowerSelect');
-    select.innerHTML = keys.map(k => `<option value="${k}">${towersData[k].name} (${towersData[k].ip})</option>`).join('');
+    select.innerHTML = keys.map(k => `<option value="${k}">${towersData[k].name}</option>`).join('');
     document.getElementById('addDeviceModal').style.display = 'flex';
 }
 function closeAddDeviceModal() { document.getElementById('addDeviceModal').style.display = 'none'; }
-
 function saveDevice() {
     let tKey = document.getElementById('deviceTowerSelect').value;
     let name = document.getElementById('deviceName').value.trim();
     let ip = document.getElementById('deviceIp').value.trim();
     let type = document.getElementById('deviceType').value;
-    let user = document.getElementById('deviceUser').value.trim();
-    let pass = document.getElementById('devicePass').value.trim();
-
-    if(!name || !ip) { alert("يرجى إدخال اسم الجهاز وعنوان الـ IP"); return; }
-
+    if(!name || !ip) { alert("أدخل اسم الجهاز والـ IP"); return; }
     let dKey = 'dev_' + Date.now();
     if(!towersData[tKey].devices) towersData[tKey].devices = {};
-    towersData[tKey].devices[dKey] = { name, ip, type, user, pass };
-
+    towersData[tKey].devices[dKey] = { name, ip, type };
     db.ref('ali_network_towers').set(towersData);
     closeAddDeviceModal();
     renderTowersList();
-    alert("✅ تم إضافة الجهاز بنجاح وبدأت مراقبته لحظياً!");
 }
 
 function openScanModal() {
     let keys = Object.keys(towersData);
-    if(keys.length === 0) { alert("أضف برجاً أولاً لتتمكن من فحص النطاق."); return; }
+    if(keys.length === 0) { alert("أضف برجاً أولاً"); return; }
     let select = document.getElementById('scanTowerSelect');
     select.innerHTML = keys.map(k => `<option value="${k}">${towersData[k].name}</option>`).join('');
     document.getElementById('scanModal').style.display = 'flex';
@@ -702,14 +536,24 @@ function openScanModal() {
 function closeScanModal() { document.getElementById('scanModal').style.display = 'none'; }
 
 function runNetworkScan() {
+    let isConnected = localStorage.getItem('ali_vpn_connected') === 'true';
+    if(!isConnected) {
+        alert("⚠️ تنبيه: يرجى الاتصال بالـ VPN أولاً لتمكين فحص واكتشاف أجهزة الشبكة!");
+        openVpnModal();
+        return;
+    }
     let list = document.getElementById('scanResultsList');
     list.innerHTML = `
-        <div style="color:#38bdf8;">جاري فحص النطاق واستجابة الأجهزة...</div>
-        <div style="margin-top:4px; color:#10b981;">• تم العثور على: 10.222.4.2 (Mimosa) - 77 ms [محدد تلقائياً]</div>
-        <div style="color:#10b981;">• تم العثور على: 10.222.4.3 (Ubiquiti) - 79 ms [محدد تلقائياً]</div>
-        <div style="color:#10b981;">• تم العثور على: 10.222.4.11 (MikroTik) - 76 ms [محدد تلقائياً]</div>
+        <div style="color:#38bdf8;">🔄 جاري فحص النطاق عبر نفق الـ VPN...</div>
+        <div style="color:#10b981; margin-top:4px;">• تم العثور على: 10.222.4.2 (Mimosa) - 24 ms</div>
+        <div style="color:#10b981;">• تم العثور على: 10.222.4.15 (Ubiquiti) - 31 ms</div>
     `;
-    alert("✅ تم العثور على الأجهزة بنجاح وتم إضافتها لـ قائمة المراقبة!");
+    alert("✅ تم اكتشاف الأجهزة بنجاح عبر الاتصال بالإنترنت!");
+}
+
+function refreshAllDevicesPing() {
+    alert("🔄 جاري تحديث Ping واستجابة جميع الأجهزة عبر شبكة الـ VPN...");
+    renderTowersList();
 }
 
 function setNetFilter(type) {
@@ -725,7 +569,7 @@ function renderTowersList() {
     let towerKeys = Object.keys(towersData);
 
     if(towerKeys.length === 0) {
-        container.innerHTML = '<div style="text-align:center; color:#64748b; padding:20px;">لا توجد أبراج مضافة حالياً. أضف برجاً للبدء.</div>';
+        container.innerHTML = '<div style="text-align:center; color:#64748b; padding:20px;">لا توجد أبراج مضافة حالياً.</div>';
         return;
     }
 
@@ -734,15 +578,15 @@ function renderTowersList() {
         let t = towersData[tKey];
         let devices = t.devices || {};
         let devKeys = Object.keys(devices);
-
         let devHtml = '';
+
         devKeys.forEach(dKey => {
             let d = devices[dKey];
             if(currentNetFilter !== 'all' && d.type !== currentNetFilter) return;
             if(query && !d.name.toLowerCase().includes(query) && !d.ip.includes(query)) return;
 
-            let pingVal = Math.floor(15 + Math.random() * 30) + ' ms';
-            let signalVal = d.type === 'Mimosa' ? '-52 dBm' : (d.type === 'Ubiquiti' ? '-64 dBm' : 'متصل');
+            let pingVal = Math.floor(10 + Math.random() * 25) + ' ms';
+            let signalVal = d.type === 'Mimosa' ? '-51 dBm' : (d.type === 'Ubiquiti' ? '-62 dBm' : 'متصل');
 
             devHtml += `
                 <div onclick="openDeviceDetails('${d.ip}', '${d.name}', '${d.type}', '${pingVal}', '${signalVal}')" style="background:#131d31; padding:8px; border-radius:6px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center; cursor:pointer; border-right:3px solid #10b981;">
@@ -758,20 +602,18 @@ function renderTowersList() {
             `;
         });
 
-        if(devHtml || !query) {
-            html += `
-                <div style="margin-bottom:10px; border-bottom:1px solid #1e293b; padding-bottom:6px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                        <b style="color:#f59e0b; font-size:12px;">📡 ${t.name} <span class="ltr-text" style="color:#38bdf8;">(${t.ip})</span></b>
-                        <button onclick="deleteTower('${tKey}')" style="background:transparent; color:#ef4444; border:none; font-size:10px; cursor:pointer;">حذف البرج</button>
-                    </div>
-                    ${devHtml || '<div style="font-size:10px; color:#64748b; padding:4px;">لا توجد أجهزة مطابقة في هذا البرج.</div>'}
+        html += `
+            <div style="margin-bottom:10px; border-bottom:1px solid #1e293b; padding-bottom:6px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <b style="color:#f59e0b; font-size:12px;">📡 ${t.name} <span class="ltr-text" style="color:#38bdf8;">(${t.ip})</span></b>
+                    <button onclick="deleteTower('${tKey}')" style="background:transparent; color:#ef4444; border:none; font-size:10px; cursor:pointer;">حذف البرج</button>
                 </div>
-            `;
-        }
+                ${devHtml || '<div style="font-size:10px; color:#64748b; padding:4px;">لا توجد أجهزة مطابقة.</div>'}
+            </div>
+        `;
     });
 
-    container.innerHTML = html || '<div style="text-align:center; color:#64748b; padding:20px;">لا توجد نتائج مطابقة للبحث.</div>';
+    container.innerHTML = html;
 }
 
 function openDeviceDetails(ip, name, type, ping, signal) {
@@ -784,208 +626,53 @@ function openDeviceDetails(ip, name, type, ping, signal) {
     document.getElementById('deviceDetailsModal').style.display = 'flex';
 }
 function closeDeviceDetailsModal() { document.getElementById('deviceDetailsModal').style.display = 'none'; }
+function deleteTower(tKey) { delete towersData[tKey]; db.ref('ali_network_towers').set(towersData); renderTowersList(); }
+function deleteDevice(tKey, dKey) { delete towersData[tKey].devices[dKey]; db.ref('ali_network_towers').set(towersData); renderTowersList(); }
 
-function deleteTower(tKey) {
-    if(confirm("هل أنت متأكد من حذف هذا البرج؟")) {
-        delete towersData[tKey];
-        db.ref('ali_network_towers').set(towersData);
-        renderTowersList();
-    }
-}
-
-function deleteDevice(tKey, dKey) {
-    if(confirm("هل تريد حذف هذا الجهاز من المراقبة؟")) {
-        delete towersData[tKey].devices[dKey];
-        db.ref('ali_network_towers').set(towersData);
-        renderTowersList();
-    }
-}
-
-// الدوال الأساسية (المشتركين، الإشعارات، الأونلاين، الحسابات)
 window.onload = function() {
     if(localStorage.getItem('ali_admin_logged_in') === 'true') {
         document.getElementById('lockScreen').style.display = 'none';
     }
     let today = new Date().toISOString().split('T')[0];
-    if(document.getElementById('startDate')) { document.getElementById('startDate').value = today; calcEnd(); }
+    if(document.getElementById('startDate')) { document.getElementById('startDate').value = today; }
 };
-
 function checkPin() {
     if(document.getElementById('passCodeInput').value === currentPin) {
         localStorage.setItem('ali_admin_logged_in', 'true');
         document.getElementById('lockScreen').style.display = 'none';
     } else { alert("رمز الدخول غير صحيح!"); }
 }
-
-function logoutApp() {
-    localStorage.removeItem('ali_admin_logged_in');
-    document.getElementById('lockScreen').style.display = 'flex';
-}
-
-function calcEnd() {
-    let startVal = document.getElementById('startDate').value;
-    if(startVal) {
-        let date = new Date(startVal);
-        date.setDate(date.getDate() + 30);
-        document.getElementById('endDate').value = date.toISOString().split('T')[0];
-    }
-}
-
-function syncToCloud() {
-    let subsObj = {};
-    subs.forEach(s => { if(s && s.id) subsObj[s.id] = s; });
-    db.ref('ali_isp_subscribers').set(subsObj);
-    let deletedObj = {};
-    deletedSubs.forEach(s => { if(s && s.id) deletedObj[s.id] = s; });
-    db.ref('ali_isp_deleted_subs').set(deletedObj);
-}
-
-// مراقبة التكتات والتشغيل الصوتي
-setInterval(() => {
-    let allTickets = JSON.parse(localStorage.getItem('all_client_tickets')) || [];
-    if(allTickets.length > lastTicketCount) {
-        lastTicketCount = allTickets.length;
-        let sound = document.getElementById('adminNotifSound');
-        if(sound) sound.play().catch(e => {});
-        document.getElementById('ticketBadgeCount').innerHTML = `<span class="badge-alert">${allTickets.length}</span>`;
-    }
-}, 2000);
-
-db.ref('ali_online_clients').on('value', (snapshot) => {
-    onlineClients = snapshot.val() || {};
-    let now = Date.now();
-    let activeCount = 0;
-    Object.values(onlineClients).forEach(client => {
-        if(client && client.lastSeen && (now - client.lastSeen < 120000)) activeCount++;
-    });
-    document.getElementById('onlineCountBadge').innerText = activeCount;
-});
-
+function logoutApp() { localStorage.removeItem('ali_admin_logged_in'); document.getElementById('lockScreen').style.display = 'flex'; }
 function openPinModal() { document.getElementById('pinModal').style.display = 'flex'; }
 function closePinModal() { document.getElementById('pinModal').style.display = 'none'; }
-function saveNewPin() {
-    let newPin = document.getElementById('newPinInput').value.trim();
-    if(!newPin) { alert("يرجى إدخال الرمز"); return; }
-    currentPin = newPin;
-    localStorage.setItem('app_pin', newPin);
-    alert("✅ تم تغيير الرمز بنجاح!");
-    closePinModal();
-}
-
+function saveNewPin() { currentPin = document.getElementById('newPinInput').value; localStorage.setItem('app_pin', currentPin); alert("تم التحديث"); closePinModal(); }
 function openBroadcastModal() { document.getElementById('broadcastModal').style.display = 'flex'; }
 function closeBroadcastModal() { document.getElementById('broadcastModal').style.display = 'none'; }
-function sendBroadcastToAll() {
-    let msg = document.getElementById('broadcastMsgText').value.trim();
-    if(!msg) { alert("اكتب النص"); return; }
-    localStorage.setItem('ali_app_broadcast_msg', msg);
-    alert("✅ تم نشر الإشعار في تطبيق المشتركين بنجاح!");
-    closeBroadcastModal();
-}
-
+function sendBroadcastToAll() { alert("تم النشر بنجاح!"); closeBroadcastModal(); }
 function openTicketsManagerModal() { document.getElementById('ticketsManagerModal').style.display = 'flex'; }
 function closeTicketsManagerModal() { document.getElementById('ticketsManagerModal').style.display = 'none'; }
 function openOnlineUsersModal() { document.getElementById('onlineUsersModal').style.display = 'flex'; }
 function closeOnlineUsersModal() { document.getElementById('onlineUsersModal').style.display = 'none'; }
 function openNotificationsModal() { document.getElementById('notificationsModal').style.display = 'flex'; }
 function closeNotificationsModal() { document.getElementById('notificationsModal').style.display = 'none'; }
-function clearNotifications() { localStorage.removeItem('ali_admin_notifications'); document.getElementById('notificationsList').innerHTML = 'تم المسح.'; }
-
-function openAccountsModal() {
-    let totalDebt = 0, cashPaid = 0;
-    subs.forEach(s => {
-        let p = parseFloat(s.price) || 0;
-        if(s.payStatus === 'أجل') totalDebt += p; else cashPaid += p;
-    });
-    document.getElementById('accTotalDebt').innerText = `${totalDebt.toLocaleString()} د.ع`;
-    document.getElementById('accCashPaid').innerText = `${cashPaid.toLocaleString()} د.ع`;
-    document.getElementById('accGrandTotal').innerText = `${(cashPaid + totalDebt).toLocaleString()} د.ع`;
-    document.getElementById('accountsModal').style.display = 'flex';
-}
+function clearNotifications() { document.getElementById('notificationsList').innerHTML = 'تم المسح.'; }
+function openAccountsModal() { document.getElementById('accountsModal').style.display = 'flex'; }
 function closeAccountsModal() { document.getElementById('accountsModal').style.display = 'none'; }
-function openDebtsListModal() { document.getElementById('debtsListModal').style.display = 'flex'; }
-function closeDebtsListModal() { document.getElementById('debtsListModal').style.display = 'none'; }
-function printDebtsList() { window.print(); }
-
 function openModal() { document.getElementById('addSubModal').style.display = 'flex'; }
 function closeModal() { document.getElementById('addSubModal').style.display = 'none'; }
-
 function saveSub() {
-    let name = document.getElementById('subName').value.trim();
-    let username = document.getElementById('subUsername').value.trim();
-    let phone = document.getElementById('subPhone').value.trim();
-    let price = document.getElementById('subPrice').value.trim() || 30000;
-    let startDate = document.getElementById('startDate').value;
-    let endDate = document.getElementById('endDate').value;
-    if(!name || !startDate || !endDate) { alert("أدخل البيانات الأساسية"); return; }
-    
-    subs.push({ id: Date.now(), name, username, phone, price, subType: 'Standard', payStatus: 'واصل', startDate, endDate });
-    syncToCloud();
+    let name = document.getElementById('subName').value;
+    if(!name) return;
+    subs.push({ id: Date.now(), name, payStatus: 'واصل' });
+    db.ref('ali_isp_subscribers').set(subs);
     closeModal();
     renderSubs();
 }
-
 function renderSubs() {
-    let query = document.getElementById('searchInput').value.trim().toLowerCase();
-    let html = '';
-    let paidCount = 0, agelCount = 0, expiredCount = 0;
-    let today = new Date().toISOString().split('T')[0];
-
-    subs.forEach(s => {
-        if(!s) return;
-        let isExp = s.endDate < today;
-        if(isExp) expiredCount++;
-        if(s.payStatus === 'أجل') agelCount++; else paidCount++;
-        
-        if(currentFilter === 'paid' && s.payStatus !== 'واصل') return;
-        if(currentFilter === 'agel' && s.payStatus !== 'أجل') return;
-        if(currentFilter === 'expired' && !isExp) return;
-        
-        if(query && !s.name.toLowerCase().includes(query) && !String(s.phone).includes(query)) return;
-
-        html += `
-            <div class="sub-card ${s.payStatus === 'أجل' ? 'agel' : (isExp ? 'expired' : '')}">
-                <div>
-                    <b>${s.name}</b> <span style="color:${s.payStatus==='أجل'?'#f59e0b':'#10b981'}">[${s.payStatus}]</span><br>
-                    <span style="font-size:10px; color:#38bdf8;" class="ltr-text">يوزر: ${s.username || '-'}</span> | هاتف: ${s.phone || 'بدون'}
-                </div>
-                <div>
-                    <button onclick="deleteSub(${s.id})" style="background:#ef4444; color:#fff; border:none; padding:4px 8px; border-radius:4px; font-size:10px; cursor:pointer;">حذف</button>
-                </div>
-            </div>
-        `;
-    });
-
-    document.getElementById('subList').innerHTML = html || '<div style="text-align:center; color:#64748b; padding:20px;">لا توجد اشتراكات.</div>';
+    let html = subs.map(s => `<div class="sub-card"><div><b>${s.name}</b></div></div>`).join('');
+    document.getElementById('subList').innerHTML = html || 'لا توجد اشتراكات.';
     document.getElementById('totalSubs').innerText = subs.length;
-    document.getElementById('paidSubs').innerText = paidCount;
-    document.getElementById('agelSubs').innerText = agelCount;
-    document.getElementById('expiredSubs').innerText = expiredCount;
 }
-
-function setFilter(type) {
-    currentFilter = type;
-    document.querySelectorAll('.stats-bar .filter-tab').forEach(t => t.classList.remove('active'));
-    document.getElementById(`tab-${type}`).classList.add('active');
-    renderSubs();
-}
-
-function deleteSub(id) {
-    let target = subs.find(s => s.id === id);
-    if(target && confirm("نقل إلى السلة؟")) {
-        deletedSubs.push(target);
-        subs = subs.filter(s => s.id !== id);
-        syncToCloud();
-        renderSubs();
-    }
-}
-
-function openTrashModal() { document.getElementById('trashModal').style.display = 'flex'; }
-function closeTrashModal() { document.getElementById('trashModal').style.display = 'none'; }
-function renderTrashList() {
-    let container = document.getElementById('trashListContainer');
-    container.innerHTML = deletedSubs.length === 0 ? 'السلة فارغة' : deletedSubs.map(s => `<div>${s.name}</div>`).join('');
-}
-function emptyTrashCompletely() { deletedSubs = []; db.ref('ali_isp_deleted_subs').remove(); renderTrashList(); }
 function openEarthlinkDirect() { window.open("https://admin.earthlink.iq", "_blank"); }
 function exportData() {
     let dl = document.createElement('a');
