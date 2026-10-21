@@ -28,6 +28,7 @@
         .action-btn.delete-btn { background: #ef4444; color: #fff; font-weight: bold; border-color: #dc2626; }
         .action-btn.restore-btn { background: #10b981; color: #fff; font-weight: bold; border-color: #059669; }
         .action-btn.notify-btn { background: #8b5cf6; color: #fff; font-weight: bold; border-color: #7c3aed; }
+        .action-btn.online-btn { background: #10b981; color: #090d16; font-weight: bold; border-color: #059669; grid-column: span 2; }
         .action-btn.broadcast-btn { background: #06b6d4; color: #090d16; font-weight: bold; border-color: #0891b2; grid-column: span 2; }
         .action-btn.tickets-btn { background: #ec4899; color: #fff; font-weight: bold; border-color: #db2777; grid-column: span 2; }
         .action-btn.accounts-btn { background: #14b8a6; color: #090d16; font-weight: bold; border-color: #0d9488; grid-column: span 2; }
@@ -54,7 +55,6 @@
         .account-title { color: #14b8a6; font-weight: bold; margin-bottom: 4px; }
         .account-val { font-size: 14px; font-weight: bold; color: #fff; }
 
-        /* كلاس لعكس اتجاه يوزر الاشتراك بشكل صحيح */
         .ltr-text { direction: ltr; unicode-bidi: embed; text-align: left; display: inline-block; }
 
         #lockScreen { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0d1526; justify-content: center; align-items: center; z-index: 999999; }
@@ -110,6 +110,7 @@
     <button class="action-btn import-btn" onclick="importExcelOrJson()">📥 استيراد ملف أيرثلنك</button>
     <button class="action-btn accounts-btn" onclick="openAccountsModal()">📊 الحسابات والإيرادات المالية</button>
     <button class="action-btn notify-btn" onclick="sendGroupDebtReminder()">📢 تنبيه غير المسددين</button>
+    <button class="action-btn online-btn" onclick="openOnlineUsersModal()">🟢 المتواجدون أونلاين الآن (<span id="onlineCountBadge">0</span>)</button>
     <button class="action-btn restore-btn" onclick="openTrashModal()">♻️ سلة المحذوفات (<span id="deletedCount">0</span>)</button>
     <button class="action-btn broadcast-btn" onclick="openBroadcastModal()">📣 إرسال إشعار عام للكل</button>
     <button class="action-btn tickets-btn" onclick="openTicketsManagerModal()">🎫 إدارة التكتات والردود</button>
@@ -119,6 +120,16 @@
 
 <div id="subList">
     <div style="text-align: center; color: #64748b; padding: 30px;">جاري الاتصال بالسيرفر السحابي...</div>
+</div>
+
+<!-- نافذة المتواجدين أونلاين الآن -->
+<div id="onlineUsersModal" class="modal">
+    <div class="modal-content" style="border-color: #10b981; max-width: 380px;">
+        <h3 style="margin-top:0; color:#10b981; text-align:center;">🟢 المشتركون المتواجدون أونلاين</h3>
+        <p style="font-size:10px; color:#94a3b8; text-align:center; margin-top:0;">المشتركون الذين فتحوا التطبيق خلال آخر دقيقتين:</p>
+        <div id="onlineUsersListContainer" style="max-height: 230px; overflow-y: auto; margin-bottom: 10px; background:#0d1526; padding:8px; border-radius:6px; font-size:11px;">جاري التحميل...</div>
+        <button class="cancel-btn" onclick="closeOnlineUsersModal()" style="background:#10b981; color:#090d16; font-weight:bold;">إغلاق</button>
+    </div>
 </div>
 
 <!-- نافذة الإشعارات -->
@@ -311,6 +322,7 @@ const db = firebase.database();
 
 let subs = [];
 let deletedSubs = [];
+let onlineClients = {};
 let currentPin = localStorage.getItem('app_pin') || '1234';
 let currentFilter = 'all';
 let currentSelectedSubId = null;
@@ -320,6 +332,7 @@ db.ref('ali_isp_subscribers').on('value', (snapshot) => {
     const data = snapshot.val();
     subs = data ? (Array.isArray(data) ? data.filter(i => i !== null) : Object.values(data)) : [];
     renderSubs();
+    checkExpiringTomorrow(); // فحص الاشتراكات التي ستنتهي غداً
 });
 
 db.ref('ali_isp_deleted_subs').on('value', (snapshot) => {
@@ -331,6 +344,25 @@ db.ref('ali_isp_deleted_subs').on('value', (snapshot) => {
     }
 });
 
+// مراقبة المشتركين المتواجدين أونلاين عبر Firebase Presence
+db.ref('ali_online_clients').on('value', (snapshot) => {
+    onlineClients = snapshot.val() || {};
+    let now = Date.now();
+    let activeCount = 0;
+    
+    // حساب المتواجدين خلال آخر دقيقتين (120000 ملي ثانية)
+    Object.values(onlineClients).forEach(client => {
+        if(client && (now - client.lastSeen < 120000)) {
+            activeCount++;
+        }
+    });
+    
+    document.getElementById('onlineCountBadge').innerText = activeCount;
+    if(document.getElementById('onlineUsersModal').style.display === 'flex') {
+        renderOnlineUsersList();
+    }
+});
+
 function syncToCloud() {
     let subsObj = {};
     subs.forEach(s => { if(s && s.id) subsObj[s.id] = s; });
@@ -339,6 +371,80 @@ function syncToCloud() {
     let deletedObj = {};
     deletedSubs.forEach(s => { if(s && s.id) deletedObj[s.id] = s; });
     db.ref('ali_isp_deleted_subs').set(deletedObj);
+}
+
+// دالة فحص وتنبيه اشتراكات الغد (قبل يوم واحد) أوتوماتيكياً
+function checkExpiringTomorrow() {
+    let today = new Date();
+    let tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    let tomorrowStr = tomorrow.toISOString().split('T')[0];
+
+    let lastCheckDate = localStorage.getItem('ali_last_expiry_check');
+    let todayStr = today.toISOString().split('T')[0];
+
+    // لتجنب تكرار الإرسال المزعج طوال اليوم، يتم فحصها مرة واحدة باليوم
+    if (lastCheckDate === todayStr) return;
+
+    let expiringSoon = subs.filter(s => s.endDate === tomorrowStr);
+    if (expiringSoon.length > 0) {
+        expiringSoon.forEach(s => {
+            let priceFormatted = parseFloat(s.price || 30000).toLocaleString();
+            let alertMsg = `⚠️ تنبيه هام:\nعزيزنا المشترك، اشتراكك في مكتب مهندس علي سينتهي غداً (${s.endDate}).\n• يوزر الاشتراك: ${s.username || s.name}\n• المبلغ المطلوب: ${priceFormatted} د.ع\nيرجى التجديد لضمان استمرار الخدمة دون انقطاع.`;
+
+            // تسجيل الإشعار في تطبيق المشترك السحابي والمحلي
+            localStorage.setItem(`client_activation_notif_${s.name}`, alertMsg);
+            let chats = JSON.parse(localStorage.getItem(`ticket_chat_${s.name}`)) || [];
+            chats.push({ sender: "النظام (تنبيه انتهاء)", text: alertMsg });
+            localStorage.setItem(`ticket_chat_${s.name}`, JSON.stringify(chats));
+
+            // فتح واتساب أوتوماتيكي إذا وجد رقم هاتف
+            if (s.phone && s.phone.trim() !== "") {
+                let cleanPhone = s.phone.replace(/\D/g, '');
+                if (cleanPhone.startsWith('0')) cleanPhone = '964' + cleanPhone.substring(1);
+                window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(alertMsg)}`, '_blank');
+            }
+        });
+        localStorage.setItem('ali_last_expiry_check', todayStr);
+    }
+}
+
+// فتح نافذة المشتركين المتواجدين أونلاين
+function openOnlineUsersModal() {
+    renderOnlineUsersList();
+    document.getElementById('onlineUsersModal').style.display = 'flex';
+}
+function closeOnlineUsersModal() { document.getElementById('onlineUsersModal').style.display = 'none'; }
+
+function renderOnlineUsersList() {
+    let container = document.getElementById('onlineUsersListContainer');
+    let now = Date.now();
+    let activeUsers = [];
+
+    Object.values(onlineClients).forEach(client => {
+        if(client && client.name && (now - client.lastSeen < 120000)) {
+            activeUsers.push(client);
+        }
+    });
+
+    if(activeUsers.length === 0) {
+        container.innerHTML = '<div style="text-align:center; color:#64748b; padding:20px;">لا يوجد أي مشترك متواجد أونلاين حالياً.</div>';
+    } else {
+        let html = '';
+        activeUsers.forEach((u, idx) => {
+            let lastTime = new Date(u.lastSeen).toLocaleTimeString('ar-IQ', {hour: '2-digit', minute:'2-digit'});
+            html += `
+                <div style="background:#131d31; border:1px solid #1e293b; padding:8px; border-radius:6px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <div style="font-weight:bold; color:#10b981;">🟢 ${idx+1}. ${u.name}</div>
+                        ${u.username ? `<div style="font-size:10px; color:#38bdf8;" class="ltr-text">يوزر: ${u.username}</div>` : ''}
+                    </div>
+                    <div style="font-size:10px; color:#94a3b8;">آخر ظهور: ${lastTime}</div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
 }
 
 function sendAutoNotificationAndWhatsApp(sub, type) {
