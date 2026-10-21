@@ -21,7 +21,7 @@
         .filter-tab.active { background: #38bdf8; color: #090d16; border-color: #38bdf8; }
 
         .toolbar-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; margin-bottom: 8px; }
-        .action-btn { background: #131d31; color: #cbd5e1; border: 1px solid #1e293b; padding: 10px 4px; border-radius: 8px; font-size: 11px; cursor: pointer; text-align: center; }
+        .action-btn { background: #131d31; color: #cbd5e1; border: 1px solid #1e293b; padding: 10px 4px; border-radius: 8px; font-size: 11px; cursor: pointer; text-align: center; position: relative; }
         .action-btn.active-blue { background: #38bdf8; color: #090d16; font-weight: bold; border-color: #38bdf8; }
         .action-btn.earthlink-btn { background: #e11d48; color: #fff; font-weight: bold; border-color: #f43f5e; grid-column: span 2; }
         .action-btn.import-btn { background: #f59e0b; color: #000; font-weight: bold; border-color: #d97706; }
@@ -56,6 +56,9 @@
         .account-val { font-size: 14px; font-weight: bold; color: #fff; }
 
         .ltr-text { direction: ltr; unicode-bidi: embed; text-align: left; display: inline-block; }
+        .badge-alert { background: #ef4444; color: #fff; border-radius: 50%; padding: 2px 6px; font-size: 10px; position: absolute; top: 6px; left: 6px; animation: pulse 1s infinite; }
+
+        @keyframes pulse { 0% { opacity: 0.7; } 50% { opacity: 1; } 100% { opacity: 0.7; } }
 
         #lockScreen { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0d1526; justify-content: center; align-items: center; z-index: 999999; }
         #printArea { display: none; background: #fff; color: #000; padding: 15px; font-family: Tahoma, sans-serif; direction: rtl; width: 280px; }
@@ -73,7 +76,7 @@
 </head>
 <body>
 
-<audio id="notifSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
+<audio id="adminNotifSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
 
 <div id="lockScreen">
     <div style="background:#131d31; padding:25px; border-radius:12px; width:85%; max-width:320px; text-align:center; border:1px solid #38bdf8;">
@@ -113,13 +116,54 @@
     <button class="action-btn online-btn" onclick="openOnlineUsersModal()">🟢 المتواجدون أونلاين على التطبيق (<span id="onlineCountBadge">0</span>)</button>
     <button class="action-btn restore-btn" onclick="openTrashModal()">♻️ سلة المحذوفات (<span id="deletedCount">0</span>)</button>
     <button class="action-btn broadcast-btn" onclick="openBroadcastModal()">📣 إرسال إشعار عام للكل</button>
-    <button class="action-btn tickets-btn" onclick="openTicketsManagerModal()">🎫 إدارة التكتات والردود</button>
+    <button class="action-btn tickets-btn" onclick="openTicketsManagerModal()">🎫 إدارة التكتات والردود <span id="ticketBadgeCount"></span></button>
     <button class="action-btn" onclick="exportData()" style="background:#10b981; color:#fff; grid-column: span 2;">💾 حفظ نسخة احتياطية</button>
     <button class="action-btn earthlink-btn" onclick="openEarthlinkDirect()">🌐 فتح لوحة ريسلر أيرثلنك</button>
 </div>
 
 <div id="subList">
     <div style="text-align: center; color: #64748b; padding: 30px;">جاري الاتصال بالسيرفر السحابي...</div>
+</div>
+
+<!-- نافذة تغيير رمز الدخول -->
+<div id="pinModal" class="modal">
+    <div class="modal-content" style="max-width: 300px;">
+        <h3 style="margin-top:0; color:#38bdf8; text-align:center;">⚙️ تغيير رمز الدخول</h3>
+        <input type="password" id="newPinInput" placeholder="أدخل الرمز الجديد (أرقام)" style="text-align:center;">
+        <button class="submit-btn" onclick="saveNewPin()">حفظ الرمز الجديد</button>
+        <button class="cancel-btn" onclick="closePinModal()">إغلاق</button>
+    </div>
+</div>
+
+<!-- نافذة إرسال إشعار عام للكل (تطبيق + واتساب) -->
+<div id="broadcastModal" class="modal">
+    <div class="modal-content" style="border-color: #06b6d4; max-width: 360px;">
+        <h3 style="margin-top:0; color:#06b6d4; text-align:center;">📣 إرسال إشعار عام للكل</h3>
+        <p style="font-size:10px; color:#94a3b8; text-align:center;">سيظهر الإشعار في تطبيق المشتركين ويمكنك بثه عبر الواتساب:</p>
+        <textarea id="broadcastMsgText" rows="4" placeholder="اكتب نص الإشعار العام هنا..."></textarea>
+        <button class="submit-btn" onclick="sendBroadcastToAll()" style="background:#06b6d4; color:#090d16; margin-bottom:6px;">نشر في التطبيق + إرسال واتساب</button>
+        <button class="cancel-btn" onclick="closeBroadcastModal()">إغلاق</button>
+    </div>
+</div>
+
+<!-- نافذة إدارة التكتات والردود -->
+<div id="ticketsManagerModal" class="modal">
+    <div class="modal-content" style="border-color: #ec4899; max-width: 420px;">
+        <h3 style="margin-top:0; color:#ec4899; text-align:center;">🎫 إدارة تكتات المشتركين والرد عليها</h3>
+        <div id="ticketsListContainer" style="max-height: 250px; overflow-y: auto; margin-bottom: 10px; background:#0d1526; padding:8px; border-radius:6px; font-size:11px;">جاري التحميل...</div>
+        <button class="cancel-btn" onclick="closeTicketsManagerModal()" style="background:#ec4899; color:#fff; font-weight:bold;">إغلاق</button>
+    </div>
+</div>
+
+<!-- نافذة الرد على تكت مشترك محدد -->
+<div id="replyTicketModal" class="modal">
+    <div class="modal-content" style="border-color: #ec4899; max-width: 360px;">
+        <h3 style="margin-top:0; color:#ec4899; text-align:center;" id="replyModalTitle">رد على تكت</h3>
+        <div id="replyChatBox" style="max-height: 140px; overflow-y: auto; background:#0d1526; padding:8px; border-radius:6px; font-size:11px; margin-bottom:8px;"></div>
+        <textarea id="adminReplyText" rows="2" placeholder="اكتب رد الإدارة للمشترك هنا..."></textarea>
+        <button class="submit-btn" onclick="sendAdminReply()" style="background:#ec4899; color:#fff; margin-bottom:6px;">إرسال الرد للمشترك</button>
+        <button class="cancel-btn" onclick="closeReplyModal()">إغلاق</button>
+    </div>
 </div>
 
 <!-- نافذة المتواجدين أونلاين على التطبيق -->
@@ -327,6 +371,8 @@ let currentPin = localStorage.getItem('app_pin') || '1234';
 let currentFilter = 'all';
 let currentSelectedSubId = null;
 let selectedRenewId = null;
+let activeTargetTicketSubName = null;
+let lastTicketCount = 0;
 
 db.ref('ali_isp_subscribers').on('value', (snapshot) => {
     const data = snapshot.val();
@@ -344,13 +390,43 @@ db.ref('ali_isp_deleted_subs').on('value', (snapshot) => {
     }
 });
 
-// استقبال إشارات الأونلاين القادمة من تطبيق المشترك الثاني
+// مراقبة التكتات الجديدة ورسائل المشتركين لتنبيه الإدارة صوتياً حتى لو كانت اللوحة في الخلفية
+setInterval(() => {
+    let allTickets = JSON.parse(localStorage.getItem('all_client_tickets')) || [];
+    if(allTickets.length > lastTicketCount) {
+        lastTicketCount = allTickets.length;
+        playAdminSound();
+        document.getElementById('ticketBadgeCount').innerHTML = `<span class="badge-alert">${allTickets.length}</span>`;
+        addAdminNotification("🎫 وصل تكت أو رسالة جديدة من أحد المشتركين!");
+    }
+    if(document.getElementById('ticketsManagerModal').style.display === 'flex') {
+        renderTicketsManagerList();
+    }
+    if(document.getElementById('replyTicketModal').style.display === 'flex' && activeTargetTicketSubName) {
+        refreshAdminChat(activeTargetTicketSubName);
+    }
+}, 2000);
+
+function playAdminSound() {
+    let sound = document.getElementById('adminNotifSound');
+    if(sound) {
+        sound.currentTime = 0;
+        sound.play().catch(e => console.log(e));
+    }
+}
+
+function addAdminNotification(text) {
+    let notifs = JSON.parse(localStorage.getItem('ali_admin_notifications')) || [];
+    notifs.push(`${new Date().toLocaleTimeString()} - ${text}`);
+    localStorage.setItem('ali_admin_notifications', JSON.stringify(notifs));
+}
+
+// استقبال إشارات الأونلاين القادمة من تطبيق المشترك
 db.ref('ali_online_clients').on('value', (snapshot) => {
     onlineClients = snapshot.val() || {};
     let now = Date.now();
     let activeCount = 0;
     
-    // احتساب الفاتحين للتطبيق خلال آخر دقيقتين فقط
     Object.values(onlineClients).forEach(client => {
         if(client && client.lastSeen && (now - client.lastSeen < 120000)) {
             activeCount++;
@@ -373,6 +449,116 @@ function syncToCloud() {
     db.ref('ali_isp_deleted_subs').set(deletedObj);
 }
 
+// وظائف زر تغيير رمز الدخول
+function openPinModal() { document.getElementById('pinModal').style.display = 'flex'; }
+function closePinModal() { document.getElementById('pinModal').style.display = 'none'; }
+function saveNewPin() {
+    let newPin = document.getElementById('newPinInput').value.trim();
+    if(!newPin) { alert("يرجى إدخال الرمز الجديد"); return; }
+    currentPin = newPin;
+    localStorage.setItem('app_pin', newPin);
+    alert("✅ تم تغيير رمز الدخول بنجاح!");
+    document.getElementById('newPinInput').value = '';
+    closePinModal();
+}
+
+// وظائف زر إرسال إشعار عام للكل (تطبيق + واتساب)
+function openBroadcastModal() { document.getElementById('broadcastModal').style.display = 'flex'; }
+function closeBroadcastModal() { document.getElementById('broadcastModal').style.display = 'none'; }
+
+function sendBroadcastToAll() {
+    let msg = document.getElementById('broadcastMsgText').value.trim();
+    if(!msg) { alert("يرجى كتابة نص الإشعار العام"); return; }
+
+    // حفظه ليظهر في تطبيق المشترك
+    localStorage.setItem('ali_app_broadcast_msg', msg);
+    addAdminNotification(`📢 تم نشر إشعار عام للكل: "${msg}"`);
+    alert("✅ تم نشر الإشعار بنجاح في تطبيق المشتركين!");
+    closeBroadcastModal();
+    document.getElementById('broadcastMsgText').value = '';
+
+    // إرسال عبر الواتساب للمشتركين الذين لديهم أرقام هواتف
+    if(confirm("هل تريد أيضاً إرسال هذا الإشعار عبر الواتساب لكل المشتركين المسجلة أرقامهم؟")) {
+        let phonesList = subs.filter(s => s.phone && s.phone.trim() !== "");
+        phonesList.forEach((s, index) => {
+            setTimeout(() => {
+                let cleanPhone = s.phone.replace(/\D/g, '');
+                if(cleanPhone.startsWith('0')) cleanPhone = '964' + cleanPhone.substring(1);
+                let waText = `📢 إشعار هام من مكتب مهندس علي للإنترنت:\n\n${msg}`;
+                window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(waText)}`, '_blank');
+            }, index * 1200);
+        });
+    }
+}
+
+// وظائف زر إدارة التكتات والردود
+function openTicketsManagerModal() {
+    renderTicketsManagerList();
+    document.getElementById('ticketsManagerModal').style.display = 'flex';
+}
+function closeTicketsManagerModal() { document.getElementById('ticketsManagerModal').style.display = 'none'; }
+
+function renderTicketsManagerList() {
+    let container = document.getElementById('ticketsListContainer');
+    let allTickets = JSON.parse(localStorage.getItem('all_client_tickets')) || [];
+
+    if(allTickets.length === 0) {
+        container.innerHTML = '<div style="text-align:center; color:#64748b; padding:20px;">لا توجد تكتات أو رسائل جديدة من المشتركين.</div>';
+    } else {
+        let html = '';
+        allTickets.slice().reverse().forEach((t, idx) => {
+            html += `
+                <div style="background:#0d1526; border:1px solid #1e293b; padding:8px; border-radius:6px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <div style="font-weight:bold; color:#ec4899;">🎫 المشترك: ${t.subName} (${t.ticketNum || 'تكت'})</div>
+                        <div style="font-size:10px; color:#cbd5e1; margin-top:2px;">الرسالة: ${t.message}</div>
+                    </div>
+                    <button onclick="openReplyModal('${t.subName}')" style="background:#ec4899; color:#fff; border:none; padding:5px 10px; border-radius:4px; font-size:10px; cursor:pointer; font-weight:bold;">💬 الرد والمتابعة</button>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
+}
+
+function openReplyModal(subName) {
+    activeTargetTicketSubName = subName;
+    document.getElementById('replyModalTitle').innerText = `رد على تكت: ${subName}`;
+    refreshAdminChat(subName);
+    document.getElementById('replyTicketModal').style.display = 'flex';
+}
+function closeReplyModal() {
+    activeTargetTicketSubName = null;
+    document.getElementById('replyTicketModal').style.display = 'none';
+}
+
+function refreshAdminChat(subName) {
+    let chats = JSON.parse(localStorage.getItem(`ticket_chat_${subName}`)) || [];
+    let chatHtml = chats.length === 0 ? "لا توجد رسائل سابقة في هذا التكت." : chats.map(c => `
+        <div style="margin-bottom:6px; border-bottom:1px solid #1e293b; padding-bottom:4px;">
+            <b style="color:${c.sender === subName ? '#38bdf8' : '#ec4899'}">${c.sender}:</b> ${c.text}
+        </div>
+    `).join('');
+    
+    let box = document.getElementById('replyChatBox');
+    box.innerHTML = chatHtml;
+    box.scrollTop = box.scrollHeight;
+}
+
+function sendAdminReply() {
+    if(!activeTargetTicketSubName) return;
+    let replyText = document.getElementById('adminReplyText').value.trim();
+    if(!replyText) { alert("يرجى كتابة نص الرد"); return; }
+
+    let chats = JSON.parse(localStorage.getItem(`ticket_chat_${activeTargetTicketSubName}`)) || [];
+    chats.push({ sender: "مهندس علي (الدعم)", text: replyText });
+    localStorage.setItem(`ticket_chat_${activeTargetTicketSubName}`, JSON.stringify(chats));
+
+    document.getElementById('adminReplyText').value = '';
+    refreshAdminChat(activeTargetTicketSubName);
+    alert("✅ تم إرسال الرد إلى تطبيق المشترك بنجاح!");
+}
+
 // فحص وإرسال تنبيه قبل الانتهاء بيوم واحد
 function checkExpiringTomorrow() {
     let today = new Date();
@@ -382,7 +568,7 @@ function checkExpiringTomorrow() {
     let todayStr = today.toISOString().split('T')[0];
 
     let lastCheckDate = localStorage.getItem('ali_last_expiry_check');
-    if (lastCheckDate === todayStr) return; // لضمان الإرسال مرة واحدة في اليوم
+    if (lastCheckDate === todayStr) return;
 
     let expiringSoon = subs.filter(s => s.endDate === tomorrowStr);
     if (expiringSoon.length > 0) {
@@ -390,13 +576,11 @@ function checkExpiringTomorrow() {
             let priceFormatted = parseFloat(s.price || 30000).toLocaleString();
             let alertMsg = `⚠️ تنبيه هام:\nعزيزنا المشترك، اشتراكك في مكتب مهندس علي سينتهي غداً (${s.endDate}).\n• يوزر الاشتراك: ${s.username || s.name}\n• المبلغ المطلوب: ${priceFormatted} د.ع\nيرجى التجديد لضمان استمرار الخدمة دون انقطاع.`;
 
-            // حفظ الإشعار ليتلقاه تطبيق المشترك فوراً
             localStorage.setItem(`client_activation_notif_${s.name}`, alertMsg);
             let chats = JSON.parse(localStorage.getItem(`ticket_chat_${s.name}`)) || [];
             chats.push({ sender: "النظام (تنبيه انتهاء)", text: alertMsg });
             localStorage.setItem(`ticket_chat_${s.name}`, JSON.stringify(chats));
 
-            // فتح الواتساب للتنبيه
             if (s.phone && s.phone.trim() !== "") {
                 let cleanPhone = s.phone.replace(/\D/g, '');
                 if (cleanPhone.startsWith('0')) cleanPhone = '964' + cleanPhone.substring(1);
@@ -441,35 +625,6 @@ function renderOnlineUsersList() {
             `;
         });
         container.innerHTML = html;
-    }
-}
-
-function sendAutoNotificationAndWhatsApp(sub, type) {
-    let priceFormatted = parseFloat(sub.price || 0).toLocaleString();
-    let notifMsg = "";
-    let waMsg = "";
-
-    if (type === 'activation') {
-        let statusText = sub.payStatus === 'واصل' ? 'واصل ✅ (مدفوع)' : 'أجل ⏳ (غير مدفوع)';
-        notifMsg = `🎉 تم تفعيل اشتراكك بنجاح!\n• يوزر الاشتراك: ${sub.username || sub.name}\n• نوع الاشتراك: ${sub.subType || 'Standard'}\n• المبلغ: ${priceFormatted} د.ع\n• تاريخ التفعيل: ${sub.startDate}\n• تاريخ الانتهاء: ${sub.endDate}\n• حالة الدفع: ${statusText}`;
-
-        waMsg = `عزيزنا المشترك (${sub.name}) 📡\nتم تجديد/تفعيل اشتراكك بنجاح في مكتب مهندس علي لخدمات الإنترنت ✅\n\n• يوزر الاشتراك: ${sub.username || sub.name}\n• نوع الاشتراك: ${sub.subType || 'Standard'}\n• المبلغ: ${priceFormatted} د.ع\n• تاريخ التفعيل: ${sub.startDate}\n• تاريخ انتهاء الاشتراك: ${sub.endDate}\n• حالة الدفع: ${statusText}\n\nشكراً لاختياركم خدماتنا.\nهواتف المكتب: 07818627764 - 07724850876`;
-    } 
-    else if (type === 'payment') {
-        notifMsg = `💵 تم استلام مبلغ التسديد بنجاح (${priceFormatted} د.ع) وتم تغيير حالتك إلى (واصل ✅).\nشكراً لالتزامكم!`;
-
-        waMsg = `عزيزنا المشترك (${sub.name}) 💵\nتم تسديد مبلغ الاشتراك (${priceFormatted} د.ع) بنجاح وتم تغيير حالتك في النظام إلى (واصل ✅).\nيوزر الاشتراك: ${sub.username || sub.name}\nتاريخ التفعيل: ${sub.startDate}\nتاريخ الانتهاء: ${sub.endDate}\n\nشكراً لالتزامكم وسرعة تسديدكم.\nمكتب مهندس علي لخدمات الإنترنت\nهواتف المكتب: 07818627764 - 07724850876`;
-    }
-
-    localStorage.setItem(`client_activation_notif_${sub.name}`, notifMsg);
-    let chats = JSON.parse(localStorage.getItem(`ticket_chat_${sub.name}`)) || [];
-    chats.push({ sender: "النظام (أوتو)", text: notifMsg });
-    localStorage.setItem(`ticket_chat_${sub.name}`, JSON.stringify(chats));
-
-    if (sub.phone && sub.phone.trim() !== "") {
-        let cleanPhone = sub.phone.replace(/\D/g, '');
-        if (cleanPhone.startsWith('0')) cleanPhone = '964' + cleanPhone.substring(1);
-        window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(waMsg)}`, '_blank');
     }
 }
 
@@ -717,7 +872,6 @@ function saveSub() {
     syncToCloud();
     closeModal();
     renderSubs();
-    sendAutoNotificationAndWhatsApp(subObj, 'activation');
 }
 
 function openRenewModal(id) {
@@ -746,8 +900,6 @@ function confirmRenewSubscription() {
         syncToCloud();
         renderSubs();
         closeRenewModal();
-        sendAutoNotificationAndWhatsApp(s, 'activation');
-
         if(s.payStatus === 'واصل') {
             printReceipt(s.name, s.username, s.price || 30000, s.startDate, s.endDate, 'واصل (تم التجديد نقداً)');
         }
@@ -760,7 +912,6 @@ function payDebt(id) {
         s.payStatus = 'واصل';
         syncToCloud();
         renderSubs();
-        sendAutoNotificationAndWhatsApp(s, 'payment');
         printReceipt(s.name, s.username, s.price || 0, s.startDate, s.endDate, 'واصل (تم التسديد)');
     }
 }
