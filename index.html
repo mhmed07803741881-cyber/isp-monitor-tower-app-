@@ -37,8 +37,6 @@
         .sub-card.expired { border-right-color: #ef4444; }
         .sub-card.agel { border-right-color: #f59e0b; }
 
-        .select-checkbox { width: 18px; height: 18px; margin-left: 10px; cursor: pointer; accent-color: #38bdf8; }
-
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; z-index: 99999; }
         .modal-content { background: #131d31; padding: 20px; border-radius: 12px; width: 90%; max-width: 360px; border: 1px solid #38bdf8; box-sizing: border-box; }
 
@@ -55,17 +53,9 @@
         .account-val { font-size: 14px; font-weight: bold; color: #fff; }
 
         #lockScreen { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0d1526; justify-content: center; align-items: center; z-index: 999999; }
-        #printArea { display: none; background: #fff; color: #000; padding: 15px; font-family: Tahoma, sans-serif; direction: rtl; width: 280px; }
-        @media print {
-            body * { visibility: hidden; }
-            #printArea, #printArea * { visibility: visible; }
-            #printArea { position: absolute; left: 0; top: 0; width: 100%; display: block !important; }
-        }
     </style>
 </head>
 <body>
-
-<audio id="notifSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
 
 <div id="lockScreen">
     <div style="background:#131d31; padding:25px; border-radius:12px; width:85%; max-width:320px; text-align:center; border:1px solid #38bdf8;">
@@ -82,7 +72,6 @@
         <p>هواتف المكتب: 07818627764 - 07724850876</p>
     </div>
     <div class="header-btns">
-        <button class="action-btn" onclick="openNotificationsModal()" style="padding: 6px 10px; font-size:11px; background:#1e293b; color:#f59e0b;">🔔 الإشعارات</button>
         <button class="action-btn" onclick="openPinModal()" style="padding: 6px 10px; font-size:10px; background:#1e293b; color:#38bdf8;">⚙️ الرمز</button>
         <button class="action-btn" onclick="logoutApp()" style="padding: 6px 10px; font-size:10px; background:#1e293b; color:#ef4444;">🔒 خروج</button>
     </div>
@@ -113,40 +102,31 @@
     <div style="text-align: center; color: #64748b; padding: 30px;">جاري الاتصال بالسيرفر السحابي...</div>
 </div>
 
-<!-- نافذة الحسابات المالية (4 نوافذ فرعية) -->
+<!-- نافذة الحسابات المالية -->
 <div id="accountsModal" class="modal">
     <div class="modal-content" style="border-color: #14b8a6; max-width: 380px;">
         <h3 style="margin-top:0; color:#14b8a6; text-align:center;">📊 قسم الحسابات والإيرادات</h3>
-        
-        <!-- النافذة الأولى: عدد الاشتراكات المفعّلة للأنواع الأربعة -->
         <div class="account-box">
             <div class="account-title">1️⃣ الاشتراكات المفعّلة حسب النوع:</div>
             <div id="accSubTypesCount" style="font-size: 11px; line-height: 1.6; color: #cbd5e1;">جاري الحساب...</div>
         </div>
-
-        <!-- النافذة الثانية: مجموع الديون -->
         <div class="account-box">
             <div class="account-title">2️⃣ مجموع الديون المعلقة (أجل):</div>
             <div class="account-val" id="accTotalDebt" style="color: #f59e0b;">0 د.ع</div>
         </div>
-
-        <!-- النافذة الثالثة: مبلغ الاشتراكات النقدي -->
         <div class="account-box">
             <div class="account-title">3️⃣ مبلغ الاشتراكات النقدي (واصل):</div>
             <div class="account-val" id="accCashPaid" style="color: #10b981;">0 د.ع</div>
         </div>
-
-        <!-- النافذة الرابعة: المجموع الكلي -->
         <div class="account-box" style="border-color: #38bdf8;">
             <div class="account-title" style="color: #38bdf8;">4️⃣ المجموع الكلي للإيرادات:</div>
             <div class="account-val" id="accGrandTotal" style="color: #38bdf8;">0 د.ع</div>
         </div>
-
         <button class="cancel-btn" onclick="closeAccountsModal()" style="background:#14b8a6; color:#090d16; font-weight:bold;">إغلاق</button>
     </div>
 </div>
 
-<!-- نافذة إضافة مشترك -->
+<!-- نافذة إضافة / تعديل مشترك -->
 <div id="addSubModal" class="modal">
     <div class="modal-content">
         <h3 style="margin-top:0; color:#38bdf8;" id="modalTitle">اشتراك جديد (30 يوماً)</h3>
@@ -195,31 +175,13 @@
     </div>
 </div>
 
-<!-- بقية النوافذ (سلة المحذوفات، التكتات، الإشعارات، الرمز، التجديد) متضمنة بالكامل -->
+<!-- نافذة سلة المحذوفات -->
 <div id="trashModal" class="modal">
     <div class="modal-content" style="border-color: #10b981; max-width: 380px;">
         <h3 style="margin-top:0; color:#10b981; text-align:center;">♻️ سلة المشتركين المحذوفين</h3>
         <div id="trashListContainer" style="max-height: 250px; overflow-y: auto; margin-bottom: 10px;"></div>
         <button class="submit-btn" onclick="emptyTrashCompletely()" style="background:#ef4444; color:#fff; margin-bottom:6px;">🗑️ تفريغ السلة نهائياً</button>
         <button class="cancel-btn" onclick="closeTrashModal()">إغلاق</button>
-    </div>
-</div>
-
-<div id="ticketsManagerModal" class="modal">
-    <div class="modal-content" style="border-color: #ec4899; max-width: 380px;">
-        <h3 style="margin-top:0; color:#ec4899; text-align:center;">🎫 تكتات المشتركين</h3>
-        <div id="adminTicketsContainer" style="max-height: 250px; overflow-y: auto; margin-bottom: 10px;"></div>
-        <button class="cancel-btn" onclick="closeTicketsManagerModal()">إغلاق</button>
-    </div>
-</div>
-
-<div id="pinModal" class="modal">
-    <div class="modal-content">
-        <h3 style="margin-top:0; color:#38bdf8;">تغيير رمز الدخول</h3>
-        <input type="password" id="oldPin" placeholder="الرمز الحالي">
-        <input type="password" id="newPin" placeholder="الرمز الجديد">
-        <button class="submit-btn" onclick="updatePin()">حفظ الرمز</button>
-        <button class="cancel-btn" onclick="closePinModal()">إغلاق</button>
     </div>
 </div>
 
@@ -254,6 +216,9 @@ db.ref('ali_isp_deleted_subs').on('value', (snapshot) => {
     const data = snapshot.val();
     deletedSubs = data ? Object.values(data) : [];
     document.getElementById('deletedCount').innerText = deletedSubs.length;
+    if(document.getElementById('trashModal').style.display === 'flex') {
+        renderTrashList();
+    }
 });
 
 function syncToCloud() {
@@ -295,7 +260,6 @@ function calcEnd() {
     }
 }
 
-// نافذة الحسابات المالية (الزر الجديد)
 function openAccountsModal() {
     let economyCount = 0, standardCount = 0, plusCount = 0, turboCount = 0;
     let totalDebt = 0;
@@ -422,6 +386,27 @@ function saveSub() {
     renderSubs();
 }
 
+// دالة حذف المشترك ونقله إلى سلة المحذوفات
+function deleteSub(id) {
+    let target = subs.find(s => String(s.id) === String(id));
+    if(target && confirm(`هل أنت تأكد من نقل المشترك (${target.name}) إلى سلة المحذوفات؟`)) {
+        deletedSubs.push(target);
+        subs = subs.filter(s => String(s.id) !== String(id));
+        syncToCloud();
+        renderSubs();
+        alert(`تم نقل المشترك (${target.name}) إلى سلة المحذوفات.`);
+    }
+}
+
+function payDebt(id) {
+    let s = subs.find(item => String(item.id) === String(id));
+    if(s && confirm(`تثبيت تسديد المبلغ للمشترك (${s.name})؟`)) {
+        s.payStatus = 'واصل';
+        syncToCloud();
+        renderSubs();
+    }
+}
+
 function renderSubs() {
     let query = document.getElementById('searchInput').value.trim().toLowerCase();
     let html = '';
@@ -440,14 +425,20 @@ function renderSubs() {
         
         if(query && !s.name.toLowerCase().includes(query) && !(s.phone || '').includes(query)) return;
 
-        let payBadge = s.payStatus === 'أجل' ? '<span style="color:#f59e0b;">[أجل ⏳]</span>' : '<span style="color:#10b981;">[واصل ✅]</span>';
+        let payBadge = s.payStatus === 'أجل' ? '<span style="color:#f59e0b; font-weight:bold;">[أجل ⏳]</span>' : '<span style="color:#10b981; font-weight:bold;">[واصل ✅]</span>';
 
         html += `
-            <div class="sub-card ${s.payStatus === 'أجل' ? 'agel' : (isExp ? 'expired' : '')}" onclick="showSubDetails(${s.id})">
-                <div style="flex:1;">
+            <div class="sub-card ${s.payStatus === 'أجل' ? 'agel' : (isExp ? 'expired' : '')}">
+                <div style="flex:1;" onclick="showSubDetails(${s.id})">
                     <div style="font-size: 13px; font-weight: bold;">${s.name} ${payBadge} <span style="font-size:10px; color:#38bdf8;">(${s.subType || 'Standard'})</span></div>
-                    <div style="font-size: 10px; color: #94a3b8;">هاتف: ${s.phone || 'بدون'} | ${s.price || 0} د.ع</div>
+                    <div style="font-size: 10px; color: #94a3b8;">هاتف: ${s.phone || 'بدون'} | ${parseFloat(s.price || 0).toLocaleString()} د.ع</div>
                     <div style="font-size: 11px; margin-top: 3px; color:#cbd5e1;">انتهاء: <span style="color:${isExp ? '#ef4444' : '#10b981'}; font-weight:bold;">${s.endDate}</span></div>
+                </div>
+                
+                <!-- أزرار الإجراءات السريعة متضمنة زر الحذف -->
+                <div style="display:flex; flex-direction:column; gap:4px;" onclick="event.stopPropagation()">
+                    ${s.payStatus === 'أجل' ? `<button onclick="payDebt(${s.id})" style="background:#10b981; color:#fff; border:none; padding:4px 6px; border-radius:4px; font-size:10px; cursor:pointer;">💵 تسديد</button>` : ''}
+                    <button onclick="deleteSub(${s.id})" style="background:#ef4444; color:#fff; border:none; padding:4px 6px; border-radius:4px; font-size:10px; cursor:pointer;">🗑️ حذف</button>
                 </div>
             </div>
         `;
@@ -467,12 +458,47 @@ function setFilter(type) {
     renderSubs();
 }
 
-function openTrashModal() { document.getElementById('trashModal').style.display = 'flex'; }
+function openTrashModal() { renderTrashList(); document.getElementById('trashModal').style.display = 'flex'; }
 function closeTrashModal() { document.getElementById('trashModal').style.display = 'none'; }
-function openTicketsManagerModal() { document.getElementById('ticketsManagerModal').style.display = 'flex'; }
-function closeTicketsManagerModal() { document.getElementById('ticketsManagerModal').style.display = 'none'; }
-function openPinModal() { document.getElementById('pinModal').style.display = 'flex'; }
-function closePinModal() { document.getElementById('pinModal').style.display = 'none'; }
+
+function renderTrashList() {
+    let container = document.getElementById('trashListContainer');
+    if(deletedSubs.length === 0) {
+        container.innerHTML = '<div style="text-align:center; color:#64748b; padding:20px;">سلة المحذوفات فارغة.</div>';
+    } else {
+        container.innerHTML = deletedSubs.map(s => `
+            <div style="background:#0d1526; border:1px solid #1e293b; padding:8px; border-radius:6px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div style="font-size:12px; font-weight:bold; color:#38bdf8;">${s.name}</div>
+                    <div style="font-size:10px; color:#94a3b8;">هاتف: ${s.phone || 'بدون'}</div>
+                </div>
+                <button onclick="restoreSubscriber(${s.id})" style="background:#10b981; color:#fff; border:none; padding:5px 8px; border-radius:4px; font-size:10px; cursor:pointer;">♻️ استرجاع</button>
+            </div>
+        `).join('');
+    }
+}
+
+function restoreSubscriber(id) {
+    let target = deletedSubs.find(item => String(item.id) === String(id));
+    if(target) {
+        deletedSubs = deletedSubs.filter(item => String(item.id) !== String(id));
+        subs.push(target);
+        syncToCloud();
+        renderTrashList();
+        renderSubs();
+        alert(`تم استرجاع المشترك (${target.name}) بنجاح.`);
+    }
+}
+
+function emptyTrashCompletely() {
+    if(deletedSubs.length === 0) return;
+    if(confirm("مسح جميع العناصر في السلة نهائياً؟")) {
+        deletedSubs = [];
+        db.ref('ali_isp_deleted_subs').remove();
+        renderTrashList();
+    }
+}
+
 function openEarthlinkDirect() { window.open("https://admin.earthlink.iq", "_blank"); }
 function exportData() {
     let dl = document.createElement('a');
