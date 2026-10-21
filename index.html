@@ -387,7 +387,7 @@ function exportData() {
     alert("💾 تم حفظ نسخة احتياطية بنجاح!");
 }
 
-// دالة استيراد ملف أيرثلنك المحدثة والذكية
+// دالة استيراد ملف أيرثلنك المحدثة الخالية من الأخطاء والرموز العشرية
 function importExcelOrJson() {
     let input = document.createElement('input');
     input.type = 'file';
@@ -423,15 +423,15 @@ function importExcelOrJson() {
                     expDate.setDate(expDate.getDate() + 30);
                     let defaultEndDate = expDate.toISOString().split('T')[0];
                     let countAdded = 0;
+                    let baseId = Date.now();
 
-                    jsonRows.forEach(row => {
+                    jsonRows.forEach((row, index) => {
                         let keys = Object.keys(row);
                         let name = "";
                         let phone = "";
                         let fullName = "";
                         let price = "30000";
 
-                        // بحث ذكي في مفاتيح الأعمدة بغض النظر عن لغتها أو تسميتها
                         keys.forEach(k => {
                             let lowerKey = k.toLowerCase();
                             let val = String(row[k]).trim();
@@ -450,7 +450,6 @@ function importExcelOrJson() {
                             }
                         });
 
-                        // إذا لم يتم العثور بالطريقة الذكية، نأخذ أول عمود كاسم وثاني عمود كهاتف
                         if(!name && keys.length > 0) {
                             name = String(row[keys[0]] || "").trim();
                         }
@@ -460,7 +459,7 @@ function importExcelOrJson() {
 
                         if(name && name !== "") {
                             subs.push({
-                                id: Date.now() + Math.random(),
+                                id: baseId + index, // استخدام أرقام صحيحة لمنع خطأ Firebase
                                 name: name,
                                 fullName: fullName || name,
                                 phone: phone,
