@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>إدارة المشتركين - مهندس علي لخدمات الإنترنت</title>
+    <!-- مكتبة قراءة ملفات الإكسل -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- مكتبات Firebase السحابية -->
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <style>
@@ -53,6 +55,12 @@
         .account-val { font-size: 14px; font-weight: bold; color: #fff; }
 
         #lockScreen { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0d1526; justify-content: center; align-items: center; z-index: 999999; }
+        #printArea { display: none; background: #fff; color: #000; padding: 15px; font-family: Tahoma, sans-serif; direction: rtl; width: 280px; }
+        @media print {
+            body * { visibility: hidden; }
+            #printArea, #printArea * { visibility: visible; }
+            #printArea { position: absolute; left: 0; top: 0; width: 100%; display: block !important; }
+        }
     </style>
 </head>
 <body>
@@ -175,6 +183,21 @@
     </div>
 </div>
 
+<!-- نافذة التجديد / التفعيل -->
+<div id="renewModal" class="modal">
+    <div class="modal-content" style="border-color: #0284c7; max-width: 320px;">
+        <h3 style="margin-top:0; color:#38bdf8; text-align:center;">🔄 تفعيل اشتراك جديد</h3>
+        <p style="font-size:11px; color:#94a3b8; text-align:center;" id="renewSubTargetName"></p>
+        <label style="font-size:11px; color:#cbd5e1;">اختر طريقة الدفع للتجديد:</label>
+        <select id="renewPayType" style="margin-top:8px;">
+            <option value="واصل">✅ واصل (نقداً - مدفوع)</option>
+            <option value="أجل">⏳ أجل (غير مدفوع)</option>
+        </select>
+        <button class="submit-btn" onclick="confirmRenewSubscription()" style="background:#0284c7; color:#fff; margin-top:10px;">تأكيد التفعيل (30 يوماً)</button>
+        <button class="cancel-btn" onclick="closeRenewModal()">إغلاق</button>
+    </div>
+</div>
+
 <!-- نافذة سلة المحذوفات -->
 <div id="trashModal" class="modal">
     <div class="modal-content" style="border-color: #10b981; max-width: 380px;">
@@ -182,6 +205,22 @@
         <div id="trashListContainer" style="max-height: 250px; overflow-y: auto; margin-bottom: 10px;"></div>
         <button class="submit-btn" onclick="emptyTrashCompletely()" style="background:#ef4444; color:#fff; margin-bottom:6px;">🗑️ تفريغ السلة نهائياً</button>
         <button class="cancel-btn" onclick="closeTrashModal()">إغلاق</button>
+    </div>
+</div>
+
+<!-- طباعة الوصل -->
+<div id="printArea">
+    <div style="text-align: center; border-bottom: 2px dashed #000; padding-bottom: 8px; margin-bottom: 8px;">
+        <h3 style="margin:0; font-size:13px;">مكتب مهندس علي لخدمات الإنترنت</h3>
+        <p style="margin:2px 0; font-size:9px;">هواتف المكتب: 07818627764 - 07724850876</p>
+        <p style="margin:2px 0; font-size:11px; font-weight:bold;" id="receiptTitle">وصل قبض اشتراك</p>
+    </div>
+    <div style="font-size: 11px; line-height: 1.6;">
+        <div><b>اسم المشترك:</b> <span id="pName"></span></div>
+        <div><b>المبلغ:</b> <span id="pPrice"></span> د.ع</div>
+        <div><b>الحالة:</b> <span id="pPayStatus"></span></div>
+        <div><b>تاريخ التفعيل:</b> <span id="pStart"></span></div>
+        <div><b>تاريخ الانتهاء:</b> <span id="pEnd"></span></div>
     </div>
 </div>
 
@@ -205,6 +244,7 @@ let deletedSubs = [];
 let currentPin = localStorage.getItem('app_pin') || '1234';
 let currentFilter = 'all';
 let currentSelectedSubId = null;
+let selectedRenewId = null;
 
 db.ref('ali_isp_subscribers').on('value', (snapshot) => {
     const data = snapshot.val();
@@ -386,22 +426,73 @@ function saveSub() {
     renderSubs();
 }
 
-// دالة حذف المشترك ونقله إلى سلة المحذوفات
+// دالة التفعيل والتجديد
+function openRenewModal(id) {
+    let s = subs.find(item => String(item.id) === String(id));
+    if(s) {
+        selectedRenewId = id;
+        document.getElementById('renewSubTargetName').innerText = `المشترك: ${s.name}`;
+        document.getElementById('renewPayType').value = 'واصل';
+        document.getElementById('renewModal').style.display = 'flex';
+    }
+}
+function closeRenewModal() { selectedRenewId = null; document.getElementById('renewModal').style.display = 'none'; }
+
+function confirmRenewSubscription() {
+    if(!selectedRenewId) return;
+    let s = subs.find(item => String(item.id) === String(selectedRenewId));
+    let chosenPayType = document.getElementById('renewPayType').value;
+
+    if(s) {
+        let today = new Date();
+        s.startDate = today.toISOString().split('T')[0];
+        today.setDate(today.getDate() + 30);
+        s.endDate = today.toISOString().split('T')[0];
+        s.payStatus = chosenPayType;
+
+        syncToCloud();
+        renderSubs();
+        closeRenewModal();
+        alert(`✅ تم تفعيل الاشتراك بنجاح حتى تاريخ (${s.endDate})`);
+    }
+}
+
+// دالة تسديد الدين
+function payDebt(id) {
+    let s = subs.find(item => String(item.id) === String(id));
+    if(s && confirm(`تثبيت تسديد المبلغ للمشترك (${s.name})؟`)) {
+        s.payStatus = 'واصل';
+        syncToCloud();
+        renderSubs();
+    }
+}
+
+// دالة إرسال الواتساب
+function sendWhatsapp(phone, name, endDate, payStatus) {
+    if(!phone) { alert("رقم الهاتف غير متوفر"); return; }
+    let cleanPhone = phone.replace(/\D/g, '');
+    if(cleanPhone.startsWith('0')) cleanPhone = '964' + cleanPhone.substring(1);
+    let msg = payStatus === 'أجل' ? `عزيزي المشترك ${name} ⏳\nنود تذكيرك بوجود مبلغ معلق (أجل) في مكتب مهندس علي.` : `عزيزي المشترك ${name} 📡\nاشتراكك سينتهي بتاريخ ${endDate}.`;
+    window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+// دالة طباعة الوصل
+function printReceipt(name, price, start, end, payStatus) {
+    document.getElementById('receiptTitle').innerText = 'وصل قبض اشتراك';
+    document.getElementById('pName').innerText = name;
+    document.getElementById('pPrice').innerText = price;
+    document.getElementById('pPayStatus').innerText = payStatus;
+    document.getElementById('pStart').innerText = start;
+    document.getElementById('pEnd').innerText = end;
+    window.print();
+}
+
+// دالة حذف المشترك
 function deleteSub(id) {
     let target = subs.find(s => String(s.id) === String(id));
     if(target && confirm(`هل أنت تأكد من نقل المشترك (${target.name}) إلى سلة المحذوفات؟`)) {
         deletedSubs.push(target);
         subs = subs.filter(s => String(s.id) !== String(id));
-        syncToCloud();
-        renderSubs();
-        alert(`تم نقل المشترك (${target.name}) إلى سلة المحذوفات.`);
-    }
-}
-
-function payDebt(id) {
-    let s = subs.find(item => String(item.id) === String(id));
-    if(s && confirm(`تثبيت تسديد المبلغ للمشترك (${s.name})؟`)) {
-        s.payStatus = 'واصل';
         syncToCloud();
         renderSubs();
     }
@@ -435,10 +526,13 @@ function renderSubs() {
                     <div style="font-size: 11px; margin-top: 3px; color:#cbd5e1;">انتهاء: <span style="color:${isExp ? '#ef4444' : '#10b981'}; font-weight:bold;">${s.endDate}</span></div>
                 </div>
                 
-                <!-- أزرار الإجراءات السريعة متضمنة زر الحذف -->
-                <div style="display:flex; flex-direction:column; gap:4px;" onclick="event.stopPropagation()">
-                    ${s.payStatus === 'أجل' ? `<button onclick="payDebt(${s.id})" style="background:#10b981; color:#fff; border:none; padding:4px 6px; border-radius:4px; font-size:10px; cursor:pointer;">💵 تسديد</button>` : ''}
-                    <button onclick="deleteSub(${s.id})" style="background:#ef4444; color:#fff; border:none; padding:4px 6px; border-radius:4px; font-size:10px; cursor:pointer;">🗑️ حذف</button>
+                <!-- الأزرار السريعة الكاملة متضمنة تفعيل، تسديد، واتساب، وصل، وحذف -->
+                <div style="display:flex; flex-direction:column; gap:3px;" onclick="event.stopPropagation()">
+                    ${s.payStatus === 'أجل' ? `<button onclick="payDebt(${s.id})" style="background:#10b981; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">💵 تسديد</button>` : ''}
+                    <button onclick="openRenewModal(${s.id})" style="background:#0284c7; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">🔄 تفعيل</button>
+                    <button onclick="sendWhatsapp('${s.phone}', '${s.name}', '${s.endDate}', '${s.payStatus}')" style="background:#25d366; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">💬 واتساب</button>
+                    <button onclick="printReceipt('${s.name}', '${s.price || 0}', '${s.startDate}', '${s.endDate}', '${s.payStatus}')" style="background:#475569; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">🖨️ وصل</button>
+                    <button onclick="deleteSub(${s.id})" style="background:#ef4444; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">🗑️ حذف</button>
                 </div>
             </div>
         `;
