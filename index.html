@@ -56,10 +56,15 @@
 
         #lockScreen { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0d1526; justify-content: center; align-items: center; z-index: 999999; }
         #printArea { display: none; background: #fff; color: #000; padding: 15px; font-family: Tahoma, sans-serif; direction: rtl; width: 280px; }
+        #printDebtsArea { display: none; }
+
         @media print {
             body * { visibility: hidden; }
             #printArea, #printArea * { visibility: visible; }
             #printArea { position: absolute; left: 0; top: 0; width: 100%; display: block !important; }
+            
+            #printDebtsArea, #printDebtsArea * { visibility: visible; }
+            #printDebtsArea { position: absolute; left: 0; top: 0; width: 100%; display: block !important; background: #fff; color: #000; padding: 20px; direction: rtl; font-family: Tahoma, sans-serif; }
         }
     </style>
 </head>
@@ -82,7 +87,6 @@
         <p>هواتف المكتب: 07818627764 - 07724850876</p>
     </div>
     <div class="header-btns">
-        <!-- إرجاع زر الإشعارات -->
         <button class="action-btn" onclick="openNotificationsModal()" style="padding: 6px 10px; font-size:11px; background:#1e293b; color:#f59e0b;">🔔 الإشعارات</button>
         <button class="action-btn" onclick="openPinModal()" style="padding: 6px 10px; font-size:10px; background:#1e293b; color:#38bdf8;">⚙️ الرمز</button>
         <button class="action-btn" onclick="logoutApp()" style="padding: 6px 10px; font-size:10px; background:#1e293b; color:#ef4444;">🔒 خروج</button>
@@ -96,7 +100,7 @@
     <div class="filter-tab" id="tab-expired" onclick="setFilter('expired')" style="color:#ef4444;">منتهي (<span id="expiredSubs">0</span>)</div>
 </div>
 
-<input type="text" id="searchInput" class="search-box" placeholder="🔍 ابحث عن اسم المشترك، اليوزر أو رقم الهاتف..." oninput="renderSubs()">
+<input type="text" id="searchInput" class="search-box" placeholder="🔍 ابحث عن اسم المشترك، يوزر الاشتراك أو رقم الهاتف..." oninput="renderSubs()">
 
 <div class="toolbar-grid">
     <button class="action-btn active-blue" onclick="openModal()">+ إضافة مشترك</button>
@@ -124,7 +128,7 @@
     </div>
 </div>
 
-<!-- نافذة الحسابات المالية -->
+<!-- نافذة الحسابات المالية المحدثة -->
 <div id="accountsModal" class="modal">
     <div class="modal-content" style="border-color: #14b8a6; max-width: 380px;">
         <h3 style="margin-top:0; color:#14b8a6; text-align:center;">📊 قسم الحسابات والإيرادات</h3>
@@ -135,6 +139,7 @@
         <div class="account-box">
             <div class="account-title">2️⃣ مجموع الديون المعلقة (أجل):</div>
             <div class="account-val" id="accTotalDebt" style="color: #f59e0b;">0 د.ع</div>
+            <button onclick="openDebtsListModal()" style="margin-top: 6px; width: 100%; background: #f59e0b; color: #090d16; border: none; padding: 6px; border-radius: 4px; font-weight: bold; font-size: 11px; cursor: pointer;">📋 عرض أسماء غير المسددين</button>
         </div>
         <div class="account-box">
             <div class="account-title">3️⃣ مبلغ الاشتراكات النقدي (واصل):</div>
@@ -148,15 +153,36 @@
     </div>
 </div>
 
+<!-- نافذة قائمة غير المسددين (أجل) الجديدة -->
+<div id="debtsListModal" class="modal">
+    <div class="modal-content" style="border-color: #f59e0b; max-width: 420px;">
+        <h3 style="margin-top:0; color:#f59e0b; text-align:center;">📋 قائمة المشتركين غير المسددين (أجل)</h3>
+        <div id="debtsListContainer" style="max-height: 260px; overflow-y: auto; margin-bottom: 10px; background:#0d1526; padding:8px; border-radius:6px; font-size:11px;">جاري التحميل...</div>
+        <button class="submit-btn" onclick="printDebtsList()" style="background:#38bdf8; color:#090d16; margin-bottom:6px; font-weight:bold;">🖨️ طباعة قائمة غير المسددين</button>
+        <button class="cancel-btn" onclick="closeDebtsListModal()">إغلاق</button>
+    </div>
+</div>
+
 <!-- نافذة إضافة / تعديل مشترك -->
 <div id="addSubModal" class="modal">
     <div class="modal-content">
         <h3 style="margin-top:0; color:#38bdf8;" id="modalTitle">اشتراك جديد (30 يوماً)</h3>
         <input type="hidden" id="editSubId">
-        <input type="text" id="subName" placeholder="اسم المشترك / اليوزر (للتسجيل)">
+        
+        <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">اسم المشترك:</label>
+        <input type="text" id="subName" placeholder="اسم المشترك (مثال: علي أحمد)">
+        
+        <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">يوزر الاشتراك (اسم المستخدم):</label>
+        <input type="text" id="subUsername" placeholder="يوزر الاشتراك (مثال: ali_net99)">
+        
+        <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">الاسم الثلاثي:</label>
         <input type="text" id="subFullName" placeholder="الاسم الثلاثي للمشترك">
+        
+        <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">رقم الهاتف:</label>
         <input type="text" id="subPhone" placeholder="رقم الهاتف">
-        <input type="number" id="subPrice" placeholder="مبلغ الاشتراك (د.ع)" value="30000">
+        
+        <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">مبلغ الاشتراك (د.ع):</label>
+        <input type="number" id="subPrice" placeholder="مبلغ الاشتراك" value="30000">
         
         <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">نوع الاشتراك:</label>
         <select id="subType">
@@ -172,7 +198,10 @@
             <option value="أجل">⏳ أجل (غير مدفوع)</option>
         </select>
 
+        <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">تاريخ التفعيل:</label>
         <input type="date" id="startDate" onchange="calcEnd()">
+        
+        <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">تاريخ الانتهاء:</label>
         <input type="date" id="endDate">
         
         <button class="submit-btn" onclick="saveSub()" id="saveBtnText">حفظ المشترك</button>
@@ -184,8 +213,9 @@
 <div id="subDetailsModal" class="modal">
     <div class="modal-content" style="border-color: #10b981;">
         <h3 style="margin-top:0; color:#38bdf8; text-align:center;" id="dName">تفاصيل المشترك</h3>
+        <div class="details-row"><span class="details-label">يوزر الاشتراك:</span><span class="details-value" id="dUsername" style="color:#38bdf8;">-</span></div>
         <div class="details-row"><span class="details-label">الاسم الثلاثي:</span><span class="details-value" id="dFullName" style="color:#f59e0b;">-</span></div>
-        <div class="details-row"><span class="details-label">نوع الاشتراك:</span><span class="details-value" id="dSubType" style="color:#38bdf8;">-</span></div>
+        <div class="details-row"><span class="details-label">نوع الاشتراك:</span><span class="details-value" id="dSubType">-</span></div>
         <div class="details-row"><span class="details-label">رقم الهاتف:</span><span class="details-value" id="dPhone">-</span></div>
         <div class="details-row"><span class="details-label">سعر الاشتراك:</span><span class="details-value" id="dPrice">-</span></div>
         <div class="details-row"><span class="details-label">حالة الدفع:</span><span class="details-value" id="dPayStatus">-</span></div>
@@ -222,7 +252,7 @@
     </div>
 </div>
 
-<!-- طباعة الوصل -->
+<!-- طباعة وصل مفرد -->
 <div id="printArea">
     <div style="text-align: center; border-bottom: 2px dashed #000; padding-bottom: 8px; margin-bottom: 8px;">
         <h3 style="margin:0; font-size:13px;">مكتب مهندس علي لخدمات الإنترنت</h3>
@@ -231,11 +261,34 @@
     </div>
     <div style="font-size: 11px; line-height: 1.6;">
         <div><b>اسم المشترك:</b> <span id="pName"></span></div>
+        <div><b>يوزر الاشتراك:</b> <span id="pUsername"></span></div>
         <div><b>المبلغ:</b> <span id="pPrice"></span> د.ع</div>
         <div><b>الحالة:</b> <span id="pPayStatus"></span></div>
         <div><b>تاريخ التفعيل:</b> <span id="pStart"></span></div>
         <div><b>تاريخ الانتهاء:</b> <span id="pEnd"></span></div>
     </div>
+</div>
+
+<!-- منطقة طباعة قائمة غير المسددين -->
+<div id="printDebtsArea">
+    <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px;">
+        <h2 style="margin:0; font-size:18px;">مكتب مهندس علي لخدمات الإنترنت</h2>
+        <p style="margin:4px 0; font-size:12px;">تقرير الديون والمعلقات (المشتركين غير المسددين - أجل)</p>
+        <p style="margin:2px 0; font-size:11px;" id="printDebtsDate"></p>
+    </div>
+    <table style="width:100%; border-collapse: collapse; font-size:12px;" border="1">
+        <thead>
+            <tr style="background:#f1f5f9; text-align:right;">
+                <th style="padding:6px;">ت</th>
+                <th style="padding:6px;">اسم المشترك</th>
+                <th style="padding:6px;">يوزر الاشتراك</th>
+                <th style="padding:6px;">رقم الهاتف</th>
+                <th style="padding:6px;">المبلغ (د.ع)</th>
+            </tr>
+        </thead>
+        <tbody id="printDebtsTableBody"></tbody>
+    </table>
+    <div style="margin-top: 15px; font-size: 13px; font-weight: bold; text-align: left;" id="printDebtsTotal"></div>
 </div>
 
 <script>
@@ -285,7 +338,6 @@ function syncToCloud() {
     db.ref('ali_isp_deleted_subs').set(deletedObj);
 }
 
-// إشعارات التطبيق والواتساب الأوتوماتيكية
 function sendAutoNotificationAndWhatsApp(sub, type) {
     let priceFormatted = parseFloat(sub.price || 0).toLocaleString();
     let notifMsg = "";
@@ -293,23 +345,21 @@ function sendAutoNotificationAndWhatsApp(sub, type) {
 
     if (type === 'activation') {
         let statusText = sub.payStatus === 'واصل' ? 'واصل ✅ (مدفوع)' : 'أجل ⏳ (غير مدفوع)';
-        notifMsg = `🎉 تم تفعيل اشتراكك بنجاح!\n• نوع الاشتراك: ${sub.subType || 'Standard'}\n• المبلغ: ${priceFormatted} د.ع\n• تاريخ التفعيل: ${sub.startDate}\n• تاريخ الانتهاء: ${sub.endDate}\n• حالة الدفع: ${statusText}`;
+        notifMsg = `🎉 تم تفعيل اشتراكك بنجاح!\n• يوزر الاشتراك: ${sub.username || sub.name}\n• نوع الاشتراك: ${sub.subType || 'Standard'}\n• المبلغ: ${priceFormatted} د.ع\n• تاريخ التفعيل: ${sub.startDate}\n• تاريخ الانتهاء: ${sub.endDate}\n• حالة الدفع: ${statusText}`;
 
-        waMsg = `عزيزنا المشترك (${sub.name}) 📡\nتم تجديد/تفعيل اشتراكك بنجاح في مكتب مهندس علي لخدمات الإنترنت ✅\n\n• نوع الاشتراك: ${sub.subType || 'Standard'}\n• المبلغ: ${priceFormatted} د.ع\n• تاريخ التفعيل: ${sub.startDate}\n• تاريخ انتهاء الاشتراك: ${sub.endDate}\n• حالة الدفع: ${statusText}\n\nشكراً لاختياركم خدماتنا.\nهواتف المكتب: 07818627764 - 07724850876`;
+        waMsg = `عزيزنا المشترك (${sub.name}) 📡\nتم تجديد/تفعيل اشتراكك بنجاح في مكتب مهندس علي لخدمات الإنترنت ✅\n\n• يوزر الاشتراك: ${sub.username || sub.name}\n• نوع الاشتراك: ${sub.subType || 'Standard'}\n• المبلغ: ${priceFormatted} د.ع\n• تاريخ التفعيل: ${sub.startDate}\n• تاريخ انتهاء الاشتراك: ${sub.endDate}\n• حالة الدفع: ${statusText}\n\nشكراً لاختياركم خدماتنا.\nهواتف المكتب: 07818627764 - 07724850876`;
     } 
     else if (type === 'payment') {
         notifMsg = `💵 تم استلام مبلغ التسديد بنجاح (${priceFormatted} د.ع) وتم تغيير حالتك إلى (واصل ✅).\nشكراً لالتزامكم!`;
 
-        waMsg = `عزيزنا المشترك (${sub.name}) 💵\nتم تسديد مبلغ الاشتراك (${priceFormatted} د.ع) بنجاح وتم تغيير حالتك في النظام إلى (واصل ✅).\nتاريخ التفعيل: ${sub.startDate}\nتاريخ الانتهاء: ${sub.endDate}\n\nشكراً لالتزامكم وسرعة تسديدكم.\nمكتب مهندس علي لخدمات الإنترنت\nهواتف المكتب: 07818627764 - 07724850876`;
+        waMsg = `عزيزنا المشترك (${sub.name}) 💵\nتم تسديد مبلغ الاشتراك (${priceFormatted} د.ع) بنجاح وتم تغيير حالتك في النظام إلى (واصل ✅).\nيوزر الاشتراك: ${sub.username || sub.name}\nتاريخ التفعيل: ${sub.startDate}\nتاريخ الانتهاء: ${sub.endDate}\n\nشكراً لالتزامكم وسرعة تسديدكم.\nمكتب مهندس علي لخدمات الإنترنت\nهواتف المكتب: 07818627764 - 07724850876`;
     }
 
-    // 1. نشر الإشعار فوراً لتطبيق المشترك في السحابة وفي المحادثة
     localStorage.setItem(`client_activation_notif_${sub.name}`, notifMsg);
     let chats = JSON.parse(localStorage.getItem(`ticket_chat_${sub.name}`)) || [];
     chats.push({ sender: "النظام (أوتو)", text: notifMsg });
     localStorage.setItem(`ticket_chat_${sub.name}`, JSON.stringify(chats));
 
-    // 2. إرسال أوتو عبر الواتساب إذا كان الرقم متوفرأً
     if (sub.phone && sub.phone.trim() !== "") {
         let cleanPhone = sub.phone.replace(/\D/g, '');
         if (cleanPhone.startsWith('0')) cleanPhone = '964' + cleanPhone.substring(1);
@@ -317,7 +367,6 @@ function sendAutoNotificationAndWhatsApp(sub, type) {
     }
 }
 
-// دالة إرسال تنبيه غير المسددين الشاملة للمبلغ والتواريخ
 function sendGroupDebtReminder() {
     let unPaidSubs = subs.filter(s => s.payStatus === 'أجل' && s.phone && s.phone.trim() !== "");
     if(unPaidSubs.length === 0) { alert("لا توجد ديون معلقة بأرقام هاتف مسجلة."); return; }
@@ -329,7 +378,7 @@ function sendGroupDebtReminder() {
                 if(cleanPhone.startsWith('0')) cleanPhone = '964' + cleanPhone.substring(1);
                 let priceFormatted = parseFloat(s.price || 0).toLocaleString();
                 
-                let msg = `عزيزي المشترك (${s.name}) ⏳\nنود تذكيرك بوجود مبلغ اشتراك معلق (أجل) في مكتب مهندس علي لخدمات الإنترنت.\n\n• المبلغ المطلوب: ${priceFormatted} د.ع\n• تاريخ التفعيل: ${s.startDate || '-'}\n• تاريخ الانتهاء: ${s.endDate || '-'}\n\nيرجى التسديد خلال 3 أيام لضمان استمرار الخدمة. شكراً لتفهمكم.`;
+                let msg = `عزيزي المشترك (${s.name}) ⏳\nنود تذكيرك بوجود مبلغ اشتراك معلق (أجل) في مكتب مهندس علي لخدمات الإنترنت.\n\n• يوزر الاشتراك: ${s.username || s.name}\n• المبلغ المطلوب: ${priceFormatted} د.ع\n• تاريخ التفعيل: ${s.startDate || '-'}\n• تاريخ الانتهاء: ${s.endDate || '-'}\n\nيرجى التسديد خلال 3 أيام لضمان استمرار الخدمة. شكراً لتفهمكم.`;
                 window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`, '_blank');
             }, index * 1200);
         });
@@ -414,10 +463,71 @@ function openAccountsModal() {
 }
 function closeAccountsModal() { document.getElementById('accountsModal').style.display = 'none'; }
 
+// فتح قائمة غير المسددين داخل قسم الحسابات
+function openDebtsListModal() {
+    closeAccountsModal();
+    let unPaidSubs = subs.filter(s => s.payStatus === 'أجل');
+    let container = document.getElementById('debtsListContainer');
+
+    if(unPaidSubs.length === 0) {
+        container.innerHTML = '<div style="text-align:center; color:#10b981; padding:20px; font-weight:bold;">رائع! لا توجد أي ديون معلقة (الكل واصل).</div>';
+    } else {
+        let html = '';
+        unPaidSubs.forEach((s, idx) => {
+            let priceFormatted = parseFloat(s.price || 0).toLocaleString();
+            html += `
+                <div style="background:#131d31; border:1px solid #1e293b; padding:8px; border-radius:6px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <div style="font-weight:bold; color:#38bdf8;">${idx+1}. ${s.name} ${s.username ? '('+s.username+')' : ''}</div>
+                        <div style="font-size:10px; color:#94a3b8;">هاتف: ${s.phone || 'بدون'} | المبلغ: <span style="color:#f59e0b; font-weight:bold;">${priceFormatted} د.ع</span></div>
+                    </div>
+                    ${s.phone ? `<button onclick="sendWhatsapp('${s.phone}', '${s.name}', '${s.username}', '${s.endDate}', '${s.payStatus}', '${s.price}', '${s.startDate}')" style="background:#25d366; color:#fff; border:none; padding:4px 8px; border-radius:4px; font-size:10px; cursor:pointer;">💬 واتساب</button>` : ''}
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
+    document.getElementById('debtsListModal').style.display = 'flex';
+}
+function closeDebtsListModal() { document.getElementById('debtsListModal').style.display = 'none'; }
+
+// طباعة قائمة غير المسددين
+function printDebtsList() {
+    let unPaidSubs = subs.filter(s => s.payStatus === 'أجل');
+    if(unPaidSubs.length === 0) { alert("لا توجد ديون لطباعتها."); return; }
+
+    let todayStr = new Date().toLocaleDateString('ar-IQ');
+    document.getElementById('printDebtsDate').innerText = `تاريخ التقرير: ${todayStr}`;
+
+    let tbodyHTML = '';
+    let totalSum = 0;
+
+    unPaidSubs.forEach((s, idx) => {
+        let price = parseFloat(s.price || 0);
+        totalSum += price;
+        tbodyHTML += `
+            <tr>
+                <td style="padding:5px; text-align:center;">${idx+1}</td>
+                <td style="padding:5px;">${s.name}</td>
+                <td style="padding:5px;">${s.username || '-'}</td>
+                <td style="padding:5px;">${s.phone || '-'}</td>
+                <td style="padding:5px; font-weight:bold;">${price.toLocaleString()} د.ع</td>
+            </tr>
+        `;
+    });
+
+    document.getElementById('printDebtsTableBody').innerText = ''; // تنظيف
+    document.getElementById('printDebtsTableBody').innerHTML = tbodyHTML;
+    document.getElementById('printDebtsTotal').innerText = `المجموع الكلي للديون (أجل): ${totalSum.toLocaleString()} د.ع (${unPaidSubs.length} مشترك)`;
+
+    window.print();
+}
+
 function openModal() {
     document.getElementById('modalTitle').innerText = "اشتراك جديد (30 يوماً)";
     document.getElementById('editSubId').value = "";
     document.getElementById('subName').value = "";
+    document.getElementById('subUsername').value = "";
     document.getElementById('subFullName').value = "";
     document.getElementById('subPhone').value = "";
     document.getElementById('subPrice').value = "30000";
@@ -425,7 +535,7 @@ function openModal() {
     document.getElementById('subStatus').value = "واصل";
     document.getElementById('startDate').value = new Date().toISOString().split('T')[0];
     calcEnd();
-    document.getElementById('saveBtnText').innerText = "حفظ المشترك وإرسال التنبيه";
+    document.getElementById('saveBtnText').innerText = "حفظ المشترك";
     document.getElementById('addSubModal').style.display = 'flex';
 }
 
@@ -436,6 +546,7 @@ function showSubDetails(id) {
     if(!s) return;
     currentSelectedSubId = s.id;
     document.getElementById('dName').innerText = `👤 ${s.name}`;
+    document.getElementById('dUsername').innerText = s.username || "غير متوفر";
     document.getElementById('dFullName').innerText = s.fullName || "غير محدد";
     document.getElementById('dSubType').innerText = s.subType || "Standard";
     document.getElementById('dPhone').innerText = s.phone || "غير مسجل";
@@ -455,6 +566,7 @@ function openEditModalFromDetails() {
     document.getElementById('modalTitle').innerText = "✏️ تعديل معلومات المشترك";
     document.getElementById('editSubId').value = s.id;
     document.getElementById('subName').value = s.name || "";
+    document.getElementById('subUsername').value = s.username || "";
     document.getElementById('subFullName').value = s.fullName || "";
     document.getElementById('subPhone').value = s.phone || "";
     document.getElementById('subPrice').value = s.price || "30000";
@@ -469,6 +581,7 @@ function openEditModalFromDetails() {
 function saveSub() {
     let editId = document.getElementById('editSubId').value;
     let name = document.getElementById('subName').value.trim();
+    let username = document.getElementById('subUsername').value.trim();
     let fullName = document.getElementById('subFullName').value.trim();
     let phone = document.getElementById('subPhone').value.trim();
     let price = document.getElementById('subPrice').value.trim() || "30000";
@@ -477,13 +590,14 @@ function saveSub() {
     let startDate = document.getElementById('startDate').value;
     let endDate = document.getElementById('endDate').value;
     
-    if(!name || !startDate || !endDate) { alert("يرجى ملء الحقول الأساسية"); return; }
+    if(!name || !startDate || !endDate) { alert("يرجى ملء اسم المشترك والتواريخ الأساسية"); return; }
     
     let subObj;
     if(editId) {
         subObj = subs.find(item => String(item.id) === String(editId));
         if(subObj) {
             subObj.name = name;
+            subObj.username = username;
             subObj.fullName = fullName;
             subObj.phone = phone;
             subObj.price = price;
@@ -493,19 +607,16 @@ function saveSub() {
             subObj.endDate = endDate;
         }
     } else {
-        subObj = { id: Date.now(), name, fullName, phone, price, subType, payStatus, startDate, endDate };
+        subObj = { id: Date.now(), name, username, fullName, phone, price, subType, payStatus, startDate, endDate };
         subs.push(subObj);
     }
 
     syncToCloud();
     closeModal();
     renderSubs();
-
-    // إرسال تنبيه أوتوماتيكي للتطبيق والواتساب
     sendAutoNotificationAndWhatsApp(subObj, 'activation');
 }
 
-// دالة التفعيل والتجديد الأوتوماتيكية
 function openRenewModal(id) {
     let s = subs.find(item => String(item.id) === String(id));
     if(s) {
@@ -532,48 +643,42 @@ function confirmRenewSubscription() {
         syncToCloud();
         renderSubs();
         closeRenewModal();
-
-        // إرسال أوتو لتطبيق المشترك والواتساب
         sendAutoNotificationAndWhatsApp(s, 'activation');
 
         if(s.payStatus === 'واصل') {
-            printReceipt(s.name, s.price || 30000, s.startDate, s.endDate, 'واصل (تم التجديد نقداً)');
+            printReceipt(s.name, s.username, s.price || 30000, s.startDate, s.endDate, 'واصل (تم التجديد نقداً)');
         }
     }
 }
 
-// دالة تسديد الدين الأوتوماتيكية
 function payDebt(id) {
     let s = subs.find(item => String(item.id) === String(id));
     if(s && confirm(`تثبيت تسديد المبلغ للمشترك (${s.name})؟`)) {
         s.payStatus = 'واصل';
         syncToCloud();
         renderSubs();
-
-        // إرسال أوتو فور التسديد لتطبيق المشترك والواتساب
         sendAutoNotificationAndWhatsApp(s, 'payment');
-        printReceipt(s.name, s.price || 0, s.startDate, s.endDate, 'واصل (تم التسديد)');
+        printReceipt(s.name, s.username, s.price || 0, s.startDate, s.endDate, 'واصل (تم التسديد)');
     }
 }
 
-// دالة إرسال الواتساب الفردي بالمعلومات المحدثة
-function sendWhatsapp(phone, name, endDate, payStatus, price, startDate) {
+function sendWhatsapp(phone, name, username, endDate, payStatus, price, startDate) {
     if(!phone) { alert("رقم الهاتف غير متوفر"); return; }
     let cleanPhone = phone.replace(/\D/g, '');
     if(cleanPhone.startsWith('0')) cleanPhone = '964' + cleanPhone.substring(1);
     let priceFormatted = parseFloat(price || 0).toLocaleString();
 
     let msg = payStatus === 'أجل' ? 
-        `عزيزي المشترك (${name}) ⏳\nنود تذكيرك بوجود مبلغ اشتراك معلق (أجل) في مكتب مهندس علي لخدمات الإنترنت.\n\n• المبلغ المطلوب: ${priceFormatted} د.ع\n• تاريخ التفعيل: ${startDate || '-'}\n• تاريخ الانتهاء: ${endDate || '-'}` : 
-        `عزيزي المشترك (${name}) 📡\nاشتراكك سينتهي بتاريخ ${endDate}. شكراً لاختياركم خدماتنا.`;
+        `عزيزي المشترك (${name}) ⏳\nنود تذكيرك بوجود مبلغ اشتراك معلق (أجل) في مكتب مهندس علي لخدمات الإنترنت.\n\n• يوزر الاشتراك: ${username || name}\n• المبلغ المطلوب: ${priceFormatted} د.ع\n• تاريخ التفعيل: ${startDate || '-'}\n• تاريخ الانتهاء: ${endDate || '-'}` : 
+        `عزيزي المشترك (${name}) 📡\nيوزر الاشتراك: ${username || name}\nاشتراكك سينتهي بتاريخ ${endDate}. شكراً لاختياركم خدماتنا.`;
         
     window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`, '_blank');
 }
 
-// دالة طباعة الوصل
-function printReceipt(name, price, start, end, payStatus) {
+function printReceipt(name, username, price, start, end, payStatus) {
     document.getElementById('receiptTitle').innerText = 'وصل قبض اشتراك';
     document.getElementById('pName').innerText = name;
+    document.getElementById('pUsername').innerText = username || 'غير متوفر';
     document.getElementById('pPrice').innerText = parseFloat(price || 0).toLocaleString();
     document.getElementById('pPayStatus').innerText = payStatus;
     document.getElementById('pStart').innerText = start;
@@ -581,7 +686,6 @@ function printReceipt(name, price, start, end, payStatus) {
     window.print();
 }
 
-// دالة حذف المشترك
 function deleteSub(id) {
     let target = subs.find(s => String(s.id) === String(id));
     if(target && confirm(`هل أنت تأكد من نقل المشترك (${target.name}) إلى سلة المحذوفات؟`)) {
@@ -608,7 +712,10 @@ function renderSubs() {
         if(currentFilter === 'agel' && s.payStatus !== 'أجل') return;
         if(currentFilter === 'expired' && !isExp) return;
         
-        if(query && !s.name.toLowerCase().includes(query) && !(s.phone || '').includes(query)) return;
+        let matchName = (s.name || '').toLowerCase().includes(query);
+        let matchUsername = (s.username || '').toLowerCase().includes(query);
+        let matchPhone = (s.phone || '').includes(query);
+        if(query && !matchName && !matchUsername && !matchPhone) return;
 
         let payBadge = s.payStatus === 'أجل' ? '<span style="color:#f59e0b; font-weight:bold;">[أجل ⏳]</span>' : '<span style="color:#10b981; font-weight:bold;">[واصل ✅]</span>';
 
@@ -616,6 +723,7 @@ function renderSubs() {
             <div class="sub-card ${s.payStatus === 'أجل' ? 'agel' : (isExp ? 'expired' : '')}">
                 <div style="flex:1;" onclick="showSubDetails(${s.id})">
                     <div style="font-size: 13px; font-weight: bold;">${s.name} ${payBadge} <span style="font-size:10px; color:#38bdf8;">(${s.subType || 'Standard'})</span></div>
+                    ${s.username ? `<div style="font-size: 11px; color: #38bdf8;">يوزر: ${s.username}</div>` : ''}
                     <div style="font-size: 10px; color: #94a3b8;">هاتف: ${s.phone || 'بدون'} | ${parseFloat(s.price || 0).toLocaleString()} د.ع</div>
                     <div style="font-size: 11px; margin-top: 3px; color:#cbd5e1;">انتهاء: <span style="color:${isExp ? '#ef4444' : '#10b981'}; font-weight:bold;">${s.endDate}</span></div>
                 </div>
@@ -623,8 +731,8 @@ function renderSubs() {
                 <div style="display:flex; flex-direction:column; gap:3px;" onclick="event.stopPropagation()">
                     ${s.payStatus === 'أجل' ? `<button onclick="payDebt(${s.id})" style="background:#10b981; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">💵 تسديد</button>` : ''}
                     <button onclick="openRenewModal(${s.id})" style="background:#0284c7; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">🔄 تفعيل</button>
-                    <button onclick="sendWhatsapp('${s.phone}', '${s.name}', '${s.endDate}', '${s.payStatus}', '${s.price}', '${s.startDate}')" style="background:#25d366; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">💬 واتساب</button>
-                    <button onclick="printReceipt('${s.name}', '${s.price || 0}', '${s.startDate}', '${s.endDate}', '${s.payStatus}')" style="background:#475569; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">🖨️ وصل</button>
+                    <button onclick="sendWhatsapp('${s.phone}', '${s.name}', '${s.username}', '${s.endDate}', '${s.payStatus}', '${s.price}', '${s.startDate}')" style="background:#25d366; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">💬 واتساب</button>
+                    <button onclick="printReceipt('${s.name}', '${s.username}', '${s.price || 0}', '${s.startDate}', '${s.endDate}', '${s.payStatus}')" style="background:#475569; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">🖨️ وصل</button>
                     <button onclick="deleteSub(${s.id})" style="background:#ef4444; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">🗑️ حذف</button>
                 </div>
             </div>
@@ -656,7 +764,7 @@ function renderTrashList() {
         container.innerHTML = deletedSubs.map(s => `
             <div style="background:#0d1526; border:1px solid #1e293b; padding:8px; border-radius:6px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
                 <div>
-                    <div style="font-size:12px; font-weight:bold; color:#38bdf8;">${s.name}</div>
+                    <div style="font-size:12px; font-weight:bold; color:#38bdf8;">${s.name} ${s.username ? '('+s.username+')' : ''}</div>
                     <div style="font-size:10px; color:#94a3b8;">هاتف: ${s.phone || 'بدون'}</div>
                 </div>
                 <button onclick="restoreSubscriber(${s.id})" style="background:#10b981; color:#fff; border:none; padding:5px 8px; border-radius:4px; font-size:10px; cursor:pointer;">♻️ استرجاع</button>
