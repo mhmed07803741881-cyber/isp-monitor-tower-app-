@@ -54,6 +54,9 @@
         .account-title { color: #14b8a6; font-weight: bold; margin-bottom: 4px; }
         .account-val { font-size: 14px; font-weight: bold; color: #fff; }
 
+        /* كلاس لعكس اتجاه يوزر الاشتراك بشكل صحيح */
+        .ltr-text { direction: ltr; unicode-bidi: embed; text-align: left; display: inline-block; }
+
         #lockScreen { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0d1526; justify-content: center; align-items: center; z-index: 999999; }
         #printArea { display: none; background: #fff; color: #000; padding: 15px; font-family: Tahoma, sans-serif; direction: rtl; width: 280px; }
         #printDebtsArea { display: none; }
@@ -128,7 +131,7 @@
     </div>
 </div>
 
-<!-- نافذة الحسابات المالية المحدثة -->
+<!-- نافذة الحسابات المالية -->
 <div id="accountsModal" class="modal">
     <div class="modal-content" style="border-color: #14b8a6; max-width: 380px;">
         <h3 style="margin-top:0; color:#14b8a6; text-align:center;">📊 قسم الحسابات والإيرادات</h3>
@@ -153,7 +156,7 @@
     </div>
 </div>
 
-<!-- نافذة قائمة غير المسددين (أجل) الجديدة -->
+<!-- نافذة قائمة غير المسددين (أجل) -->
 <div id="debtsListModal" class="modal">
     <div class="modal-content" style="border-color: #f59e0b; max-width: 420px;">
         <h3 style="margin-top:0; color:#f59e0b; text-align:center;">📋 قائمة المشتركين غير المسددين (أجل)</h3>
@@ -173,7 +176,7 @@
         <input type="text" id="subName" placeholder="اسم المشترك (مثال: علي أحمد)">
         
         <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">يوزر الاشتراك (اسم المستخدم):</label>
-        <input type="text" id="subUsername" placeholder="يوزر الاشتراك (مثال: ali_net99)">
+        <input type="text" id="subUsername" placeholder="يوزر الاشتراك (مثال: ali_net99)" style="direction: ltr; text-align: left;">
         
         <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">الاسم الثلاثي:</label>
         <input type="text" id="subFullName" placeholder="الاسم الثلاثي للمشترك">
@@ -209,11 +212,11 @@
     </div>
 </div>
 
-<!-- نافذة التفاصيل -->
+<!-- نافذة التفاصيل بمعكوس اتجاه اليوزر -->
 <div id="subDetailsModal" class="modal">
     <div class="modal-content" style="border-color: #10b981;">
         <h3 style="margin-top:0; color:#38bdf8; text-align:center;" id="dName">تفاصيل المشترك</h3>
-        <div class="details-row"><span class="details-label">يوزر الاشتراك:</span><span class="details-value" id="dUsername" style="color:#38bdf8;">-</span></div>
+        <div class="details-row"><span class="details-label">يوزر الاشتراك:</span><span class="details-value ltr-text" id="dUsername" style="color:#38bdf8;">-</span></div>
         <div class="details-row"><span class="details-label">الاسم الثلاثي:</span><span class="details-value" id="dFullName" style="color:#f59e0b;">-</span></div>
         <div class="details-row"><span class="details-label">نوع الاشتراك:</span><span class="details-value" id="dSubType">-</span></div>
         <div class="details-row"><span class="details-label">رقم الهاتف:</span><span class="details-value" id="dPhone">-</span></div>
@@ -261,7 +264,7 @@
     </div>
     <div style="font-size: 11px; line-height: 1.6;">
         <div><b>اسم المشترك:</b> <span id="pName"></span></div>
-        <div><b>يوزر الاشتراك:</b> <span id="pUsername"></span></div>
+        <div><b>يوزر الاشتراك:</b> <span id="pUsername" class="ltr-text"></span></div>
         <div><b>المبلغ:</b> <span id="pPrice"></span> د.ع</div>
         <div><b>الحالة:</b> <span id="pPayStatus"></span></div>
         <div><b>تاريخ التفعيل:</b> <span id="pStart"></span></div>
@@ -463,7 +466,6 @@ function openAccountsModal() {
 }
 function closeAccountsModal() { document.getElementById('accountsModal').style.display = 'none'; }
 
-// فتح قائمة غير المسددين داخل قسم الحسابات
 function openDebtsListModal() {
     closeAccountsModal();
     let unPaidSubs = subs.filter(s => s.payStatus === 'أجل');
@@ -478,7 +480,7 @@ function openDebtsListModal() {
             html += `
                 <div style="background:#131d31; border:1px solid #1e293b; padding:8px; border-radius:6px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
                     <div>
-                        <div style="font-weight:bold; color:#38bdf8;">${idx+1}. ${s.name} ${s.username ? '('+s.username+')' : ''}</div>
+                        <div style="font-weight:bold; color:#38bdf8;">${idx+1}. ${s.name} <span class="ltr-text">${s.username ? '('+s.username+')' : ''}</span></div>
                         <div style="font-size:10px; color:#94a3b8;">هاتف: ${s.phone || 'بدون'} | المبلغ: <span style="color:#f59e0b; font-weight:bold;">${priceFormatted} د.ع</span></div>
                     </div>
                     ${s.phone ? `<button onclick="sendWhatsapp('${s.phone}', '${s.name}', '${s.username}', '${s.endDate}', '${s.payStatus}', '${s.price}', '${s.startDate}')" style="background:#25d366; color:#fff; border:none; padding:4px 8px; border-radius:4px; font-size:10px; cursor:pointer;">💬 واتساب</button>` : ''}
@@ -491,7 +493,6 @@ function openDebtsListModal() {
 }
 function closeDebtsListModal() { document.getElementById('debtsListModal').style.display = 'none'; }
 
-// طباعة قائمة غير المسددين
 function printDebtsList() {
     let unPaidSubs = subs.filter(s => s.payStatus === 'أجل');
     if(unPaidSubs.length === 0) { alert("لا توجد ديون لطباعتها."); return; }
@@ -509,14 +510,13 @@ function printDebtsList() {
             <tr>
                 <td style="padding:5px; text-align:center;">${idx+1}</td>
                 <td style="padding:5px;">${s.name}</td>
-                <td style="padding:5px;">${s.username || '-'}</td>
+                <td style="padding:5px;" class="ltr-text">${s.username || '-'}</td>
                 <td style="padding:5px;">${s.phone || '-'}</td>
                 <td style="padding:5px; font-weight:bold;">${price.toLocaleString()} د.ع</td>
             </tr>
         `;
     });
 
-    document.getElementById('printDebtsTableBody').innerText = ''; // تنظيف
     document.getElementById('printDebtsTableBody').innerHTML = tbodyHTML;
     document.getElementById('printDebtsTotal').innerText = `المجموع الكلي للديون (أجل): ${totalSum.toLocaleString()} د.ع (${unPaidSubs.length} مشترك)`;
 
@@ -723,7 +723,7 @@ function renderSubs() {
             <div class="sub-card ${s.payStatus === 'أجل' ? 'agel' : (isExp ? 'expired' : '')}">
                 <div style="flex:1;" onclick="showSubDetails(${s.id})">
                     <div style="font-size: 13px; font-weight: bold;">${s.name} ${payBadge} <span style="font-size:10px; color:#38bdf8;">(${s.subType || 'Standard'})</span></div>
-                    ${s.username ? `<div style="font-size: 11px; color: #38bdf8;">يوزر: ${s.username}</div>` : ''}
+                    ${s.username ? `<div style="font-size: 11px; color: #38bdf8;" class="ltr-text">يوزر: ${s.username}</div>` : ''}
                     <div style="font-size: 10px; color: #94a3b8;">هاتف: ${s.phone || 'بدون'} | ${parseFloat(s.price || 0).toLocaleString()} د.ع</div>
                     <div style="font-size: 11px; margin-top: 3px; color:#cbd5e1;">انتهاء: <span style="color:${isExp ? '#ef4444' : '#10b981'}; font-weight:bold;">${s.endDate}</span></div>
                 </div>
@@ -764,7 +764,7 @@ function renderTrashList() {
         container.innerHTML = deletedSubs.map(s => `
             <div style="background:#0d1526; border:1px solid #1e293b; padding:8px; border-radius:6px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
                 <div>
-                    <div style="font-size:12px; font-weight:bold; color:#38bdf8;">${s.name} ${s.username ? '('+s.username+')' : ''}</div>
+                    <div style="font-size:12px; font-weight:bold; color:#38bdf8;">${s.name} <span class="ltr-text">${s.username ? '('+s.username+')' : ''}</span></div>
                     <div style="font-size:10px; color:#94a3b8;">هاتف: ${s.phone || 'بدون'}</div>
                 </div>
                 <button onclick="restoreSubscriber(${s.id})" style="background:#10b981; color:#fff; border:none; padding:5px 8px; border-radius:4px; font-size:10px; cursor:pointer;">♻️ استرجاع</button>
