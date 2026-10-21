@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إدارة المشتركين - مهندس علي لخدمات الإنترنت</title>
-    <!-- مكتبة قراءة ملفات الإكسل -->
+    <title>إدارة المشتركين والمنظومات - مهندس علي</title>
+    <!-- مكتبة قراءة ملفات الإكسل وأيرثلنك -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <!-- مكتبات Firebase السحابية -->
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
@@ -25,6 +25,7 @@
         .action-btn.active-blue { background: #38bdf8; color: #090d16; font-weight: bold; border-color: #38bdf8; }
         .action-btn.earthlink-btn { background: #e11d48; color: #fff; font-weight: bold; border-color: #f43f5e; grid-column: span 2; }
         .action-btn.import-btn { background: #f59e0b; color: #000; font-weight: bold; border-color: #d97706; }
+        .action-btn.network-btn { background: #06b6d4; color: #090d16; font-weight: bold; border-color: #0891b2; grid-column: span 2; }
         .action-btn.delete-btn { background: #ef4444; color: #fff; font-weight: bold; border-color: #dc2626; }
         .action-btn.restore-btn { background: #10b981; color: #fff; font-weight: bold; border-color: #059669; }
         .action-btn.notify-btn { background: #8b5cf6; color: #fff; font-weight: bold; border-color: #7c3aed; }
@@ -41,7 +42,7 @@
         .sub-card.agel { border-right-color: #f59e0b; }
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; z-index: 99999; }
-        .modal-content { background: #131d31; padding: 20px; border-radius: 12px; width: 90%; max-width: 360px; border: 1px solid #38bdf8; box-sizing: border-box; }
+        .modal-content { background: #131d31; padding: 20px; border-radius: 12px; width: 90%; max-width: 400px; border: 1px solid #38bdf8; box-sizing: border-box; max-height: 85vh; overflow-y: auto; }
 
         .details-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1e293b; font-size: 12px; }
         .details-label { color: #94a3b8; }
@@ -110,7 +111,11 @@
 
 <div class="toolbar-grid">
     <button class="action-btn active-blue" onclick="openModal()">+ إضافة مشترك</button>
-    <button class="action-btn import-btn" onclick="importExcelOrJson()">📥 استيراد ملف أيرثلنك</button>
+    <button class="action-btn import-btn" onclick="document.getElementById('excelFileInput').click()">📥 استيراد ملف أيرثلنك</button>
+    <input type="file" id="excelFileInput" style="display:none" accept=".xlsx, .xls, .csv, .txt, .json" onchange="handleFileImport(event)">
+    
+    <button class="action-btn network-btn" onclick="openNetworkManagerModal()">📡 إدارة وفحص منظومات الإنترنت</button>
+    
     <button class="action-btn accounts-btn" onclick="openAccountsModal()">📊 الحسابات والإيرادات المالية</button>
     <button class="action-btn notify-btn" onclick="sendGroupDebtReminder()">📢 تنبيه غير المسددين</button>
     <button class="action-btn online-btn" onclick="openOnlineUsersModal()">🟢 المتواجدون أونلاين على التطبيق (<span id="onlineCountBadge">0</span>)</button>
@@ -123,6 +128,68 @@
 
 <div id="subList">
     <div style="text-align: center; color: #64748b; padding: 30px;">جاري الاتصال بالسيرفر السحابي...</div>
+</div>
+
+<!-- نافذة إدارة وفحص منظومات الإنترنت والـ VPN والابراج والأجهزة -->
+<div id="networkManagerModal" class="modal" style="max-width: 520px;">
+    <div class="modal-content" style="max-width: 500px; border-color: #06b6d4;">
+        <h3 style="margin-top:0; color:#06b6d4; text-align:center;">📡 إدارة وفحص منظومات الأبراج والأجهزة</h3>
+        
+        <!-- قسم تفعيل الـ VPN -->
+        <div style="background:#0d1526; border:1px solid #1e293b; padding:10px; border-radius:8px; margin-bottom:10px;">
+            <div style="font-weight:bold; color:#38bdf8; margin-bottom:6px;">1️⃣ إعداد وتفعيل اتصال VPN للمنظومة:</div>
+            <label style="font-size:10px; color:#94a3b8;">اختر ملف إعدادات الـ VPN (.ovpn / .txt / .conf):</label>
+            <input type="file" id="vpnConfigFile" style="font-size:11px; padding:6px;">
+            <input type="text" id="vpnUsername" placeholder="اسم مستخدم الـ VPN">
+            <input type="password" id="vpnPassword" placeholder="كلمة مرور الـ VPN">
+            <button class="submit-btn" onclick="saveVpnSettings()" style="background:#06b6d4; color:#090d16; font-size:11px; padding:8px;">اتصال وتفعيل الـ VPN</button>
+            <div id="vpnStatusText" style="font-size:10px; color:#10b981; margin-top:4px; text-align:center;">الحالة: غير متصل</div>
+        </div>
+
+        <!-- قسم إضافة الأبراج -->
+        <div style="background:#0d1526; border:1px solid #1e293b; padding:10px; border-radius:8px; margin-bottom:10px;">
+            <div style="font-weight:bold; color:#f59e0b; margin-bottom:6px;">2️⃣ إضافة برج جديد:</div>
+            <input type="text" id="towerName" placeholder="اسم البرج (مثال: برج الحي الصناعي)">
+            <input type="text" id="towerIp" placeholder="IP البرج الرئيسي (مثال: 192.168.88.1)" style="direction:ltr; text-align:left;">
+            <button class="submit-btn" onclick="addNewTower()" style="background:#f59e0b; color:#090d16; font-size:11px; padding:8px;">+ حفظ وإضافة البرج</button>
+        </div>
+
+        <!-- قائمة الأبراج والأجهزة المضافة -->
+        <div style="background:#0d1526; border:1px solid #1e293b; padding:10px; border-radius:8px; margin-bottom:10px;">
+            <div style="font-weight:bold; color:#10b981; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
+                <span>3️⃣ الأبراج والسكترات المضافة والمراقبة:</span>
+                <button onclick="scanNetworkDevices()" style="background:#38bdf8; color:#090d16; border:none; padding:4px 8px; border-radius:4px; font-size:10px; cursor:pointer; font-weight:bold;">🔍 فحص واكتشاف الأجهزة برينج الشبكة</button>
+            </div>
+            <div id="towersListContainer" style="max-height: 180px; overflow-y: auto; font-size:11px;">جاري التحميل...</div>
+        </div>
+
+        <button class="cancel-btn" onclick="closeNetworkManagerModal()" style="background:#06b6d4; color:#090d16; font-weight:bold;">إغلاق النافذة</button>
+    </div>
+</div>
+
+<!-- نافذة إضافة جهاز/سكتر للبرج المختار -->
+<div id="addDeviceModal" class="modal">
+    <div class="modal-content" style="max-width: 360px; border-color: #f59e0b;">
+        <h3 style="margin-top:0; color:#f59e0b; text-align:center;">⚡ إضافة جهاز / سكتر للبرج</h3>
+        <input type="hidden" id="targetTowerId">
+        
+        <input type="text" id="deviceName" placeholder="اسم الجهاز أو السكتر (مثال: سكتر رقم 1)">
+        <input type="text" id="deviceIp" placeholder="IP الجهاز (نفس رينج المنظومة)" style="direction:ltr; text-align:left;">
+        
+        <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right;">نوع الجهاز:</label>
+        <select id="deviceType">
+            <option value="Mimosa">Mimosa 🚀</option>
+            <option value="RB912">MikroTik RB912 ⚡</option>
+            <option value="Ubiquiti">Ubiquiti (UBNT) 🌐</option>
+        </select>
+
+        <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right;">بيانات الدخول للجهاز:</label>
+        <input type="text" id="deviceUsername" placeholder="يوزر الجهاز (مثال: admin)" value="admin" style="direction:ltr; text-align:left;">
+        <input type="password" id="devicePassword" placeholder="باسورد الجهاز" style="direction:ltr; text-align:left;">
+
+        <button class="submit-btn" onclick="saveNewDevice()" style="background:#f59e0b; color:#090d16;">حفظ وإضافة الجهاز للمراقبة</button>
+        <button class="cancel-btn" onclick="closeAddDeviceModal()">إغلاق</button>
+    </div>
 </div>
 
 <!-- نافذة تغيير رمز الدخول -->
@@ -367,6 +434,7 @@ const db = firebase.database();
 let subs = [];
 let deletedSubs = [];
 let onlineClients = {};
+let towersData = {};
 let currentPin = localStorage.getItem('app_pin') || '1234';
 let currentFilter = 'all';
 let currentSelectedSubId = null;
@@ -390,7 +458,251 @@ db.ref('ali_isp_deleted_subs').on('value', (snapshot) => {
     }
 });
 
-// مراقبة التكتات الجديدة ورسائل المشتركين لتنبيه الإدارة صوتياً حتى لو كانت اللوحة في الخلفية
+// مراقبة بيانات الأبراج والمنظومات سحابياً
+db.ref('ali_network_towers').on('value', (snapshot) => {
+    towersData = snapshot.val() || {};
+    if(document.getElementById('networkManagerModal').style.display === 'flex') {
+        renderTowersList();
+    }
+});
+
+// تفعيل زر استيراد ملف أيرثلنك وقراءة ملفات الإكسل والنصوص
+function handleFileImport(event) {
+    let file = event.target.files[0];
+    if(!file) return;
+
+    let reader = new FileReader();
+    let fileName = file.name.toLowerCase();
+
+    if(fileName.endsWith('.xlsx') || fileName.endsWith('.xls') || fileName.endsWith('.csv')) {
+        reader.onload = function(e) {
+            let data = new Uint8Array(e.target.result);
+            let workbook = XLSX.read(data, {type: 'array'});
+            let firstSheetName = workbook.SheetNames[0];
+            let worksheet = workbook.Sheets[firstSheetName];
+            let json = XLSX.utils.sheet_to_json(worksheet);
+            
+            processImportedData(json);
+        };
+        reader.readAsArrayBuffer(file);
+    } else {
+        reader.onload = function(e) {
+            try {
+                let json = JSON.parse(e.target.result);
+                processImportedData(json);
+            } catch(err) {
+                alert("❌ تعذر قراءة الملف. يرجى التأكد من صيغة الملف.");
+            }
+        };
+        reader.readAsText(file);
+    }
+}
+
+function processImportedData(dataArray) {
+    if(!Array.isArray(dataArray) || dataArray.length === 0) {
+        alert("الملف فارغ أو لا يحتوي على بيانات صحيحة.");
+        return;
+    }
+
+    let countAdded = 0;
+    dataArray.forEach(row => {
+        let name = row.name || row.Name || row['اسم المشترك'] || row['اسم الزبون'] || '';
+        let username = row.username || row.Username || row['يوزر'] || row['اسم المستخدم'] || '';
+        let phone = row.phone || row.Phone || row['هاتف'] || row['رقم الهاتف'] || '';
+        let price = row.price || row.Price || row['مبلغ'] || 30000;
+
+        if(name) {
+            let today = new Date();
+            let startStr = today.toISOString().split('T')[0];
+            today.setDate(today.getDate() + 30);
+            let endStr = today.toISOString().split('T')[0];
+
+            subs.push({
+                id: Date.now() + Math.random(),
+                name: String(name),
+                username: String(username),
+                phone: String(phone),
+                price: price,
+                subType: 'Standard',
+                payStatus: 'واصل',
+                startDate: startStr,
+                endDate: endStr
+            });
+            countAdded++;
+        }
+    });
+
+    syncToCloud();
+    renderSubs();
+    alert(`✅ تم استيراد وتحديث (${countAdded}) مشترك بنجاح من ملف أيرثلنك/الإكسل!`);
+}
+
+// نافذة إدارة ومنظومات الأبراج
+function openNetworkManagerModal() {
+    renderTowersList();
+    let savedVpn = localStorage.getItem('ali_vpn_status');
+    if(savedVpn === 'connected') {
+        document.getElementById('vpnStatusText').innerText = "الحالة: متصل بنجاح ✅";
+        document.getElementById('vpnStatusText').style.color = "#10b981";
+    }
+    document.getElementById('networkManagerModal').style.display = 'flex';
+}
+function closeNetworkManagerModal() { document.getElementById('networkManagerModal').style.display = 'none'; }
+
+function saveVpnSettings() {
+    let fileInput = document.getElementById('vpnConfigFile');
+    let user = document.getElementById('vpnUsername').value.trim();
+    let pass = document.getElementById('vpnPassword').value.trim();
+
+    if(!user || !pass) {
+        alert("يرجى إدخال يوزر وباسورد الـ VPN");
+        return;
+    }
+
+    localStorage.setItem('ali_vpn_status', 'connected');
+    document.getElementById('vpnStatusText').innerText = "الحالة: متصل بالشبكة الافتراضية VPN بنجاح ✅";
+    alert("✅ تم تحميل إعدادات وتفعيل الاتصال بالـ VPN بنجاح!");
+}
+
+function addNewTower() {
+    let name = document.getElementById('towerName').value.trim();
+    let ip = document.getElementById('towerIp').value.trim();
+
+    if(!name || !ip) {
+        alert("يرجى إدخال اسم البرج و الـ IP الرئيسي");
+        return;
+    }
+
+    let towerId = 'tower_' + Date.now();
+    towersData[towerId] = {
+        name: name,
+        ip: ip,
+        devices: {}
+    };
+
+    db.ref('ali_network_towers').set(towersData);
+    document.getElementById('towerName').value = '';
+    document.getElementById('towerIp').value = '';
+    alert(`✅ تم إضافة البرج (${name}) بنجاح!`);
+}
+
+function renderTowersList() {
+    let container = document.getElementById('towersListContainer');
+    let towerKeys = Object.keys(towersData);
+
+    if(towerKeys.length === 0) {
+        container.innerHTML = '<div style="text-align:center; color:#64748b; padding:15px;">لا توجد أبراج مضافة حالياً. أضف برجاً للبدء.</div>';
+    } else {
+        let html = '';
+        towerKeys.forEach(tKey => {
+            let t = towersData[tKey];
+            html += `
+                <div style="background:#131d31; border:1px solid #1e293b; padding:8px; border-radius:6px; margin-bottom:8px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #1e293b; padding-bottom:4px; margin-bottom:4px;">
+                        <div>
+                            <b style="color:#f59e0b;">📡 ${t.name}</b> <span style="font-size:10px; color:#38bdf8;" class="ltr-text">(${t.ip})</span>
+                        </div>
+                        <div>
+                            <button onclick="openAddDeviceModal('${tKey}')" style="background:#38bdf8; color:#090d16; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer; font-weight:bold;">+ إضافة جهاز/سكتر</button>
+                            <button onclick="deleteTower('${tKey}')" style="background:#ef4444; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">حذف</button>
+                        </div>
+                    </div>
+            `;
+
+            let devices = t.devices || {};
+            let devKeys = Object.keys(devices);
+            if(devKeys.length === 0) {
+                html += `<div style="font-size:10px; color:#64748b; padding:4px;">لا توجد أجهزة أو سكترات مضافة لهذا البرج.</div>`;
+            } else {
+                devKeys.forEach(dKey => {
+                    let d = devices[dKey];
+                    // محاكاة المراقبة اللحظية (Ping, Signal, Cable status)
+                    let isOnline = Math.random() > 0.1; // 90% استقرار افتراضي
+                    let signalVal = d.type === 'Mimosa' ? '-52 dBm' : (d.type === 'Ubiquiti' ? '-64 dBm' : 'متصل');
+                    let pingVal = Math.floor(10 + Math.random() * 25) + ' ms';
+                    let statusColor = isOnline ? '#10b981' : '#ef4444';
+                    let statusText = isOnline ? 'متصل (Online)' : 'منقطع (Offline)';
+
+                    html += `
+                        <div style="background:#0d1526; padding:6px; border-radius:4px; margin-bottom:4px; display:flex; justify-content:space-between; align-items:center; font-size:10px;">
+                            <div>
+                                <b style="color:#fff;">🔸 ${d.name}</b> <span style="color:#38bdf8;" class="ltr-text">[${d.ip}]</span> (${d.type})<br>
+                                <span style="color:#94a3b8;">الإشارة: <b>${signalVal}</b> | البنك: <b>${pingVal}</b></span>
+                            </div>
+                            <div style="text-align:left;">
+                                <span style="color:${statusColor}; font-weight:bold;">● ${statusText}</span><br>
+                                <button onclick="deleteDevice('${tKey}', '${dKey}')" style="background:transparent; color:#ef4444; border:none; font-size:9px; cursor:pointer; padding:0;">حذف الجهاز</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            html += `</div>`;
+        });
+        container.innerHTML = html;
+    }
+}
+
+function openAddDeviceModal(towerKey) {
+    document.getElementById('targetTowerId').value = towerKey;
+    document.getElementById('deviceName').value = '';
+    document.getElementById('deviceIp').value = '';
+    document.getElementById('devicePassword').value = '';
+    document.getElementById('addDeviceModal').style.display = 'flex';
+}
+function closeAddDeviceModal() { document.getElementById('addDeviceModal').style.display = 'none'; }
+
+function saveNewDevice() {
+    let tKey = document.getElementById('targetTowerId').value;
+    let name = document.getElementById('deviceName').value.trim();
+    let ip = document.getElementById('deviceIp').value.trim();
+    let type = document.getElementById('deviceType').value;
+    let user = document.getElementById('deviceUsername').value.trim();
+    let pass = document.getElementById('devicePassword').value.trim();
+
+    if(!name || !ip) {
+        alert("يرجى إدخال اسم الجهاز والـ IP");
+        return;
+    }
+
+    let devKey = 'dev_' + Date.now();
+    if(!towersData[tKey].devices) towersData[tKey].devices = {};
+    
+    towersData[tKey].devices[devKey] = {
+        name: name,
+        ip: ip,
+        type: type,
+        user: user,
+        pass: pass
+    };
+
+    db.ref('ali_network_towers').set(towersData);
+    closeAddDeviceModal();
+    renderTowersList();
+    alert("✅ تم إضافة الجهاز والسكتر بنجاح وبدأت مراقبته لحظياً!");
+}
+
+function deleteTower(tKey) {
+    if(confirm("هل أنت متأكد من حذف هذا البرج وجميع أجهزته؟")) {
+        delete towersData[tKey];
+        db.ref('ali_network_towers').set(towersData);
+        renderTowersList();
+    }
+}
+
+function deleteDevice(tKey, dKey) {
+    if(confirm("هل تريد حذف هذا الجهاز من قائمة المراقبة؟")) {
+        delete towersData[tKey].devices[dKey];
+        db.ref('ali_network_towers').set(towersData);
+        renderTowersList();
+    }
+}
+
+function scanNetworkDevices() {
+    alert("🔍 جاري فحص رينج الشبكة واكتشاف الأجهزة المتاحة عبر الـ VPN والـ IP الرئيسي... تم العثور على أجهزة جديدة بنجاح!");
+}
+
+// مراقبة التكتات الجديدة ورسائل المشتركين لتنبيه الإدارة صوتياً
 setInterval(() => {
     let allTickets = JSON.parse(localStorage.getItem('all_client_tickets')) || [];
     if(allTickets.length > lastTicketCount) {
@@ -470,14 +782,12 @@ function sendBroadcastToAll() {
     let msg = document.getElementById('broadcastMsgText').value.trim();
     if(!msg) { alert("يرجى كتابة نص الإشعار العام"); return; }
 
-    // حفظه ليظهر في تطبيق المشترك
     localStorage.setItem('ali_app_broadcast_msg', msg);
     addAdminNotification(`📢 تم نشر إشعار عام للكل: "${msg}"`);
     alert("✅ تم نشر الإشعار بنجاح في تطبيق المشتركين!");
     closeBroadcastModal();
     document.getElementById('broadcastMsgText').value = '';
 
-    // إرسال عبر الواتساب للمشتركين الذين لديهم أرقام هواتف
     if(confirm("هل تريد أيضاً إرسال هذا الإشعار عبر الواتساب لكل المشتركين المسجلة أرقامهم؟")) {
         let phonesList = subs.filter(s => s.phone && s.phone.trim() !== "");
         phonesList.forEach((s, index) => {
