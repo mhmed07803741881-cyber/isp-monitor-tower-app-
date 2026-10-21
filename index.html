@@ -110,7 +110,7 @@
     <button class="action-btn import-btn" onclick="importExcelOrJson()">📥 استيراد ملف أيرثلنك</button>
     <button class="action-btn accounts-btn" onclick="openAccountsModal()">📊 الحسابات والإيرادات المالية</button>
     <button class="action-btn notify-btn" onclick="sendGroupDebtReminder()">📢 تنبيه غير المسددين</button>
-    <button class="action-btn online-btn" onclick="openOnlineUsersModal()">🟢 المتواجدون أونلاين الآن (<span id="onlineCountBadge">0</span>)</button>
+    <button class="action-btn online-btn" onclick="openOnlineUsersModal()">🟢 المتواجدون أونلاين على التطبيق (<span id="onlineCountBadge">0</span>)</button>
     <button class="action-btn restore-btn" onclick="openTrashModal()">♻️ سلة المحذوفات (<span id="deletedCount">0</span>)</button>
     <button class="action-btn broadcast-btn" onclick="openBroadcastModal()">📣 إرسال إشعار عام للكل</button>
     <button class="action-btn tickets-btn" onclick="openTicketsManagerModal()">🎫 إدارة التكتات والردود</button>
@@ -122,11 +122,11 @@
     <div style="text-align: center; color: #64748b; padding: 30px;">جاري الاتصال بالسيرفر السحابي...</div>
 </div>
 
-<!-- نافذة المتواجدين أونلاين الآن -->
+<!-- نافذة المتواجدين أونلاين على التطبيق -->
 <div id="onlineUsersModal" class="modal">
     <div class="modal-content" style="border-color: #10b981; max-width: 380px;">
-        <h3 style="margin-top:0; color:#10b981; text-align:center;">🟢 المشتركون المتواجدون أونلاين</h3>
-        <p style="font-size:10px; color:#94a3b8; text-align:center; margin-top:0;">المشتركون الذين فتحوا التطبيق خلال آخر دقيقتين:</p>
+        <h3 style="margin-top:0; color:#10b981; text-align:center;">🟢 المتواجدون أونلاين على تطبيق المشترك</h3>
+        <p style="font-size:10px; color:#94a3b8; text-align:center; margin-top:0;">المشتركون الفاتحون للتطبيق الآن (خلال آخر دقيقتين):</p>
         <div id="onlineUsersListContainer" style="max-height: 230px; overflow-y: auto; margin-bottom: 10px; background:#0d1526; padding:8px; border-radius:6px; font-size:11px;">جاري التحميل...</div>
         <button class="cancel-btn" onclick="closeOnlineUsersModal()" style="background:#10b981; color:#090d16; font-weight:bold;">إغلاق</button>
     </div>
@@ -223,7 +223,7 @@
     </div>
 </div>
 
-<!-- نافذة التفاصيل بمعكوس اتجاه اليوزر -->
+<!-- نافذة التفاصيل -->
 <div id="subDetailsModal" class="modal">
     <div class="modal-content" style="border-color: #10b981;">
         <h3 style="margin-top:0; color:#38bdf8; text-align:center;" id="dName">تفاصيل المشترك</h3>
@@ -332,7 +332,7 @@ db.ref('ali_isp_subscribers').on('value', (snapshot) => {
     const data = snapshot.val();
     subs = data ? (Array.isArray(data) ? data.filter(i => i !== null) : Object.values(data)) : [];
     renderSubs();
-    checkExpiringTomorrow(); // فحص الاشتراكات التي ستنتهي غداً
+    checkExpiringTomorrow();
 });
 
 db.ref('ali_isp_deleted_subs').on('value', (snapshot) => {
@@ -344,15 +344,15 @@ db.ref('ali_isp_deleted_subs').on('value', (snapshot) => {
     }
 });
 
-// مراقبة المشتركين المتواجدين أونلاين عبر Firebase Presence
+// استقبال إشارات الأونلاين القادمة من تطبيق المشترك الثاني
 db.ref('ali_online_clients').on('value', (snapshot) => {
     onlineClients = snapshot.val() || {};
     let now = Date.now();
     let activeCount = 0;
     
-    // حساب المتواجدين خلال آخر دقيقتين (120000 ملي ثانية)
+    // احتساب الفاتحين للتطبيق خلال آخر دقيقتين فقط
     Object.values(onlineClients).forEach(client => {
-        if(client && (now - client.lastSeen < 120000)) {
+        if(client && client.lastSeen && (now - client.lastSeen < 120000)) {
             activeCount++;
         }
     });
@@ -373,18 +373,16 @@ function syncToCloud() {
     db.ref('ali_isp_deleted_subs').set(deletedObj);
 }
 
-// دالة فحص وتنبيه اشتراكات الغد (قبل يوم واحد) أوتوماتيكياً
+// فحص وإرسال تنبيه قبل الانتهاء بيوم واحد
 function checkExpiringTomorrow() {
     let today = new Date();
     let tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
     let tomorrowStr = tomorrow.toISOString().split('T')[0];
-
-    let lastCheckDate = localStorage.getItem('ali_last_expiry_check');
     let todayStr = today.toISOString().split('T')[0];
 
-    // لتجنب تكرار الإرسال المزعج طوال اليوم، يتم فحصها مرة واحدة باليوم
-    if (lastCheckDate === todayStr) return;
+    let lastCheckDate = localStorage.getItem('ali_last_expiry_check');
+    if (lastCheckDate === todayStr) return; // لضمان الإرسال مرة واحدة في اليوم
 
     let expiringSoon = subs.filter(s => s.endDate === tomorrowStr);
     if (expiringSoon.length > 0) {
@@ -392,13 +390,13 @@ function checkExpiringTomorrow() {
             let priceFormatted = parseFloat(s.price || 30000).toLocaleString();
             let alertMsg = `⚠️ تنبيه هام:\nعزيزنا المشترك، اشتراكك في مكتب مهندس علي سينتهي غداً (${s.endDate}).\n• يوزر الاشتراك: ${s.username || s.name}\n• المبلغ المطلوب: ${priceFormatted} د.ع\nيرجى التجديد لضمان استمرار الخدمة دون انقطاع.`;
 
-            // تسجيل الإشعار في تطبيق المشترك السحابي والمحلي
+            // حفظ الإشعار ليتلقاه تطبيق المشترك فوراً
             localStorage.setItem(`client_activation_notif_${s.name}`, alertMsg);
             let chats = JSON.parse(localStorage.getItem(`ticket_chat_${s.name}`)) || [];
             chats.push({ sender: "النظام (تنبيه انتهاء)", text: alertMsg });
             localStorage.setItem(`ticket_chat_${s.name}`, JSON.stringify(chats));
 
-            // فتح واتساب أوتوماتيكي إذا وجد رقم هاتف
+            // فتح الواتساب للتنبيه
             if (s.phone && s.phone.trim() !== "") {
                 let cleanPhone = s.phone.replace(/\D/g, '');
                 if (cleanPhone.startsWith('0')) cleanPhone = '964' + cleanPhone.substring(1);
@@ -409,7 +407,6 @@ function checkExpiringTomorrow() {
     }
 }
 
-// فتح نافذة المشتركين المتواجدين أونلاين
 function openOnlineUsersModal() {
     renderOnlineUsersList();
     document.getElementById('onlineUsersModal').style.display = 'flex';
@@ -422,13 +419,13 @@ function renderOnlineUsersList() {
     let activeUsers = [];
 
     Object.values(onlineClients).forEach(client => {
-        if(client && client.name && (now - client.lastSeen < 120000)) {
+        if(client && client.name && client.lastSeen && (now - client.lastSeen < 120000)) {
             activeUsers.push(client);
         }
     });
 
     if(activeUsers.length === 0) {
-        container.innerHTML = '<div style="text-align:center; color:#64748b; padding:20px;">لا يوجد أي مشترك متواجد أونلاين حالياً.</div>';
+        container.innerHTML = '<div style="text-align:center; color:#64748b; padding:20px;">لا يوجد أي مشترك متواجد أونلاين على التطبيق حالياً.</div>';
     } else {
         let html = '';
         activeUsers.forEach((u, idx) => {
@@ -439,7 +436,7 @@ function renderOnlineUsersList() {
                         <div style="font-weight:bold; color:#10b981;">🟢 ${idx+1}. ${u.name}</div>
                         ${u.username ? `<div style="font-size:10px; color:#38bdf8;" class="ltr-text">يوزر: ${u.username}</div>` : ''}
                     </div>
-                    <div style="font-size:10px; color:#94a3b8;">آخر ظهور: ${lastTime}</div>
+                    <div style="font-size:10px; color:#94a3b8;">نشط الآن (${lastTime})</div>
                 </div>
             `;
         });
