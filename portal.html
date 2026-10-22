@@ -32,7 +32,7 @@
         .portal-container { background: #131d31; border: 1px solid #1e293b; padding: 20px; border-radius: 12px; width: 100%; max-width: 380px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); box-sizing: border-box; }
         h2 { color: #38bdf8; text-align: center; margin-top: 0; font-size: 17px; }
         p { color: #94a3b8; font-size: 11px; text-align: center; margin-bottom: 15px; }
-        input, textarea { width: 100%; padding: 10px; margin: 6px 0 12px 0; background: #0d1526; border: 1px solid #1e293b; color: white; border-radius: 8px; box-sizing: border-box; font-size: 13px; text-align: center; }
+        input, textarea, select { width: 100%; padding: 10px; margin: 6px 0 12px 0; background: #0d1526; border: 1px solid #1e293b; color: white; border-radius: 8px; box-sizing: border-box; font-size: 13px; text-align: center; }
         textarea { text-align: right; }
         
         .checkbox-container { display: flex; align-items: center; justify-content: right; font-size: 11px; color: #cbd5e1; margin-bottom: 12px; gap: 6px; cursor: pointer; }
@@ -46,7 +46,7 @@
         .btn-router { background: #0284c7; color: #fff; }
         .btn-speed { background: #10b981; color: #fff; }
         .btn-router-pass { background: #8b5cf6; color: #fff; }
-        .btn-diagnose { background: #f97316; color: #fff; } /* زر فحص وتشخيص الاتصال */
+        .btn-diagnose { background: #f97316; color: #fff; }
         .btn-ticket { background: #ec4899; color: #fff; position: relative; }
         .btn-logout { background: #ef4444; color: #fff; }
         
@@ -112,13 +112,12 @@
 
         <button class="btn btn-pay" onclick="copyMasterNumber()">💳 نسخ رقم التحويل (07724850876)</button>
         <button class="btn btn-wa" onclick="sendWhatsAppReceipt()">💬 إرسال إشعار التحويل واتساب</button>
-        <button class="btn btn-agel" onclick="requestAgel()">⏳ طلب تفعيل مؤجل (أجل)</button>
+        <button class="btn btn-agel" onclick="openAgelModal()">⏳ طلب تفعيل مؤجل (أجل)</button>
         
         <a href="http://192.168.0.1" target="_blank" class="btn btn-router">⚙️ تغيير رمز الراوتر (192.168.0.1)</a>
         <button class="btn btn-router-pass" onclick="openRouterPassModal()">🔑 كلمات دخول الراوتر</button>
         <a href="https://www.fast.com" target="_blank" class="btn btn-speed">🚀 فحص السرعة (Fast.com)</a>
         
-        <!-- زر فحص وتشخيص الاتصال -->
         <button class="btn btn-diagnose" onclick="openDiagnoseModal()">🔍 فحص وتشخيص الاتصال (البرج - النانو - الراوتر - الهاتف)</button>
 
         <button class="btn btn-ticket" onclick="openTicketModal()">
@@ -131,6 +130,28 @@
     <div class="support-phones">
         📞 هواتف الصيانة والمكتب:<br>
         <b>07818627764 - 07724850876</b>
+    </div>
+</div>
+
+<!-- النافذة المنسدلة لطلب الأجل -->
+<div id="agelModal" class="modal">
+    <div class="modal-content" style="border-color: #f59e0b; max-width: 320px;">
+        <h3 style="margin-top:0; color:#f59e0b; text-align:center; font-size:15px;">⏳ طلب تفعيل مؤجل (أجل)</h3>
+        <p style="font-size:10px; color:#94a3b8; text-align:center; margin-bottom:10px;">يرجى تأكيد نوع الاشتراك والمبلغ المطلوب للإرسال إلى الإدارة:</p>
+        
+        <div style="font-size:11px; color:#cbd5e1; text-align:right; margin-bottom:4px;">اختر نوع الاشتراك:</div>
+        <select id="agelPkgSelect">
+            <option value="Economy (اقتصادي)">Economy (اقتصادي)</option>
+            <option value="Plus (بلس)">Plus (بلس)</option>
+            <option value="Standard (قياسي)" selected>Standard (قياسي)</option>
+            <option value="Turbo (توربو)">Turbo (توربو)</option>
+        </select>
+
+        <div style="font-size:11px; color:#cbd5e1; text-align:right; margin-bottom:4px;">مبلغ الاشتراك (د.ع):</div>
+        <input type="number" id="agelPriceInput" value="30000">
+
+        <button class="btn btn-agel" onclick="submitAgelRequest()" style="margin-top:10px; margin-bottom:6px;">📤 إرسال الطلب (واتساب + الإدارة)</button>
+        <button class="btn" onclick="closeAgelModal()" style="background:#1e293b; color:#38bdf8;">إغلاق</button>
     </div>
 </div>
 
@@ -197,7 +218,7 @@ const db = firebase.database();
 
 let subs = [];
 let foundSubscriber = null;
-const adminPhone = "9647724850876";
+const whatsappTargetPhone = "9647818627764"; // الرقم المطلوب لتلقي الواتساب
 let lastChatLength = 0;
 const SESSION_KEY = "ali_client_portal_username_session";
 
@@ -333,9 +354,14 @@ function showSubscriberDashboard() {
     };
     let cleanPkgKey = rawPkg.toLowerCase().trim();
     document.getElementById('cPkg').innerText = pkgMap[cleanPkgKey] || rawPkg;
+    document.getElementById('agelPkgSelect').value = pkgMap[cleanPkgKey] || 'Standard (قياسي)';
     
     document.getElementById('cStatus').innerHTML = foundSubscriber.payStatus === 'واصل' ? '<span style="color:#10b981">واصل ✅</span>' : '<span style="color:#f59e0b">أجل ⏳</span>';
-    document.getElementById('cPrice').innerText = (foundSubscriber.price || 30000) + " د.ع";
+    
+    let priceVal = foundSubscriber.price || 30000;
+    document.getElementById('cPrice').innerText = priceVal + " د.ع";
+    document.getElementById('agelPriceInput').value = priceVal;
+
     document.getElementById('cStart').innerText = foundSubscriber.startDate || "غير محدد";
     document.getElementById('cEnd').innerText = foundSubscriber.endDate || "غير محدد";
 
@@ -389,21 +415,58 @@ function logoutClient(isAuto = false) {
     }
 }
 
-// دالة فحص وتشخيص الاتصال بين (البرج، نانو المشترك، كيبل الشبكة، راوتر المشترك، وهاتف المشترك)
+// نوافذ طلب الأجل وتفاصيل الاشتراك
+function openAgelModal() {
+    if(!foundSubscriber) return;
+    document.getElementById('agelModal').style.display = 'flex';
+}
+function closeAgelModal() {
+    document.getElementById('agelModal').style.display = 'none';
+}
+
+function submitAgelRequest() {
+    if(!foundSubscriber) return;
+
+    let selectedPkg = document.getElementById('agelPkgSelect').value;
+    let selectedPrice = document.getElementById('agelPriceInput').value;
+
+    // تحديث حالة المشترك محلياً في السيرفر إلى أجل
+    foundSubscriber.payStatus = 'أجل';
+    foundSubscriber.pkg = selectedPkg;
+    foundSubscriber.price = selectedPrice;
+
+    let subsObj = {};
+    subs.forEach(s => {
+        if(s.id === foundSubscriber.id) {
+            s.payStatus = 'أجل';
+            s.pkg = selectedPkg;
+            s.price = selectedPrice;
+        }
+        subsObj[s.id] = s;
+    });
+    db.ref('ali_isp_subscribers').set(subsObj);
+
+    // إضافة الإشعار للوحة الأدمن الرئيسية (ali_admin_notifications)
+    let notifs = JSON.parse(localStorage.getItem('ali_admin_notifications')) || [];
+    notifs.push(`${new Date().toLocaleTimeString()} - ⏳ طلب تفعيل مؤجل (أجل) جديد من المشترك: ${foundSubscriber.name} | يوزر: ${foundSubscriber.username} | الباقة: ${selectedPkg} | المبلغ: ${selectedPrice} د.ع`);
+    localStorage.setItem('ali_admin_notifications', JSON.stringify(notifs));
+
+    closeAgelModal();
+    alert("✅ تم إرسال طلب التفعيل المؤجل (الأجل) وإشعار الإدارة بنجاح!");
+
+    // توجيه المشترك إلى الواتساب مع كافة التفاصيل على الرقم 07818627764
+    let agelMsg = `⏳ طلب تفعيل مؤجل (أجل) جديد 📡\n\n- اسم المشترك: ${foundSubscriber.name}\n- يوزر الاشتراك: ${foundSubscriber.username}\n- رقم الهاتف: ${foundSubscriber.phone}\n- نوع الاشتراك: ${selectedPkg}\n- مبلغ الاشتراك: ${selectedPrice} د.ع\n- تاريخ الانتهاء الحالي: ${foundSubscriber.endDate || 'غير محدد'}\n\nيرجى التفضل بتفعيل الحساب. شكراً لكم.`;
+    window.open(`https://api.whatsapp.com/send?phone=${whatsappTargetPhone}&text=${encodeURIComponent(agelMsg)}`, '_blank');
+}
+
+// الفحص والتشخيص
 function openDiagnoseModal() {
     document.getElementById('diagnoseLoadingArea').style.display = 'block';
     document.getElementById('diagnoseResultArea').style.display = 'none';
     document.getElementById('diagnoseModal').style.display = 'flex';
-    
-    // محاكاة محركات فحص الحزم والارتباط الحقيقي
-    setTimeout(() => {
-        runNetworkDiagnostics();
-    }, 1500);
+    setTimeout(() => { runNetworkDiagnostics(); }, 1500);
 }
-
-function closeDiagnoseModal() {
-    document.getElementById('diagnoseModal').style.display = 'none';
-}
+function closeDiagnoseModal() { document.getElementById('diagnoseModal').style.display = 'none'; }
 
 function runNetworkDiagnostics() {
     document.getElementById('diagnoseLoadingArea').style.display = 'block';
@@ -412,8 +475,6 @@ function runNetworkDiagnostics() {
     setTimeout(() => {
         document.getElementById('diagnoseLoadingArea').style.display = 'none';
         let resultDiv = document.getElementById('diagnoseResultArea');
-
-        // فحوصات محاكاة ذكية لحالة الاتصال
         let isOnline = navigator.onLine;
         let randCheck = Math.random();
 
@@ -565,22 +626,8 @@ function copyMasterNumber() {
 function sendWhatsAppReceipt() {
     if(!foundSubscriber) return;
     let priceVal = foundSubscriber.price || 30000;
-    let msg = `مرحباً مهندس علي 📡\nلقد قمت بتحويل مبلغ الاشتراك (${priceVal} د.ع) إلى رقمك (${adminPhone}).\nاسم المشترك: ${foundSubscriber.name} (يوزر: ${foundSubscriber.username})`;
-    window.open(`https://api.whatsapp.com/send?phone=${adminPhone}&text=${encodeURIComponent(msg)}`, '_blank');
-}
-
-function requestAgel() {
-    if(!foundSubscriber) return;
-    foundSubscriber.payStatus = 'أجل';
-    let subsObj = {};
-    subs.forEach(s => {
-        if(s.id === foundSubscriber.id) s.payStatus = 'أجل';
-        subsObj[s.id] = s;
-    });
-    db.ref('ali_isp_subscribers').set(subsObj);
-    let agelMsg = `⏳ طلب تفعيل مؤجل (أجل) من المشترك (${foundSubscriber.name} - يوزر: ${foundSubscriber.username}).`;
-    window.open(`https://api.whatsapp.com/send?phone=${adminPhone}&text=${encodeURIComponent(agelMsg)}`, '_blank');
-    alert("تم إرسال طلب الأجل للإدارة بنجاح!");
+    let msg = `مرحباً مهندس علي 📡\nلقد قمت بتحويل مبلغ الاشتراك (${priceVal} د.ع) إلى رقمك.\nاسم المشترك: ${foundSubscriber.name} (يوزر: ${foundSubscriber.username})`;
+    window.open(`https://api.whatsapp.com/send?phone=9647724850876&text=${encodeURIComponent(msg)}`, '_blank');
 }
 </script>
 </body>
