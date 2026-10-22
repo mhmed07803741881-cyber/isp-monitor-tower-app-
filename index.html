@@ -383,7 +383,7 @@
             <input type="number" id="renewPartialPaid" value="0" min="0" style="text-align:center; font-weight:bold; color:#10b981;">
         </div>
 
-        <button class="submit-btn" onclick="confirmRenewSubscription()" style="background:#0284c7; color:#fff; margin-top:10px;">تأكيد التفعيل (30 يوماً)</button>
+        <button class="submit-btn" onclick="confirmRenewSubscription()" style="background:#0284c7; color:#fff; margin-top:10px;">تأكيد التفعيل وطباعة وصل</button>
         <button class="cancel-btn" onclick="closeRenewModal()">إغلاق</button>
     </div>
 </div>
@@ -1057,7 +1057,7 @@ function openAccountsModal() {
             let partial = parseFloat(s.partialPaid) || 0;
             let remaining = total - partial;
             totalDebt += (remaining > 0 ? remaining : 0);
-            cashPaid += partial; // ما تم تسديده جزئياً يدخل ضمن الأموال الواصلة
+            cashPaid += partial;
         } else {
             cashPaid += unitPrice;
         }
@@ -1319,9 +1319,15 @@ function confirmRenewSubscription() {
         syncToCloud();
         renderSubs();
         closeRenewModal();
-        if(s.payStatus === 'واصل') {
-            printReceipt(s.name, s.username, s.price || 30000, s.startDate, s.endDate, 'واصل (تم التجديد نقداً)', 0);
-        }
+
+        // إرسال الإشعار والتفاصيل عبر تكت المشترك التطبيق + الواتساب تلقائياً
+        let paidAmountForReceipt = chosenPayType === 'واصل' ? (parseFloat(s.price) || 30000) : chosenPartialPaid;
+        let totalDebtCalc = (parseFloat(s.price || 30000) * chosenDebtMonths);
+        let remainingCalc = chosenPayType === 'أجل' ? (totalDebtCalc - chosenPartialPaid) : 0;
+
+        sendNotificationToClientAndWhatsapp(s, `🔄 تم تجديد اشتراكك بنجاح في مكتب مهندس علي!\n\n• يوزر الاشتراك: ${s.username || s.name}\n• حالة الدفع: ${s.payStatus}\n• تاريخ التفعيل: ${s.startDate}\n• تاريخ الانتهاء: ${s.endDate}\n• المبلغ المسدد: ${paidAmountForReceipt.toLocaleString()} د.ع\n${remainingCalc > 0 ? '• المبلغ الباقي بالذمة: ' + remainingCalc.toLocaleString() + ' د.ع\n' : ''}\nشكراً لتجديد اشتراكك معنا!`);
+
+        printReceipt(s.name, s.username, paidAmountForReceipt, s.startDate, s.endDate, `تجديد اشتراك (${chosenPayType})`, remainingCalc);
     }
 }
 
@@ -1375,24 +1381,46 @@ function confirmPartialPayment() {
     let total = parseFloat(s.price || 0) * months;
     let currentPartial = parseFloat(s.partialPaid) || 0;
     let newPartial = currentPartial + paidNow;
+    let remaining = total - newPartial;
+    if(remaining < 0) remaining = 0;
 
     if(newPartial >= total) {
-        // سدد الكل واصبح واصل
         s.payStatus = 'واصل';
         s.debtMonths = 1;
         s.partialPaid = 0;
         syncToCloud();
         renderSubs();
         closePartialPayModal();
+
+        sendNotificationToClientAndWhatsapp(s, `✅ تم استلام دفعتك المالية وسداد كامل الدين بنجاح في مكتب مهندس علي!\n\n• يوزر الاشتراك: ${s.username || s.name}\n• المبلغ الواصل: ${paidNow.toLocaleString()} د.ع\n• الحالة الحالية: واصل (تمت تسوية الحساب بالكامل)\n• تاريخ الانتهاء: ${s.endDate}\n\nشكراً لالتزامكم!`);
+
         printReceipt(s.name, s.username, paidNow, s.startDate, s.endDate, 'واصل (تم سداد كامل الدين وتسوية الحساب)', 0);
     } else {
-        // تسديد جزئي (بقي عليه مبلغ)
         s.partialPaid = newPartial;
         syncToCloud();
         renderSubs();
-        let remaining = total - newPartial;
         closePartialPayModal();
+
+        sendNotificationToClientAndWhatsapp(s, `💵 تم استلام دفعتك الجزئية بنجاح في مكتب مهندس علي!\n\n• يوزر الاشتراك: ${s.username || s.name}\n• المبلغ المسدد الآن: ${paidNow.toLocaleString()} د.ع\n• إجمالي الدين: ${total.toLocaleString()} د.ع\n• إجمالي المسدد: ${newPartial.toLocaleString()} د.ع\n• المبلغ الباقي بالذمة: ${remaining.toLocaleString()} د.ع\n\nشكراً لتعاونكم!`);
+
         printReceipt(s.name, s.username, paidNow, s.startDate, s.endDate, 'تسديد جزئي', remaining);
+    }
+}
+
+// دالة مساعدة مركزية لإرسال الإشعار والتفاصيل لتطبيق المشترك وللواتساب معاً
+function sendNotificationToClientAndWhatsapp(sub, messageText) {
+    if(!sub || !sub.name) return;
+
+    // 1. إرسال إلى تطبيق المشترك (تخزين في محادثة التكتات الخاصة به)
+    let chats = JSON.parse(localStorage.getItem(`ticket_chat_${sub.name}`)) || [];
+    chats.push({ sender: "مهندس علي (الإدارة)", text: messageText });
+    localStorage.setItem(`ticket_chat_${sub.name}`, JSON.stringify(chats));
+
+    // 2. إرسال إلى الواتساب إذا كان رقم الهاتف متوفراً
+    if(sub.phone && sub.phone.trim() !== "") {
+        let cleanPhone = sub.phone.replace(/\D/g, '');
+        if(cleanPhone.startsWith('0')) cleanPhone = '964' + cleanPhone.substring(1);
+        window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(messageText)}`, '_blank');
     }
 }
 
