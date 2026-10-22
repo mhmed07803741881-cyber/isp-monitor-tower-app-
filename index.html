@@ -301,8 +301,13 @@
 
         <!-- فقرة عدد الأشهر المطلوبة في حال كان أجل -->
         <div id="debtMonthsGroup" style="display:none; background:#0d1526; border:1px solid #f59e0b; padding:8px; border-radius:6px; margin-bottom:12px;">
-            <label style="font-size:11px; color:#f59e0b; display:block; text-align:right; margin-bottom:2px; font-weight:bold;">⏳ عدد الأشهر غير الموصولة (المطلوبة):</label>
-            <input type="number" id="debtMonths" value="1" min="1" max="12" style="margin-bottom:0; text-align:center; font-weight:bold; color:#f59e0b;">
+            <label style="font-size:11px; color:#f59e0b; display:block; text-align:right; margin-bottom:2px; font-weight:bold;">⏳ عدد الأشهر المطلوبة (الدين الأصلي):</label>
+            <input type="number" id="debtMonths" value="1" min="1" max="12" style="margin-bottom:0; text-align:center; font-weight:bold; color:#f59e0b;" oninput="calcPartialDebtPreview()">
+            
+            <label style="font-size:11px; color:#10b981; display:block; text-align:right; margin-top:8px; margin-bottom:2px; font-weight:bold;">💵 المبلغ المسدد مقدماً (اختياري):</label>
+            <input type="number" id="partialPaidAmount" value="0" min="0" style="margin-bottom:0; text-align:center; font-weight:bold; color:#10b981;" oninput="calcPartialDebtPreview()">
+            
+            <div id="partialDebtPreview" style="font-size:11px; color:#38bdf8; text-align:center; margin-top:6px; font-weight:bold;"></div>
         </div>
 
         <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">تاريخ التفعيل:</label>
@@ -313,6 +318,27 @@
         
         <button class="submit-btn" onclick="saveSub()" id="saveBtnText">حفظ المشترك</button>
         <button class="cancel-btn" onclick="closeModal()">إغلاق</button>
+    </div>
+</div>
+
+<!-- نافذة التسديد الجزئي السريع (عند الضغط على تسديد) -->
+<div id="partialPayModal" class="modal">
+    <div class="modal-content" style="border-color: #10b981; max-width: 320px;">
+        <h3 style="margin-top:0; color:#10b981; text-align:center;">💵 تسديد جزء أو كل الدين</h3>
+        <p style="font-size:11px; color:#94a3b8; text-align:center;" id="partialPayTargetName"></p>
+        <input type="hidden" id="partialPaySubId">
+        
+        <div style="font-size:11px; color:#cbd5e1; margin-bottom:4px;" id="currentTotalDebtLabel">إجمالي الدين المطلوب: 0 د.ع</div>
+        
+        <label style="font-size:11px; color:#10b981;">أدخل المبلغ الذي سدده المشترك (د.ع):</label>
+        <input type="number" id="paidNowInput" placeholder="المبلغ المسدد الآن" style="text-align:center; font-weight:bold; color:#10b981; font-size:15px;" oninput="calcRemainingPreview()">
+        
+        <div id="remainingPreviewBox" style="background:#0d1526; padding:8px; border-radius:6px; margin-bottom:10px; font-size:11px; text-align:center; color:#f59e0b; border:1px solid #f59e0b;">
+            المتبقي ذمته: 0 د.ع
+        </div>
+
+        <button class="submit-btn" onclick="confirmPartialPayment()" style="background:#10b981; color:#fff; margin-bottom:6px;">تثبيت التسديد وطباعة وصل</button>
+        <button class="cancel-btn" onclick="closePartialPayModal()">إغلاق</button>
     </div>
 </div>
 
@@ -328,6 +354,8 @@
         <div class="details-row"><span class="details-label">حالة الدفع:</span><span class="details-value" id="dPayStatus">-</span></div>
         <div class="details-row" id="dDebtMonthsRow" style="display:none;"><span class="details-label" style="color:#f59e0b;">عدد أشهر الأجل:</span><span class="details-value" id="dDebtMonthsVal" style="color:#f59e0b;">-</span></div>
         <div class="details-row" id="dTotalDebtRow" style="display:none;"><span class="details-label" style="color:#f59e0b;">إجمالي الدين المطلوب:</span><span class="details-value" id="dTotalDebtVal" style="color:#f59e0b;">-</span></div>
+        <div class="details-row" id="dPaidPartialRow" style="display:none;"><span class="details-label" style="color:#10b981;">المبلغ المسدد مسبقاً:</span><span class="details-value" id="dPaidPartialVal" style="color:#10b981;">-</span></div>
+        <div class="details-row" id="dRemainingRow" style="display:none;"><span class="details-label" style="color:#ef4444;">المبلغ الباقي (المتبقي):</span><span class="details-value" id="dRemainingVal" style="color:#ef4444;">-</span></div>
         <div class="details-row"><span class="details-label">تاريخ التفعيل:</span><span class="details-value" id="dStart">-</span></div>
         <div class="details-row"><span class="details-label">تاريخ الانتهاء:</span><span class="details-value" id="dEnd">-</span></div>
         
@@ -350,6 +378,9 @@
         <div id="renewDebtMonthsGroup" style="display:none; margin-top:8px;">
             <label style="font-size:11px; color:#f59e0b;">عدد الأشهر المطلوبة (أجل):</label>
             <input type="number" id="renewDebtMonths" value="1" min="1" max="12" style="text-align:center; font-weight:bold; color:#f59e0b;">
+            
+            <label style="font-size:11px; color:#10b981; margin-top:6px; display:block;">المبلغ المسدد مقدماً (اختياري):</label>
+            <input type="number" id="renewPartialPaid" value="0" min="0" style="text-align:center; font-weight:bold; color:#10b981;">
         </div>
 
         <button class="submit-btn" onclick="confirmRenewSubscription()" style="background:#0284c7; color:#fff; margin-top:10px;">تأكيد التفعيل (30 يوماً)</button>
@@ -377,8 +408,9 @@
     <div style="font-size: 11px; line-height: 1.6;">
         <div><b>اسم المشترك:</b> <span id="pName"></span></div>
         <div><b>يوزر الاشتراك:</b> <span id="pUsername" class="ltr-text"></span></div>
-        <div><b>المبلغ:</b> <span id="pPrice"></span> د.ع</div>
+        <div><b>المبلغ القبض:</b> <span id="pPrice"></span> د.ع</div>
         <div><b>الحالة:</b> <span id="pPayStatus"></span></div>
+        <div id="printRemainingLine" style="display:none;"><b>المبلغ الباقي بالذمة:</b> <span id="pRemaining"></span> د.ع</div>
         <div><b>تاريخ التفعيل:</b> <span id="pStart"></span></div>
         <div><b>تاريخ الانتهاء:</b> <span id="pEnd"></span></div>
     </div>
@@ -388,7 +420,7 @@
 <div id="printDebtsArea">
     <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px;">
         <h2 style="margin:0; font-size:18px;">مكتب مهندس علي لخدمات الإنترنت</h2>
-        <p style="margin:4px 0; font-size:12px;">تقرير الديون والمعلقات (المشتركين غير المسددين - أجل)</p>
+        <p style="margin:4px 0; font-size:12px;">تقرير الديون والمعلقات والمتبقيات (أجل)</p>
         <p style="margin:2px 0; font-size:11px;" id="printDebtsDate"></p>
     </div>
     <table style="width:100%; border-collapse: collapse; font-size:12px;" border="1">
@@ -398,8 +430,9 @@
                 <th style="padding:6px;">اسم المشترك</th>
                 <th style="padding:6px;">يوزر الاشتراك</th>
                 <th style="padding:6px;">رقم الهاتف</th>
-                <th style="padding:6px;">عدد أشهر الأجل</th>
-                <th style="padding:6px;">المبلغ الإجمالي (د.ع)</th>
+                <th style="padding:6px;">إجمالي الدين</th>
+                <th style="padding:6px;">المسدد</th>
+                <th style="padding:6px;">المتبقي (الباقي)</th>
             </tr>
         </thead>
         <tbody id="printDebtsTableBody"></tbody>
@@ -512,6 +545,7 @@ function processImportedData(dataArray) {
                 subType: 'Standard',
                 payStatus: 'واصل',
                 debtMonths: 1,
+                partialPaid: 0,
                 startDate: startStr,
                 endDate: endStr
             });
@@ -920,9 +954,10 @@ function sendGroupDebtReminder() {
                 let months = parseInt(s.debtMonths) || 1;
                 let unitPrice = parseFloat(s.price || 0);
                 let totalDebt = unitPrice * months;
-                let totalFormatted = totalDebt.toLocaleString();
+                let partialPaid = parseFloat(s.partialPaid) || 0;
+                let remaining = totalDebt - partialPaid;
                 
-                let msg = `عزيزي المشترك (${s.name}) ⏳\nنود تذكيرك بوجود مبالغ اشتراك معلقة (أجل) في مكتب مهندس علي لخدمات الإنترنت.\n\n• يوزر الاشتراك: ${s.username || s.name}\n• عدد الأشهر المطلوبة: ${months} أشهر\n• إجمالي الدين المطلوب: ${totalFormatted} د.ع\n\nيرجى التسديد لضمان استمرار الخدمة. شكراً لتفهمكم.`;
+                let msg = `عزيزي المشترك (${s.name}) ⏳\nنود تذكيرك بوجود مبالغ اشتراك معلقة (أجل) في مكتب مهندس علي لخدمات الإنترنت.\n\n• يوزر الاشتراك: ${s.username || s.name}\n• إجمالي الدين: ${totalDebt.toLocaleString()} د.ع\n• المسدد سابقاً: ${partialPaid.toLocaleString()} د.ع\n• المبلغ الباقي (المتبقي): ${remaining.toLocaleString()} د.ع\n\nيرجى التسديد لضمان استمرار الخدمة. شكراً لتفهمكم.`;
                 window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`, '_blank');
             }, index * 1200);
         });
@@ -975,9 +1010,21 @@ function toggleDebtMonthsField() {
     let group = document.getElementById('debtMonthsGroup');
     if(status === 'أجل') {
         group.style.display = 'block';
+        calcPartialDebtPreview();
     } else {
         group.style.display = 'none';
     }
+}
+
+function calcPartialDebtPreview() {
+    let price = parseFloat(document.getElementById('subPrice').value) || 30000;
+    let months = parseInt(document.getElementById('debtMonths').value) || 1;
+    let paid = parseFloat(document.getElementById('partialPaidAmount').value) || 0;
+    let total = price * months;
+    let remaining = total - paid;
+    if(remaining < 0) remaining = 0;
+
+    document.getElementById('partialDebtPreview').innerHTML = `إجمالي: ${total.toLocaleString()} | المسدد: ${paid.toLocaleString()} | <b>الباقي: ${remaining.toLocaleString()} د.ع</b>`;
 }
 
 function toggleRenewMonthsField() {
@@ -1006,7 +1053,11 @@ function openAccountsModal() {
 
         if(s.payStatus === 'أجل') {
             let months = parseInt(s.debtMonths) || 1;
-            totalDebt += (unitPrice * months);
+            let total = unitPrice * months;
+            let partial = parseFloat(s.partialPaid) || 0;
+            let remaining = total - partial;
+            totalDebt += (remaining > 0 ? remaining : 0);
+            cashPaid += partial; // ما تم تسديده جزئياً يدخل ضمن الأموال الواصلة
         } else {
             cashPaid += unitPrice;
         }
@@ -1040,16 +1091,18 @@ function openDebtsListModal() {
         unPaidSubs.forEach((s, idx) => {
             let months = parseInt(s.debtMonths) || 1;
             let unitPrice = parseFloat(s.price || 0);
-            let totalDebt = unitPrice * months;
-            let totalFormatted = totalDebt.toLocaleString();
+            let total = unitPrice * months;
+            let partial = parseFloat(s.partialPaid) || 0;
+            let remaining = total - partial;
+            if(remaining < 0) remaining = 0;
             
             html += `
                 <div style="background:#131d31; border:1px solid #1e293b; padding:8px; border-radius:6px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
                     <div>
                         <div style="font-weight:bold; color:#38bdf8;">${idx+1}. ${s.name} <span class="ltr-text">${s.username ? '('+s.username+')' : ''}</span></div>
-                        <div style="font-size:10px; color:#94a3b8;">هاتف: ${s.phone || 'بدون'} | الأشهر: <b style="color:#f59e0b;">${months} أشهر</b> | الإجمالي: <span style="color:#f59e0b; font-weight:bold;">${totalFormatted} د.ع</span></div>
+                        <div style="font-size:10px; color:#94a3b8;">هاتف: ${s.phone || 'بدون'} | الدين: ${total.toLocaleString()} | مسدد: <b style="color:#10b981;">${partial.toLocaleString()}</b> | الباقي: <span style="color:#ef4444; font-weight:bold;">${remaining.toLocaleString()} د.ع</span></div>
                     </div>
-                    ${s.phone ? `<button onclick="sendWhatsapp('${s.phone}', '${s.name}', '${s.username}', '${s.endDate}', '${s.payStatus}', '${s.price}', '${s.startDate}', '${months}')" style="background:#25d366; color:#fff; border:none; padding:4px 8px; border-radius:4px; font-size:10px; cursor:pointer;">💬 واتساب</button>` : ''}
+                    ${s.phone ? `<button onclick="sendWhatsapp('${s.phone}', '${s.name}', '${s.username}', '${s.endDate}', '${s.payStatus}', '${s.price}', '${s.startDate}', '${months}', '${partial}')" style="background:#25d366; color:#fff; border:none; padding:4px 8px; border-radius:4px; font-size:10px; cursor:pointer;">💬 واتساب</button>` : ''}
                 </div>
             `;
         });
@@ -1067,13 +1120,16 @@ function printDebtsList() {
     document.getElementById('printDebtsDate').innerText = `تاريخ التقرير: ${todayStr}`;
 
     let tbodyHTML = '';
-    let totalSum = 0;
+    let totalRemainingSum = 0;
 
     unPaidSubs.forEach((s, idx) => {
         let months = parseInt(s.debtMonths) || 1;
         let unitPrice = parseFloat(s.price || 0);
-        let totalDebt = unitPrice * months;
-        totalSum += totalDebt;
+        let total = unitPrice * months;
+        let partial = parseFloat(s.partialPaid) || 0;
+        let remaining = total - partial;
+        if(remaining < 0) remaining = 0;
+        totalRemainingSum += remaining;
         
         tbodyHTML += `
             <tr>
@@ -1081,14 +1137,15 @@ function printDebtsList() {
                 <td style="padding:5px;">${s.name}</td>
                 <td style="padding:5px;" class="ltr-text">${s.username || '-'}</td>
                 <td style="padding:5px;">${s.phone || '-'}</td>
-                <td style="padding:5px; text-align:center; font-weight:bold;">${months} أشهر</td>
-                <td style="padding:5px; font-weight:bold;">${totalDebt.toLocaleString()} د.ع</td>
+                <td style="padding:5px;">${total.toLocaleString()} د.ع</td>
+                <td style="padding:5px; color:#10b981;">${partial.toLocaleString()} د.ع</td>
+                <td style="padding:5px; font-weight:bold; color:#ef4444;">${remaining.toLocaleString()} د.ع</td>
             </tr>
         `;
     });
 
     document.getElementById('printDebtsTableBody').innerHTML = tbodyHTML;
-    document.getElementById('printDebtsTotal').innerText = `المجموع الكلي للديون (أجل): ${totalSum.toLocaleString()} د.ع (${unPaidSubs.length} مشترك)`;
+    document.getElementById('printDebtsTotal').innerText = `المجموع الكلي للمبالغ المتبقية (الباقي في الذمة): ${totalRemainingSum.toLocaleString()} د.ع (${unPaidSubs.length} مشترك)`;
 
     window.print();
 }
@@ -1104,6 +1161,7 @@ function openModal() {
     document.getElementById('subType').value = "Standard";
     document.getElementById('subStatus').value = "واصل";
     document.getElementById('debtMonths').value = "1";
+    document.getElementById('partialPaidAmount').value = "0";
     document.getElementById('debtMonthsGroup').style.display = 'none';
     document.getElementById('startDate').value = new Date().toISOString().split('T')[0];
     calcEnd();
@@ -1128,13 +1186,24 @@ function showSubDetails(id) {
     if(s.payStatus === 'أجل') {
         let months = parseInt(s.debtMonths) || 1;
         let total = (parseFloat(s.price || 0) * months);
-        document.getElementById('dDebtMonthsVal').innerText = `${months} أشهر`;
+        let partial = parseFloat(s.partialPaid) || 0;
+        let remaining = total - partial;
+        if(remaining < 0) remaining = 0;
+
+        document.getElementById('dDebtMonthsVal').innerText = `${months} أشهر (${total.toLocaleString()} د.ع)`;
         document.getElementById('dTotalDebtVal').innerText = `${total.toLocaleString()} د.ع`;
+        document.getElementById('dPaidPartialVal').innerText = `${partial.toLocaleString()} د.ع`;
+        document.getElementById('dRemainingVal').innerText = `${remaining.toLocaleString()} د.ع`;
+
         document.getElementById('dDebtMonthsRow').style.display = 'flex';
         document.getElementById('dTotalDebtRow').style.display = 'flex';
+        document.getElementById('dPaidPartialRow').style.display = 'flex';
+        document.getElementById('dRemainingRow').style.display = 'flex';
     } else {
         document.getElementById('dDebtMonthsRow').style.display = 'none';
         document.getElementById('dTotalDebtRow').style.display = 'none';
+        document.getElementById('dPaidPartialRow').style.display = 'none';
+        document.getElementById('dRemainingRow').style.display = 'none';
     }
 
     document.getElementById('dStart').innerText = s.startDate || "-";
@@ -1160,9 +1229,12 @@ function openEditModalFromDetails() {
     
     if(s.payStatus === 'أجل') {
         document.getElementById('debtMonths').value = s.debtMonths || 1;
+        document.getElementById('partialPaidAmount').value = s.partialPaid || 0;
         document.getElementById('debtMonthsGroup').style.display = 'block';
+        calcPartialDebtPreview();
     } else {
         document.getElementById('debtMonths').value = 1;
+        document.getElementById('partialPaidAmount').value = 0;
         document.getElementById('debtMonthsGroup').style.display = 'none';
     }
 
@@ -1182,6 +1254,7 @@ function saveSub() {
     let subType = document.getElementById('subType').value;
     let payStatus = document.getElementById('subStatus').value;
     let debtMonths = payStatus === 'أجل' ? (parseInt(document.getElementById('debtMonths').value) || 1) : 1;
+    let partialPaid = payStatus === 'أجل' ? (parseFloat(document.getElementById('partialPaidAmount').value) || 0) : 0;
     let startDate = document.getElementById('startDate').value;
     let endDate = document.getElementById('endDate').value;
     
@@ -1199,11 +1272,12 @@ function saveSub() {
             subObj.subType = subType;
             subObj.payStatus = payStatus;
             subObj.debtMonths = debtMonths;
+            subObj.partialPaid = partialPaid;
             subObj.startDate = startDate;
             subObj.endDate = endDate;
         }
     } else {
-        subObj = { id: Date.now(), name, username, fullName, phone, price, subType, payStatus, debtMonths, startDate, endDate };
+        subObj = { id: Date.now(), name, username, fullName, phone, price, subType, payStatus, debtMonths, partialPaid, startDate, endDate };
         subs.push(subObj);
     }
 
@@ -1219,6 +1293,7 @@ function openRenewModal(id) {
         document.getElementById('renewSubTargetName').innerText = `المشترك: ${s.name}`;
         document.getElementById('renewPayType').value = 'واصل';
         document.getElementById('renewDebtMonths').value = '1';
+        document.getElementById('renewPartialPaid').value = '0';
         document.getElementById('renewDebtMonthsGroup').style.display = 'none';
         document.getElementById('renewModal').style.display = 'flex';
     }
@@ -1230,6 +1305,7 @@ function confirmRenewSubscription() {
     let s = subs.find(item => String(item.id) === String(selectedRenewId));
     let chosenPayType = document.getElementById('renewPayType').value;
     let chosenDebtMonths = chosenPayType === 'أجل' ? (parseInt(document.getElementById('renewDebtMonths').value) || 1) : 1;
+    let chosenPartialPaid = chosenPayType === 'أجل' ? (parseFloat(document.getElementById('renewPartialPaid').value) || 0) : 0;
 
     if(s) {
         let today = new Date();
@@ -1238,48 +1314,119 @@ function confirmRenewSubscription() {
         s.endDate = today.toISOString().split('T')[0];
         s.payStatus = chosenPayType;
         s.debtMonths = chosenDebtMonths;
+        s.partialPaid = chosenPartialPaid;
 
         syncToCloud();
         renderSubs();
         closeRenewModal();
         if(s.payStatus === 'واصل') {
-            printReceipt(s.name, s.username, s.price || 30000, s.startDate, s.endDate, 'واصل (تم التجديد نقداً)');
+            printReceipt(s.name, s.username, s.price || 30000, s.startDate, s.endDate, 'واصل (تم التجديد نقداً)', 0);
         }
     }
 }
 
-function payDebt(id) {
+// نافذة التسديد الجزئي
+function openPartialPayModal(id) {
     let s = subs.find(item => String(item.id) === String(id));
-    if(s && confirm(`تثبيت تسديد المبلغ للمشترك (${s.name})؟`)) {
+    if(!s) return;
+
+    let months = parseInt(s.debtMonths) || 1;
+    let total = parseFloat(s.price || 0) * months;
+    let currentPartial = parseFloat(s.partialPaid) || 0;
+    let remaining = total - currentPartial;
+    if(remaining < 0) remaining = 0;
+
+    document.getElementById('partialPaySubId').value = s.id;
+    document.getElementById('partialPayTargetName').innerText = `المشترك: ${s.name} (${s.username || '-'})`;
+    document.getElementById('currentTotalDebtLabel').innerText = `إجمالي الدين: ${total.toLocaleString()} د.ع (المسدد سابقاً: ${currentPartial.toLocaleString()})`;
+    document.getElementById('paidNowInput').value = remaining;
+    calcRemainingPreview();
+
+    document.getElementById('partialPayModal').style.display = 'flex';
+}
+function closePartialPayModal() { document.getElementById('partialPayModal').style.display = 'none'; }
+
+function calcRemainingPreview() {
+    let sId = document.getElementById('partialPaySubId').value;
+    let s = subs.find(item => String(item.id) === String(sId));
+    if(!s) return;
+
+    let months = parseInt(s.debtMonths) || 1;
+    let total = parseFloat(s.price || 0) * months;
+    let currentPartial = parseFloat(s.partialPaid) || 0;
+    let remainingBefore = total - currentPartial;
+    
+    let paidNow = parseFloat(document.getElementById('paidNowInput').value) || 0;
+    let newRemaining = remainingBefore - paidNow;
+    if(newRemaining < 0) newRemaining = 0;
+
+    document.getElementById('remainingPreviewBox').innerHTML = `المتبقي بعد هذا التسديد: <b style="color:${newRemaining === 0 ? '#10b981' : '#f59e0b'}; font-size:13px;">${newRemaining.toLocaleString()} د.ع</b>`;
+}
+
+function confirmPartialPayment() {
+    let sId = document.getElementById('partialPaySubId').value;
+    let s = subs.find(item => String(item.id) === String(sId));
+    if(!s) return;
+
+    let paidNow = parseFloat(document.getElementById('paidNowInput').value) || 0;
+    if(paidNow <= 0) { alert("يرجى إدخال مبلغ صحيح"); return; }
+
+    let months = parseInt(s.debtMonths) || 1;
+    let total = parseFloat(s.price || 0) * months;
+    let currentPartial = parseFloat(s.partialPaid) || 0;
+    let newPartial = currentPartial + paidNow;
+
+    if(newPartial >= total) {
+        // سدد الكل واصبح واصل
         s.payStatus = 'واصل';
         s.debtMonths = 1;
+        s.partialPaid = 0;
         syncToCloud();
         renderSubs();
-        printReceipt(s.name, s.username, s.price || 0, s.startDate, s.endDate, 'واصل (تم التسديد)');
+        closePartialPayModal();
+        printReceipt(s.name, s.username, paidNow, s.startDate, s.endDate, 'واصل (تم سداد كامل الدين وتسوية الحساب)', 0);
+    } else {
+        // تسديد جزئي (بقي عليه مبلغ)
+        s.partialPaid = newPartial;
+        syncToCloud();
+        renderSubs();
+        let remaining = total - newPartial;
+        closePartialPayModal();
+        printReceipt(s.name, s.username, paidNow, s.startDate, s.endDate, 'تسديد جزئي', remaining);
     }
 }
 
-function sendWhatsapp(phone, name, username, endDate, payStatus, price, startDate, debtMonths = 1) {
+function sendWhatsapp(phone, name, username, endDate, payStatus, price, startDate, debtMonths = 1, partialPaid = 0) {
     if(!phone) { alert("رقم الهاتف غير متوفر"); return; }
     let cleanPhone = phone.replace(/\D/g, '');
     if(cleanPhone.startsWith('0')) cleanPhone = '964' + cleanPhone.substring(1);
     let months = parseInt(debtMonths) || 1;
     let totalDebt = parseFloat(price || 0) * months;
-    let totalFormatted = totalDebt.toLocaleString();
+    let paid = parseFloat(partialPaid) || 0;
+    let remaining = totalDebt - paid;
+    if(remaining < 0) remaining = 0;
 
     let msg = payStatus === 'أجل' ? 
-        `عزيزي المشترك (${name}) ⏳\nنود تذكيرك بوجود مبالغ اشتراك معلقة (أجل) في مكتب مهندس علي لخدمات الإنترنت.\n\n• يوزر الاشتراك: ${username || name}\n• عدد الأشهر المطلوبة: ${months} أشهر\n• إجمالي المبلغ المطلوب: ${totalFormatted} د.ع\n• تاريخ الانتهاء: ${endDate || '-'}` : 
+        `عزيزي المشترك (${name}) ⏳\nتذكير بمبلغ الاشتراك المعلق (أجل) في مكتب مهندس علي للإنترنت.\n\n• يوزر الاشتراك: ${username || name}\n• إجمالي الدين: ${totalDebt.toLocaleString()} د.ع\n• المسدد: ${paid.toLocaleString()} د.ع\n• المبلغ الباقي (المتبقي): ${remaining.toLocaleString()} د.ع\n• تاريخ الانتهاء: ${endDate || '-'}` : 
         `عزيزي المشترك (${name}) 📡\nيوزر الاشتراك: ${username || name}\nاشتراكك سينتهي بتاريخ ${endDate}. شكراً لاختياركم خدماتنا.`;
         
     window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`, '_blank');
 }
 
-function printReceipt(name, username, price, start, end, payStatus) {
+function printReceipt(name, username, price, start, end, payStatus, remainingDebt = 0) {
     document.getElementById('receiptTitle').innerText = 'وصل قبض اشتراك';
     document.getElementById('pName').innerText = name;
     document.getElementById('pUsername').innerText = username || 'غير متوفر';
     document.getElementById('pPrice').innerText = parseFloat(price || 0).toLocaleString();
     document.getElementById('pPayStatus').innerText = payStatus;
+    
+    if(remainingDebt > 0) {
+        document.getElementById('printRemainingLine').style.display = 'block';
+        document.getElementById('pRemaining').innerText = remainingDebt.toLocaleString();
+    } else {
+        document.getElementById('printRemainingLine').style.display = 'none';
+    }
+
     document.getElementById('pStart').innerText = start;
     document.getElementById('pEnd').innerText = end;
     window.print();
@@ -1319,24 +1466,26 @@ function renderSubs() {
         let months = parseInt(s.debtMonths) || 1;
         let unitPrice = parseFloat(s.price || 0);
         let totalDebt = unitPrice * months;
-        let totalFormatted = totalDebt.toLocaleString();
+        let partial = parseFloat(s.partialPaid) || 0;
+        let remaining = totalDebt - partial;
+        if(remaining < 0) remaining = 0;
 
-        let payBadge = s.payStatus === 'أجل' ? `<span style="color:#f59e0b; font-weight:bold;">[أجل: ${months} أشهر (${totalFormatted} د.ع)]</span>` : '<span style="color:#10b981; font-weight:bold;">[واصل ✅]</span>';
+        let payBadge = s.payStatus === 'أجل' ? `<span style="color:#f59e0b; font-weight:bold;">[أجل | الباقي: ${remaining.toLocaleString()} د.ع]</span>` : '<span style="color:#10b981; font-weight:bold;">[واصل ✅]</span>';
 
         html += `
             <div class="sub-card ${s.payStatus === 'أجل' ? 'agel' : (isExp ? 'expired' : '')}">
                 <div style="flex:1;" onclick="showSubDetails(${s.id})">
                     <div style="font-size: 13px; font-weight: bold;">${s.name} ${payBadge} <span style="font-size:10px; color:#38bdf8;">(${s.subType || 'Standard'})</span></div>
                     ${s.username ? `<div style="font-size: 11px; color: #38bdf8;" class="ltr-text">يوزر: ${s.username}</div>` : ''}
-                    <div style="font-size: 10px; color: #94a3b8;">هاتف: ${s.phone || 'بدون'} | الشهر: ${unitPrice.toLocaleString()} د.ع</div>
+                    <div style="font-size: 10px; color: #94a3b8;">هاتف: ${s.phone || 'بدون'} | الدين الكلي: ${totalDebt.toLocaleString()} | المسدد: <b style="color:#10b981;">${partial.toLocaleString()}</b></div>
                     <div style="font-size: 11px; margin-top: 3px; color:#cbd5e1;">انتهاء: <span style="color:${isExp ? '#ef4444' : '#10b981'}; font-weight:bold;">${s.endDate}</span></div>
                 </div>
                 
                 <div style="display:flex; flex-direction:column; gap:3px;" onclick="event.stopPropagation()">
-                    ${s.payStatus === 'أجل' ? `<button onclick="payDebt(${s.id})" style="background:#10b981; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">💵 تسديد</button>` : ''}
+                    ${s.payStatus === 'أجل' ? `<button onclick="openPartialPayModal(${s.id})" style="background:#10b981; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">💵 تسديد</button>` : ''}
                     <button onclick="openRenewModal(${s.id})" style="background:#0284c7; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">🔄 تفعيل</button>
-                    <button onclick="sendWhatsapp('${s.phone}', '${s.name}', '${s.username}', '${s.endDate}', '${s.payStatus}', '${s.price}', '${s.startDate}', '${months}')" style="background:#25d366; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">💬 واتساب</button>
-                    <button onclick="printReceipt('${s.name}', '${s.username}', '${s.price || 0}', '${s.startDate}', '${s.endDate}', '${s.payStatus}')" style="background:#475569; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">🖨️ وصل</button>
+                    <button onclick="sendWhatsapp('${s.phone}', '${s.name}', '${s.username}', '${s.endDate}', '${s.payStatus}', '${s.price}', '${s.startDate}', '${months}', '${partial}')" style="background:#25d366; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">💬 واتساب</button>
+                    <button onclick="printReceipt('${s.name}', '${s.username}', '${s.price || 0}', '${s.startDate}', '${s.endDate}', '${s.payStatus}', 0)" style="background:#475569; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">🖨️ وصل</button>
                     <button onclick="deleteSub(${s.id})" style="background:#ef4444; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">🗑️ حذف</button>
                 </div>
             </div>
