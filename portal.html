@@ -307,15 +307,23 @@ function showSubscriberDashboard() {
     document.getElementById('cName').innerText = foundSubscriber.name || '-';
     document.getElementById('cUsernameVal').innerText = foundSubscriber.username || '-';
     
-    // ربط نوع الاشتراك (السرعة/الباقة) من البرنامج الرئيسي
-    document.getElementById('cPkg').innerText = foundSubscriber.pkg || foundSubscriber.package || 'اشتراك قياسي';
+    // جلب نوع الاشتراك مع دعم خيارات (Economy, Plus, Standard, Turbo)
+    let rawPkg = foundSubscriber.pkg || foundSubscriber.package || 'Standard';
+    let pkgMap = {
+        'economy': 'Economy (اقتصادي)',
+        'plus': 'Plus (بلس)',
+        'standard': 'Standard (قياسي)',
+        'turbo': 'Turbo (توربو)'
+    };
+    let cleanPkgKey = rawPkg.toLowerCase().trim();
+    document.getElementById('cPkg').innerText = pkgMap[cleanPkgKey] || rawPkg;
     
     document.getElementById('cStatus').innerHTML = foundSubscriber.payStatus === 'واصل' ? '<span style="color:#10b981">واصل ✅</span>' : '<span style="color:#f59e0b">أجل ⏳</span>';
     document.getElementById('cPrice').innerText = (foundSubscriber.price || 30000) + " د.ع";
     document.getElementById('cStart').innerText = foundSubscriber.startDate || "غير محدد";
     document.getElementById('cEnd').innerText = foundSubscriber.endDate || "غير محدد";
 
-    // حساب الأيام المتبقية بدقة من تاريخ التفعيل إلى الانتهاء (أو الفترة المتبقية الحالية من 30 يوماً)
+    // حساب الأيام المتبقية بدقة من تاريخ التفعيل إلى الانتهاء (فترة 30 يوماً)
     if(foundSubscriber.endDate) {
         let now = new Date();
         let endDate = new Date(foundSubscriber.endDate + "T23:59:59");
