@@ -12,7 +12,7 @@
         });
       }
     </script>
-    <!-- مكتبات Firebase السحابية المطابقة للرئيسي -->
+    <!-- مكتبات Firebase السحابية -->
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <style>
@@ -87,9 +87,9 @@
     <h2>بوابة زبائن مهندس علي</h2>
 
     <div id="loginFormArea">
-        <p>سجل الدخول باستخدام اسم المستخدم وكلمة المرور (رقم الهاتف)</p>
-        <input type="text" id="clientUsernameInput" placeholder="اسم المستخدم (اليوزر)">
-        <input type="password" id="clientPasswordInput" placeholder="كلمة المرور (رقم الهاتف)">
+        <p>سجل الدخول باستخدام يوزر الاشتراك ورقم الهاتف</p>
+        <input type="text" id="clientUsernameInput" placeholder="يوزر الاشتراك (اسم المستخدم)">
+        <input type="password" id="clientPasswordInput" placeholder="رقم الهاتف المسجل">
         
         <label class="checkbox-container">
             <input type="checkbox" id="rememberMeCheck" checked> إبقاء تسجيل الدخول دائماً
@@ -101,6 +101,7 @@
     <!-- كارت المشترك -->
     <div id="clientInfoBox" class="info-box">
         <div class="info-row"><span class="info-label">اسم المشترك:</span><span class="info-val" id="cName" style="color:#38bdf8"></span></div>
+        <div class="info-row"><span class="info-label">يوزر الاشتراك:</span><span class="info-val" id="cUsernameVal" style="color:#10b981"></span></div>
         <div class="info-row"><span class="info-label">حالة الاشتراك:</span><span class="info-val" id="cStatus"></span></div>
         <div class="info-row"><span class="info-label">تاريخ الانتهاء:</span><span class="info-val" id="cEnd"></span></div>
         <div class="info-row"><span class="info-label">مبلغ الاشتراك:</span><span class="info-val" id="cPrice"></span></div>
@@ -130,10 +131,7 @@
 <div id="clientNotifModal" class="modal">
     <div class="modal-content">
         <h3 style="margin-top:0; color:#f59e0b; text-align:center; font-size:15px;">🔔 مركز إشعارات المشترك</h3>
-        <p style="font-size:10px; color:#94a3b8; text-align:center; margin-bottom:10px;">جميع إشعارات الشبكة، تكتات الدعم الفني، وتنبيهات الانتهاء:</p>
-        
         <div id="unifiedNotificationsContainer" style="max-height: 220px; overflow-y: auto; background:#0d1526; padding:8px; border-radius:6px; font-size:11px; color:#cbd5e1; text-align:right; margin-bottom:12px; border:1px solid #1e293b;"></div>
-
         <button class="btn btn-search" onclick="clearUnifiedNotifications()" style="background:#ef4444; color:#fff; margin-bottom:6px;">🗑️ مسح وإفريغ سجل الإشعارات</button>
         <button class="btn" onclick="closeClientNotifModal()" style="background:#1e293b; color:#38bdf8;">إغلاق</button>
     </div>
@@ -143,23 +141,9 @@
 <div id="routerPassModal" class="modal">
     <div class="modal-content" style="border-color: #8b5cf6; max-width: 300px;">
         <h3 style="margin-top:0; color:#8b5cf6; text-align:center; font-size:15px;">🔑 كلمات دخول الراوتر الشائعة</h3>
-        <p style="font-size:10px; color:#94a3b8; margin-bottom:10px;">استخدم إحدى الكلمات التالية لفتح صفحة الراوتر:</p>
-        
-        <div class="router-box-item">
-            <div class="router-box-label">الاحتمال الأول:</div>
-            <div class="router-box-val">admin</div>
-        </div>
-
-        <div class="router-box-item">
-            <div class="router-box-label">الاحتمال الثاني:</div>
-            <div class="router-box-val">admin</div>
-        </div>
-
-        <div class="router-box-item">
-            <div class="router-box-label">الاحتمال الثالث:</div>
-            <div class="router-box-val">admin1</div>
-        </div>
-
+        <div class="router-box-item"><div class="router-box-label">الاحتمال الأول:</div><div class="router-box-val">admin</div></div>
+        <div class="router-box-item"><div class="router-box-label">الاحتمال الثاني:</div><div class="router-box-val">admin</div></div>
+        <div class="router-box-item"><div class="router-box-label">الاحتمال الثالث:</div><div class="router-box-val">admin1</div></div>
         <button class="btn" onclick="closeRouterPassModal()" style="background:#1e293b; color:#38bdf8; margin-top:15px;">إغلاق</button>
     </div>
 </div>
@@ -168,13 +152,10 @@
 <div id="ticketModal" class="modal">
     <div class="modal-content">
         <h3 style="margin-top:0; color:#ec4899; text-align:center; font-size:15px;">🎫 تكتات الدعم الفني والمحادثة</h3>
-        
         <textarea id="ticketMessageText" rows="3" placeholder="اكتب مشكلتك أو استفسارك هنا..."></textarea>
         <button class="btn btn-ticket" onclick="submitTicket()" style="margin-bottom:10px;">إرسال التكت للإدارة</button>
-
-        <div style="font-size:11px; color:#94a3b8; margin-bottom:4px; text-align:right;">سجل المحادثة وتحديثات الأقسام:</div>
+        <div style="font-size:11px; color:#94a3b8; margin-bottom:4px; text-align:right;">سجل المحادثة:</div>
         <div id="ticketChatHistory" style="max-height: 160px; overflow-y: auto; background:#0d1526; padding:8px; border-radius:6px; font-size:11px; color:#cbd5e1; text-align:right; margin-bottom:10px;">لا توجد رسائل.</div>
-
         <button class="btn" onclick="closeTicketModal()" style="background:#1e293b; color:#38bdf8;">إغلاق</button>
     </div>
 </div>
@@ -198,7 +179,7 @@ let subs = [];
 let foundSubscriber = null;
 const adminPhone = "9647724850876";
 let lastChatLength = 0;
-const SESSION_KEY = "ali_client_portal_full_session";
+const SESSION_KEY = "ali_client_portal_username_session";
 
 function cleanStr(str) {
     if (!str) return "";
@@ -213,42 +194,40 @@ function playNotificationSound() {
     }
 }
 
-// دالة إرسال شارة التواجد أونلاين إلى السيرفر الرئيسي
+// إرسال شارة التواجد أونلاين
 function sendClientOnlinePresence() {
-    let currentSubName = localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY);
-    
-    if (currentSubName) {
-        let safeKey = currentSubName.replace(/[.#$\[\]]/g, "_");
-        let currentObj = subs.find(s => s && s.name && cleanStr(s.name) === cleanStr(currentSubName));
-        let usernameVal = currentObj ? (currentObj.username || '') : '';
-
-        db.ref('ali_online_clients/' + safeKey).set({
-            name: currentSubName,
-            username: usernameVal,
-            lastSeen: Date.now()
-        });
+    let currentUsername = localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY);
+    if (currentUsername) {
+        let currentObj = subs.find(s => s && s.username && cleanStr(s.username) === cleanStr(currentUsername));
+        if(currentObj) {
+            let safeKey = currentObj.name.replace(/[.#$\[\]]/g, "_");
+            db.ref('ali_online_clients/' + safeKey).set({
+                name: currentObj.name,
+                username: currentObj.username,
+                lastSeen: Date.now()
+            });
+        }
     }
 }
 
-// المزامنة المباشرة لقاعدة البيانات السحابية
+// المزامنة المباشرة مع قاعدة البيانات والتحقق من بقاء المشترك
 db.ref('ali_isp_subscribers').on('value', (snapshot) => {
     const data = snapshot.val();
-    if (data) {
-        subs = Array.isArray(data) ? data.filter(item => item !== null) : Object.values(data);
-    } else {
-        subs = [];
-    }
+    subs = data ? (Array.isArray(data) ? data.filter(item => item !== null) : Object.values(data)) : [];
 
-    let savedUser = localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY);
+    let savedUsername = localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY);
     
-    if (savedUser) {
-        let currentSub = subs.find(s => s && s.name && cleanStr(s.name) === cleanStr(savedUser));
+    if (savedUsername) {
+        // البحث عن المشترك بالاعتماد على يوزر الاشتراك (اسم المستخدم)
+        let currentSub = subs.find(s => s && s.username && cleanStr(s.username) === cleanStr(savedUsername));
+        
         if (currentSub) {
             foundSubscriber = currentSub;
             showSubscriberDashboard();
             checkExpiryAlerts();
-            sendClientOnlinePresence(); // إرسال التواجد فور فتح التطبيق
+            sendClientOnlinePresence();
         } else {
+            // إذا تم حذفه من اللوحة الرئيسية للأدمن -> تسجيل خروج تلقائي فوري
             logoutClient(true);
         }
     } else {
@@ -266,8 +245,6 @@ window.onload = function() {
 
 setInterval(() => {
     if(!foundSubscriber) return;
-
-    // تحديث التواجد أونلاين كل دقيقة طالما التطبيق مفتوح
     sendClientOnlinePresence();
 
     let chats = JSON.parse(localStorage.getItem(`ticket_chat_${foundSubscriber.name}`)) || [];
@@ -278,111 +255,18 @@ setInterval(() => {
         if(lastMsg.sender !== foundSubscriber.name) {
             playNotificationSound();
             let messengerBanner = document.getElementById('messengerPopBanner');
-            document.getElementById('messengerPopText').innerText = `💬 رد جديد من (${lastMsg.sender}): "${lastMsg.text}"`;
+            document.getElementById('messengerPopText').innerText = `💬 رد جديد من الدعم: "${lastMsg.text}"`;
             messengerBanner.style.display = 'block';
 
             document.getElementById('ticketBadgeArea').innerHTML = '<span class="msg-badge">جديد</span>';
             document.getElementById('bellBadgeArea').innerHTML = '<span class="msg-badge">!</span>';
-            saveToCustomNotifLog(`💬 رسالة جديدة في الدعم الفني من (${lastMsg.sender})`);
         }
         
         if(document.getElementById('ticketModal').style.display === 'flex') {
             refreshChatHistory();
         }
     }
-
-    let directActivationMsg = localStorage.getItem(`client_activation_notif_${foundSubscriber.name}`);
-    if(directActivationMsg) {
-        playNotificationSound();
-        alert(directActivationMsg);
-        saveToCustomNotifLog(`🎉 تنبيه إداري: ${directActivationMsg}`);
-        localStorage.removeItem(`client_activation_notif_${foundSubscriber.name}`);
-        showSubscriberDashboard();
-        checkExpiryAlerts();
-    }
 }, 2000);
-
-function saveToCustomNotifLog(text) {
-    if(!foundSubscriber) return;
-    let userNotifs = JSON.parse(localStorage.getItem(`client_custom_notifs_${foundSubscriber.name}`)) || [];
-    userNotifs.push({ time: new Date().toLocaleTimeString(), text: text });
-    localStorage.setItem(`client_custom_notifs_${foundSubscriber.name}`, JSON.stringify(userNotifs));
-    document.getElementById('bellBadgeArea').innerHTML = '<span class="msg-badge">!</span>';
-}
-
-function renderUnifiedNotifications() {
-    if(!foundSubscriber) {
-        document.getElementById('unifiedNotificationsContainer').innerHTML = "يرجى تسجيل الدخول أولاً لعرض الإشعارات.";
-        return;
-    }
-
-    let htmlContent = "";
-    let savedBroadcast = localStorage.getItem('ali_app_broadcast_msg');
-    if(savedBroadcast) {
-        htmlContent += `<div style="margin-bottom:8px; border-bottom:1px solid #1e293b; padding-bottom:6px;"><b style="color:#06b6d4;">📢 إعلان الشبكة العام:</b> ${savedBroadcast}</div>`;
-    }
-
-    let now = new Date();
-    let endDate = new Date(foundSubscriber.endDate + "T23:59:59");
-    let diffHours = (endDate - now) / (1000 * 60 * 60);
-    if(diffHours > 0 && diffHours <= 24) {
-        htmlContent += `<div style="margin-bottom:8px; border-bottom:1px solid #1e293b; padding-bottom:6px;"><b style="color:#f59e0b;">⏳ تنبيه انتهاء الاشتراك:</b> اشتراكك سينتهي خلال ساعات (${foundSubscriber.endDate}). يرجى التسديد.</div>`;
-    } else if(diffHours <= 0) {
-        htmlContent += `<div style="margin-bottom:8px; border-bottom:1px solid #1e293b; padding-bottom:6px;"><b style="color:#ef4444;">🚨 تنبيه عاجل:</b> اشتراكك منتهي حالياً يرجى المبادرة بالتجديد.</div>`;
-    }
-
-    let chats = JSON.parse(localStorage.getItem(`ticket_chat_${foundSubscriber.name}`)) || [];
-    if(chats.length > 0) {
-        htmlContent += `<div style="margin-top:6px; margin-bottom:4px;"><b style="color:#ec4899;">🎫 سجل تكتات الدعم الفني:</b></div>`;
-        chats.forEach(c => {
-            htmlContent += `<div style="margin-bottom:5px; padding-right:6px; border-right:2px solid #ec4899;"><b>${c.sender}:</b> ${c.text}</div>`;
-        });
-    }
-
-    let customNotifs = JSON.parse(localStorage.getItem(`client_custom_notifs_${foundSubscriber.name}`)) || [];
-    if(customNotifs.length > 0) {
-        htmlContent += `<div style="margin-top:6px; margin-bottom:4px;"><b style="color:#38bdf8;">📌 التنبيهات الإدارية الخاصة:</b></div>`;
-        customNotifs.forEach(n => {
-            htmlContent += `<div style="margin-bottom:5px; font-size:10px; color:#cbd5e1;">[${n.time}] ${n.text}</div>`;
-        });
-    }
-
-    if(htmlContent === "") {
-        htmlContent = "لا توجد إشعارات أو تكتات جديدة حالياً.";
-    }
-
-    document.getElementById('unifiedNotificationsContainer').innerHTML = htmlContent;
-}
-
-function clearUnifiedNotifications() {
-    if(!foundSubscriber) return;
-    localStorage.removeItem(`client_custom_notifs_${foundSubscriber.name}`);
-    localStorage.removeItem(`ticket_chat_${foundSubscriber.name}`);
-    document.getElementById('bellBadgeArea').innerHTML = '';
-    renderUnifiedNotifications();
-    alert("تم مسح سجل إشعارات المشترك بنجاح!");
-}
-
-function checkExpiryAlerts() {
-    if(!foundSubscriber || !foundSubscriber.endDate) return;
-
-    let now = new Date();
-    let endDate = new Date(foundSubscriber.endDate + "T23:59:59");
-    let diffHours = (endDate - now) / (1000 * 60 * 60);
-    let warningBanner = document.getElementById('expiryWarningBanner');
-
-    if(diffHours > 0 && diffHours <= 1) {
-        warningBanner.innerText = "🚨 تنبيه عاجل: متبقي أقل من ساعة واحدة على انتهاء اشتراكك! يرجى التجديد لتجنب انقطاع الخدمة.";
-        warningBanner.className = "expiry-warning-banner hour-warn";
-        warningBanner.style.display = "block";
-    } else if(diffHours > 1 && diffHours <= 24) {
-        warningBanner.innerText = "⏳ تنبيه: ينتهي اشتراكك خلال أقل من 24 ساعة (غداً). يرجى المبادرة بالتسديد.";
-        warningBanner.className = "expiry-warning-banner day-warn";
-        warningBanner.style.display = "block";
-    } else {
-        warningBanner.style.display = "none";
-    }
-}
 
 function loginClient() {
     let inputUser = cleanStr(document.getElementById('clientUsernameInput').value);
@@ -390,34 +274,37 @@ function loginClient() {
     let rememberMe = document.getElementById('rememberMeCheck').checked;
 
     if(!inputUser || !inputPass) {
-        alert("يرجى كتابة اسم المستخدم وكلمة المرور");
+        alert("يرجى كتابة يوزر الاشتراك ورقم الهاتف");
         return;
     }
 
+    // المطابقة الدقيقة بين يوزر الاشتراك (username) ورقم الهاتف (phone)
     foundSubscriber = subs.find(s => {
-        if (!s || !s.name) return false;
-        let dbUser = cleanStr(s.name);
-        let dbPass = cleanStr(s.phone);
-        return (dbUser === inputUser) && (dbPass === inputPass);
+        if (!s || !s.username || !s.phone) return false;
+        let dbUser = cleanStr(s.username);
+        let dbPhone = cleanStr(s.phone);
+        return (dbUser === inputUser) && (dbPhone === inputPass);
     });
 
     if(foundSubscriber) {
         if (rememberMe) {
-            localStorage.setItem(SESSION_KEY, foundSubscriber.name);
+            localStorage.setItem(SESSION_KEY, foundSubscriber.username);
         } else {
-            sessionStorage.setItem(SESSION_KEY, foundSubscriber.name);
+            sessionStorage.setItem(SESSION_KEY, foundSubscriber.username);
         }
         showSubscriberDashboard();
         playNotificationSound();
         checkExpiryAlerts();
-        sendClientOnlinePresence(); // إرسال التواجد فور تسجيل الدخول
+        sendClientOnlinePresence();
+        alert("✅ أهلاً بك، تم تسجيل الدخول بنجاح!");
     } else {
-        alert("❌ تعذر تسجيل الدخول!\nيرجى التأكد من كتابة اليوزر ورقم الهاتف بدقة مطابقة للوحة الإدارة.");
+        alert("❌ يوزر الاشتراك أو رقم الهاتف غير صحيح. يرجى التأكد من البيانات أو مراجعة المكتب.");
     }
 }
 
 function showSubscriberDashboard() {
-    document.getElementById('cName').innerText = foundSubscriber.name;
+    document.getElementById('cName').innerText = foundSubscriber.name || '-';
+    document.getElementById('cUsernameVal').innerText = foundSubscriber.username || '-';
     document.getElementById('cStatus').innerHTML = foundSubscriber.payStatus === 'واصل' ? '<span style="color:#10b981">واصل ✅</span>' : '<span style="color:#f59e0b">أجل ⏳</span>';
     document.getElementById('cEnd').innerText = foundSubscriber.endDate || "غير محدد";
     document.getElementById('cPrice').innerText = (foundSubscriber.price || 30000) + " د.ع";
@@ -437,7 +324,7 @@ function showLoginForm() {
 function logoutClient(isAuto = false) {
     if (foundSubscriber) {
         let safeKey = foundSubscriber.name.replace(/[.#$\[\]]/g, "_");
-        db.ref('ali_online_clients/' + safeKey).remove(); // إزالة حالة التواجد فور تسجيل الخروج
+        db.ref('ali_online_clients/' + safeKey).remove();
     }
 
     localStorage.removeItem(SESSION_KEY);
@@ -449,7 +336,7 @@ function logoutClient(isAuto = false) {
     document.getElementById('clientPasswordInput').value = '';
     
     if(isAuto) {
-        alert("⚠️ تم تسجيل الخروج تلقائياً لتحديث النظام أو حذف الحساب.");
+        alert("⚠️ تنبيه: تم حذف اشتراكك أو تحديثه من قبل الإدارة، وتم تسجيل خروجك تلقائياً.");
     } else {
         alert("تم تسجيل الخروج بنجاح.");
     }
@@ -462,6 +349,53 @@ function openClientNotifModal() {
     document.getElementById('clientNotifModal').style.display = 'flex'; 
 }
 function closeClientNotifModal() { document.getElementById('clientNotifModal').style.display = 'none'; }
+
+function renderUnifiedNotifications() {
+    if(!foundSubscriber) return;
+    let htmlContent = "";
+    let savedBroadcast = localStorage.getItem('ali_app_broadcast_msg');
+    if(savedBroadcast) {
+        htmlContent += `<div style="margin-bottom:8px; border-bottom:1px solid #1e293b; padding-bottom:6px;"><b style="color:#06b6d4;">📢 إعلان الشبكة العام:</b> ${savedBroadcast}</div>`;
+    }
+
+    let chats = JSON.parse(localStorage.getItem(`ticket_chat_${foundSubscriber.name}`)) || [];
+    if(chats.length > 0) {
+        htmlContent += `<div style="margin-top:6px; margin-bottom:4px;"><b style="color:#ec4899;">🎫 سجل تكتات الدعم الفني:</b></div>`;
+        chats.forEach(c => {
+            htmlContent += `<div style="margin-bottom:5px; padding-right:6px; border-right:2px solid #ec4899;"><b>${c.sender}:</b> ${c.text}</div>`;
+        });
+    }
+
+    document.getElementById('unifiedNotificationsContainer').innerHTML = htmlContent || "لا توجد إشعارات أو تكتات جديدة حالياً.";
+}
+
+function clearUnifiedNotifications() {
+    if(!foundSubscriber) return;
+    localStorage.removeItem(`ticket_chat_${foundSubscriber.name}`);
+    document.getElementById('bellBadgeArea').innerHTML = '';
+    renderUnifiedNotifications();
+    alert("تم مسح السجل بنجاح!");
+}
+
+function checkExpiryAlerts() {
+    if(!foundSubscriber || !foundSubscriber.endDate) return;
+    let now = new Date();
+    let endDate = new Date(foundSubscriber.endDate + "T23:59:59");
+    let diffHours = (endDate - now) / (1000 * 60 * 60);
+    let warningBanner = document.getElementById('expiryWarningBanner');
+
+    if(diffHours > 0 && diffHours <= 1) {
+        warningBanner.innerText = "🚨 تنبيه عاجل: متبقي أقل من ساعة واحدة على انتهاء اشتراكك!";
+        warningBanner.className = "expiry-warning-banner hour-warn";
+        warningBanner.style.display = "block";
+    } else if(diffHours > 1 && diffHours <= 24) {
+        warningBanner.innerText = "⏳ تنبيه: ينتهي اشتراكك غداً. يرجى المبادرة بالتسديد.";
+        warningBanner.className = "expiry-warning-banner day-warn";
+        warningBanner.style.display = "block";
+    } else {
+        warningBanner.style.display = "none";
+    }
+}
 
 function openRouterPassModal() { document.getElementById('routerPassModal').style.display = 'flex'; }
 function closeRouterPassModal() { document.getElementById('routerPassModal').style.display = 'none'; }
@@ -482,7 +416,6 @@ function refreshChatHistory() {
             <b style="color:${c.sender === foundSubscriber.name ? '#38bdf8' : '#ec4899'}">${c.sender}:</b> ${c.text}
         </div>
     `).join('');
-    
     let container = document.getElementById('ticketChatHistory');
     container.innerHTML = chatHtml;
     container.scrollTop = container.scrollHeight;
@@ -491,20 +424,14 @@ function refreshChatHistory() {
 function submitTicket() {
     let msg = document.getElementById('ticketMessageText').value.trim();
     if(!msg) { alert("يرجى كتابة رسالة التكت"); return; }
-
     let ticketNum = `#${Math.floor(1000 + Math.random() * 9000)}`;
-    let allTickets = JSON.parse(localStorage.getItem('all_client_tickets')) || [];
-    allTickets.push({ subName: foundSubscriber.name, ticketNum: ticketNum, message: msg, status: 'جديد (بانتظار المراجعة)' });
-    localStorage.setItem('all_client_tickets', JSON.stringify(allTickets));
-
-    let chatItem = { sender: foundSubscriber.name, text: `[${ticketNum}] ${msg}` };
     let chats = JSON.parse(localStorage.getItem(`ticket_chat_${foundSubscriber.name}`)) || [];
-    chats.push(chatItem);
+    chats.push({ sender: foundSubscriber.name, text: `[${ticketNum}] ${msg}` });
     localStorage.setItem(`ticket_chat_${foundSubscriber.name}`, JSON.stringify(chats));
 
-    let notifs = JSON.parse(localStorage.getItem('ali_admin_notifications')) || [];
-    notifs.push(`${new Date().toLocaleTimeString()} - 🎫 تكت جديد (${ticketNum}) من المشترك: ${foundSubscriber.name}`);
-    localStorage.setItem('ali_admin_notifications', JSON.stringify(notifs));
+    let allTickets = JSON.parse(localStorage.getItem('all_client_tickets')) || [];
+    allTickets.push({ subName: foundSubscriber.name, ticketNum: ticketNum, message: msg });
+    localStorage.setItem('all_client_tickets', JSON.stringify(allTickets));
 
     playNotificationSound();
     alert("✅ تم إرسال التكت بنجاح إلى الإدارة!");
@@ -513,32 +440,28 @@ function submitTicket() {
 }
 
 function copyMasterNumber() {
-    navigator.clipboard.writeText("07724850876").then(() => {
-        alert("📋 تم نسخ رقم التحويل (07724850876) بنجاح!");
-    });
+    navigator.clipboard.writeText("07724850876").then(() => alert("📋 تم نسخ رقم التحويل بنجاح!"));
 }
 
 function sendWhatsAppReceipt() {
     if(!foundSubscriber) return;
     let priceVal = foundSubscriber.price || 30000;
-    let msg = `مرحباً مهندس علي 📡\nلقد قمت بتحويل مبلغ الاشتراك (${priceVal} د.ع) عبر ماستر كارد إلى رقمك (${adminPhone}).\nاسم المشترك: ${foundSubscriber.name}`;
+    let msg = `مرحباً مهندس علي 📡\nلقد قمت بتحويل مبلغ الاشتراك (${priceVal} د.ع) إلى رقمك (${adminPhone}).\nاسم المشترك: ${foundSubscriber.name} (يوزر: ${foundSubscriber.username})`;
     window.open(`https://api.whatsapp.com/send?phone=${adminPhone}&text=${encodeURIComponent(msg)}`, '_blank');
 }
 
 function requestAgel() {
     if(!foundSubscriber) return;
     foundSubscriber.payStatus = 'أجل';
-    
     let subsObj = {};
     subs.forEach(s => {
         if(s.id === foundSubscriber.id) s.payStatus = 'أجل';
         subsObj[s.id] = s;
     });
     db.ref('ali_isp_subscribers').set(subsObj);
-
-    let agelMsg = `⏳ طلب تفعيل مؤجل (أجل) جديد!\nالمشترك (${foundSubscriber.name}) يطلب تفعيل حسابه كأجل.`;
+    let agelMsg = `⏳ طلب تفعيل مؤجل (أجل) من المشترك (${foundSubscriber.name} - يوزر: ${foundSubscriber.username}).`;
     window.open(`https://api.whatsapp.com/send?phone=${adminPhone}&text=${encodeURIComponent(agelMsg)}`, '_blank');
-    alert("تم إرسال طلب التفعيل المؤجل (الأجل) للإدارة بنجاح!");
+    alert("تم إرسال طلب الأجل للإدارة بنجاح!");
 }
 </script>
 </body>
