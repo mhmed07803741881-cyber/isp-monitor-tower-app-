@@ -50,7 +50,7 @@
         .btn-logout { background: #ef4444; color: #fff; }
         
         .info-box { background: #0d1526; border: 1px solid #1e293b; padding: 12px; border-radius: 8px; margin-top: 12px; display: none; }
-        .info-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; }
+        .info-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; border-bottom: 1px solid #1e293b55; padding-bottom: 4px; }
         .info-label { color: #94a3b8; }
         .info-val { font-weight: bold; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; z-index: 99999; }
@@ -98,13 +98,16 @@
         <button class="btn btn-search" onclick="loginClient()">تسجيل الدخول</button>
     </div>
 
-    <!-- كارت المشترك -->
+    <!-- كارت المشترك الشامل -->
     <div id="clientInfoBox" class="info-box">
         <div class="info-row"><span class="info-label">اسم المشترك:</span><span class="info-val" id="cName" style="color:#38bdf8"></span></div>
         <div class="info-row"><span class="info-label">يوزر الاشتراك:</span><span class="info-val" id="cUsernameVal" style="color:#10b981"></span></div>
-        <div class="info-row"><span class="info-label">حالة الاشتراك:</span><span class="info-val" id="cStatus"></span></div>
-        <div class="info-row"><span class="info-label">تاريخ الانتهاء:</span><span class="info-val" id="cEnd"></span></div>
+        <div class="info-row"><span class="info-label">نوع الاشتراك (السرعة):</span><span class="info-val" id="cPkg" style="color:#f59e0b"></span></div>
+        <div class="info-row"><span class="info-label">حالة الدفع:</span><span class="info-val" id="cStatus"></span></div>
         <div class="info-row"><span class="info-label">مبلغ الاشتراك:</span><span class="info-val" id="cPrice"></span></div>
+        <div class="info-row"><span class="info-label">تاريخ التفعيل:</span><span class="info-val" id="cStart" style="color:#38bdf8"></span></div>
+        <div class="info-row"><span class="info-label">تاريخ الانتهاء:</span><span class="info-val" id="cEnd" style="color:#ef4444"></span></div>
+        <div class="info-row"><span class="info-label">الأيام المتبقية:</span><span class="info-val" id="cRemainingDays" style="font-size:13px;"></span></div>
 
         <button class="btn btn-pay" onclick="copyMasterNumber()">💳 نسخ رقم التحويل (07724850876)</button>
         <button class="btn btn-wa" onclick="sendWhatsAppReceipt()">💬 إرسال إشعار التحويل واتساب</button>
@@ -218,7 +221,6 @@ db.ref('ali_isp_subscribers').on('value', (snapshot) => {
     let savedUsername = localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY);
     
     if (savedUsername) {
-        // البحث عن المشترك بالاعتماد على يوزر الاشتراك (اسم المستخدم)
         let currentSub = subs.find(s => s && s.username && cleanStr(s.username) === cleanStr(savedUsername));
         
         if (currentSub) {
@@ -227,7 +229,6 @@ db.ref('ali_isp_subscribers').on('value', (snapshot) => {
             checkExpiryAlerts();
             sendClientOnlinePresence();
         } else {
-            // إذا تم حذفه من اللوحة الرئيسية للأدمن -> تسجيل خروج تلقائي فوري
             logoutClient(true);
         }
     } else {
@@ -246,6 +247,7 @@ window.onload = function() {
 setInterval(() => {
     if(!foundSubscriber) return;
     sendClientOnlinePresence();
+    checkExpiryAlerts(); // فحص دوري للتنبيه قبل يوم
 
     let chats = JSON.parse(localStorage.getItem(`ticket_chat_${foundSubscriber.name}`)) || [];
     if(chats.length > lastChatLength) {
@@ -278,7 +280,6 @@ function loginClient() {
         return;
     }
 
-    // المطابقة الدقيقة بين يوزر الاشتراك (username) ورقم الهاتف (phone)
     foundSubscriber = subs.find(s => {
         if (!s || !s.username || !s.phone) return false;
         let dbUser = cleanStr(s.username);
@@ -305,9 +306,29 @@ function loginClient() {
 function showSubscriberDashboard() {
     document.getElementById('cName').innerText = foundSubscriber.name || '-';
     document.getElementById('cUsernameVal').innerText = foundSubscriber.username || '-';
+    document.getElementById('cPkg').innerText = foundSubscriber.pkg || 'اشتراك قياسي';
     document.getElementById('cStatus').innerHTML = foundSubscriber.payStatus === 'واصل' ? '<span style="color:#10b981">واصل ✅</span>' : '<span style="color:#f59e0b">أجل ⏳</span>';
-    document.getElementById('cEnd').innerText = foundSubscriber.endDate || "غير محدد";
     document.getElementById('cPrice').innerText = (foundSubscriber.price || 30000) + " د.ع";
+    document.getElementById('cStart').innerText = foundSubscriber.startDate || "غير محدد";
+    document.getElementById('cEnd').innerText = foundSubscriber.endDate || "غير محدد";
+
+    // حساب الأيام المتبقية بدقة
+    if(foundSubscriber.endDate) {
+        let now = new Date();
+        let endDate = new Date(foundSubscriber.endDate + "T23:59:59");
+        let diffDays = Math.ceil((endDate - now) / (1000 * 60 * 60 * 24));
+        let remEl = document.getElementById('cRemainingDays');
+        
+        if(diffDays > 0) {
+            remEl.innerHTML = `<span style="color:#10b981;">متبقي (${diffDays}) يوم</span>`;
+        } else if(diffDays === 0) {
+            remEl.innerHTML = `<span style="color:#f59e0b;">الاشتراك ينتهي اليوم!</span>`;
+        } else {
+            remEl.innerHTML = `<span style="color:#ef4444;">منتهي منذ (${Math.abs(diffDays)}) يوم</span>`;
+        }
+    } else {
+        document.getElementById('cRemainingDays').innerText = "-";
+    }
     
     document.getElementById('loginFormArea').style.display = 'none';
     document.getElementById('clientInfoBox').style.display = 'block';
@@ -358,6 +379,18 @@ function renderUnifiedNotifications() {
         htmlContent += `<div style="margin-bottom:8px; border-bottom:1px solid #1e293b; padding-bottom:6px;"><b style="color:#06b6d4;">📢 إعلان الشبكة العام:</b> ${savedBroadcast}</div>`;
     }
 
+    // إضافة تنبيهات الانتهاء لمركز الإشعارات
+    if(foundSubscriber.endDate) {
+        let now = new Date();
+        let endDate = new Date(foundSubscriber.endDate + "T23:59:59");
+        let diffHours = (endDate - now) / (1000 * 60 * 60);
+        if(diffHours > 0 && diffHours <= 24) {
+            htmlContent += `<div style="margin-bottom:8px; border-bottom:1px solid #1e293b; padding-bottom:6px;"><b style="color:#f59e0b;">⏳ تنبيه انتهاء الاشتراك:</b> اشتراكك سينتهي غداً (${foundSubscriber.endDate}). يرجى المبادرة بالتسديد.</div>`;
+        } else if(diffHours <= 0) {
+            htmlContent += `<div style="margin-bottom:8px; border-bottom:1px solid #1e293b; padding-bottom:6px;"><b style="color:#ef4444;">🚨 تنبيه عاجل:</b> اشتراكك منتهي حالياً (${foundSubscriber.endDate}).</div>`;
+        }
+    }
+
     let chats = JSON.parse(localStorage.getItem(`ticket_chat_${foundSubscriber.name}`)) || [];
     if(chats.length > 0) {
         htmlContent += `<div style="margin-top:6px; margin-bottom:4px;"><b style="color:#ec4899;">🎫 سجل تكتات الدعم الفني:</b></div>`;
@@ -377,6 +410,7 @@ function clearUnifiedNotifications() {
     alert("تم مسح السجل بنجاح!");
 }
 
+// نظام الإنذار الصوتي والتنبيه قبل يوم واحد من الانتهاء
 function checkExpiryAlerts() {
     if(!foundSubscriber || !foundSubscriber.endDate) return;
     let now = new Date();
@@ -384,13 +418,23 @@ function checkExpiryAlerts() {
     let diffHours = (endDate - now) / (1000 * 60 * 60);
     let warningBanner = document.getElementById('expiryWarningBanner');
 
-    if(diffHours > 0 && diffHours <= 1) {
-        warningBanner.innerText = "🚨 تنبيه عاجل: متبقي أقل من ساعة واحدة على انتهاء اشتراكك!";
-        warningBanner.className = "expiry-warning-banner hour-warn";
-        warningBanner.style.display = "block";
-    } else if(diffHours > 1 && diffHours <= 24) {
-        warningBanner.innerText = "⏳ تنبيه: ينتهي اشتراكك غداً. يرجى المبادرة بالتسديد.";
+    // إذا بقي أقل من 24 ساعة (يوم واحد) ولم يتم تشغيل التنبيه اليومي سابقاً
+    let notifKey = `expiry_alert_played_${foundSubscriber.username}_${foundSubscriber.endDate}`;
+    let alreadyAlerted = localStorage.getItem(notifKey);
+
+    if(diffHours > 0 && diffHours <= 24) {
+        warningBanner.innerText = "⏳ تنبيه هام: ينتهي اشتراكك خلال أقل من 24 ساعة! يرجى التسديد لتجنب انقطاع الخدمة.";
         warningBanner.className = "expiry-warning-banner day-warn";
+        warningBanner.style.display = "block";
+
+        if(!alreadyAlerted) {
+            playNotificationSound(); // تشغيل الإنذار الصوتي تلقائياً
+            document.getElementById('bellBadgeArea').innerHTML = '<span class="msg-badge">!</span>';
+            localStorage.setItem(notifKey, 'true');
+        }
+    } else if(diffHours <= 0) {
+        warningBanner.innerText = "🚨 تنبيه عاجل: اشتراكك منتهي حالياً! يرجى المبادرة بالتجديد.";
+        warningBanner.className = "expiry-warning-banner hour-warn";
         warningBanner.style.display = "block";
     } else {
         warningBanner.style.display = "none";
