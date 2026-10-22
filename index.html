@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إدارة المشتركين ومنظومات الأبراج - مهندس علي</title>
+    <title>إدارة المشتركين والمنظومات - مهندس علي</title>
     <!-- مكتبة قراءة ملفات الإكسل وأيرثلنك -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <!-- مكتبات Firebase السحابية -->
@@ -26,11 +26,18 @@
         .action-btn.earthlink-btn { background: #e11d48; color: #fff; font-weight: bold; border-color: #f43f5e; grid-column: span 2; }
         .action-btn.import-btn { background: #f59e0b; color: #000; font-weight: bold; border-color: #d97706; }
         .action-btn.network-btn { background: #06b6d4; color: #090d16; font-weight: bold; border-color: #0891b2; grid-column: span 2; }
+        .action-btn.delete-btn { background: #ef4444; color: #fff; font-weight: bold; border-color: #dc2626; }
+        .action-btn.restore-btn { background: #10b981; color: #fff; font-weight: bold; border-color: #059669; }
+        .action-btn.notify-btn { background: #8b5cf6; color: #fff; font-weight: bold; border-color: #7c3aed; }
+        .action-btn.online-btn { background: #10b981; color: #090d16; font-weight: bold; border-color: #059669; grid-column: span 2; }
+        .action-btn.broadcast-btn { background: #06b6d4; color: #090d16; font-weight: bold; border-color: #0891b2; grid-column: span 2; }
+        .action-btn.tickets-btn { background: #ec4899; color: #fff; font-weight: bold; border-color: #db2777; grid-column: span 2; }
         .action-btn.accounts-btn { background: #14b8a6; color: #090d16; font-weight: bold; border-color: #0d9488; grid-column: span 2; }
 
         .search-box { width: 100%; padding: 10px; margin-bottom: 8px; background: #131d31; border: 1px solid #1e293b; color: white; border-radius: 8px; box-sizing: border-box; font-size: 12px; }
 
-        .sub-card { background:#131d31; border:1px solid #1e293b; padding:12px; border-radius:8px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; border-right:4px solid #10b981; cursor: pointer; }
+        .sub-card { background:#131d31; border:1px solid #1e293b; padding:12px; border-radius:8px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; border-right:4px solid #10b981; cursor: pointer; transition: background 0.2s; }
+        .sub-card:hover { background: #1e293b; }
         .sub-card.expired { border-right-color: #ef4444; }
         .sub-card.agel { border-right-color: #f59e0b; }
 
@@ -44,6 +51,10 @@
         input, select, textarea { width: 100%; padding: 10px; margin: 6px 0 12px 0; background: #0d1526; border: 1px solid #1e293b; color: white; border-radius: 6px; box-sizing: border-box; font-size: 13px; }
         .submit-btn { width: 100%; padding: 11px; background: #38bdf8; color: #090d16; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; }
         .cancel-btn { width: 100%; padding: 10px; background: #1e293b; color: #94a3b8; border: none; border-radius: 6px; cursor: pointer; margin-top: 6px; font-size: 13px; }
+
+        .account-box { background: #0d1526; border: 1px solid #14b8a6; padding: 10px; border-radius: 8px; margin-bottom: 8px; font-size: 12px; }
+        .account-title { color: #14b8a6; font-weight: bold; margin-bottom: 4px; }
+        .account-val { font-size: 14px; font-weight: bold; color: #fff; }
 
         .ltr-text { direction: ltr; unicode-bidi: embed; text-align: left; display: inline-block; }
         .badge-alert { background: #ef4444; color: #fff; border-radius: 50%; padding: 2px 6px; font-size: 10px; position: absolute; top: 6px; left: 6px; animation: pulse 1s infinite; }
@@ -89,30 +100,36 @@
 
 <div class="toolbar-grid">
     <button class="action-btn active-blue" onclick="openModal()">+ إضافة مشترك</button>
-    <button class="action-btn" onclick="document.getElementById('excelFileInput').click()" style="background:#f59e0b; color:#000; font-weight:bold;">📥 استيراد ملف أيرثلنك</button>
+    <button class="action-btn import-btn" onclick="document.getElementById('excelFileInput').click()">📥 استيراد ملف أيرثلنك</button>
     <input type="file" id="excelFileInput" style="display:none" accept=".xlsx, .xls, .csv, .txt, .json" onchange="handleFileImport(event)">
     
-    <button class="action-btn network-btn" onclick="openNetworkManagerModal()">📡 مراقب الأبراج والمنظومات</button>
-    <button class="action-btn" onclick="openAccountsModal()" style="background:#14b8a6; color:#090d16; font-weight:bold; grid-column:span 2;">📊 الحسابات والإيرادات المالية</button>
+    <button class="action-btn network-btn" onclick="openNetworkManagerModal()">📡 مراقبة الأبراج والمنظومات</button>
+    
+    <button class="action-btn accounts-btn" onclick="openAccountsModal()">📊 الحسابات والإيرادات المالية</button>
+    <button class="action-btn notify-btn" onclick="sendGroupDebtReminder()">📢 تنبيه غير المسددين</button>
+    <button class="action-btn online-btn" onclick="openOnlineUsersModal()">🟢 المتواجدون أونلاين على التطبيق (<span id="onlineCountBadge">0</span>)</button>
+    <button class="action-btn restore-btn" onclick="openTrashModal()">♻️ سلة المحذوفات (<span id="deletedCount">0</span>)</button>
+    <button class="action-btn broadcast-btn" onclick="openBroadcastModal()">📣 إرسال إشعار عام للكل</button>
+    <button class="action-btn tickets-btn" onclick="openTicketsManagerModal()">🎫 إدارة التكتات والردود <span id="ticketBadgeCount"></span></button>
     <button class="action-btn" onclick="exportData()" style="background:#10b981; color:#fff; grid-column: span 2;">💾 حفظ نسخة احتياطية</button>
-    <button class="action-btn" onclick="openEarthlinkDirect()" style="background:#e11d48; color:#fff; font-weight:bold; grid-column: span 2;">🌐 فتح لوحة ريسلر أيرثلنك</button>
+    <button class="action-btn earthlink-btn" onclick="openEarthlinkDirect()">🌐 فتح لوحة ريسلر أيرثلنك</button>
 </div>
 
 <div id="subList">
     <div style="text-align: center; color: #64748b; padding: 30px;">جاري الاتصال بالسيرفر السحابي...</div>
 </div>
 
-<!-- ================= واجهة مراقبة الأبراج والمنظومات (تطابق الفيديو تماماً) ================= -->
+<!-- ================= نافذة مراقبة الأبراج والمنظومات (تطابق الفيديو تماماً) ================= -->
 <div id="networkManagerModal" class="modal" style="max-width: 580px;">
     <div class="modal-content" style="max-width: 560px; border-color: #06b6d4;">
         
         <!-- رأس النافذة والعدّادات -->
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #1e293b; padding-bottom:8px; margin-bottom:8px;">
-            <h3 style="margin:0; color:#06b6d4; font-size:14px;">📡 مراقب الأبراج والمنظومات الحية</h3>
+            <h3 style="margin:0; color:#06b6d4; font-size:14px;">📡 مراقبة الأبراج والمنظومات الحية</h3>
             <span style="font-size:11px; color:#38bdf8;" id="onlineDevicesCounter">0 يعمل | 0 لا يعمل</span>
         </div>
 
-        <!-- شريط الأزرار تماماً كما ظهر في الفيديو -->
+        <!-- شريط الأزرار تماماً مثل الفيديو -->
         <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:4px; margin-bottom:8px;">
             <button onclick="refreshAllDevicesPing()" style="background:#131d31; color:#38bdf8; border:1px solid #1e293b; padding:8px 2px; border-radius:6px; font-size:10px; cursor:pointer; font-weight:bold;">🔄 تحديث الكل</button>
             <button onclick="openScanModal()" style="background:#131d31; color:#38bdf8; border:1px solid #1e293b; padding:8px 2px; border-radius:6px; font-size:10px; cursor:pointer; font-weight:bold;">🔍 ابحث أجهزة</button>
@@ -121,14 +138,14 @@
         </div>
 
         <div style="display:flex; gap:4px; margin-bottom:8px;">
-            <button onclick="alert('⚡ Ping لحظي مفعل لجميع الأجهزة النشطة.')" style="flex:1; background:#1e293b; color:#38bdf8; border:1px solid #1e293b; padding:6px; border-radius:6px; font-size:10px; cursor:pointer; font-weight:bold;">🟢 Ping لحظي</button>
+            <button onclick="alert('⚡ Ping لحظي مفعل لجميع الأجهزة النشطة في الشبكة.')" style="flex:1; background:#1e293b; color:#38bdf8; border:1px solid #1e293b; padding:6px; border-radius:6px; font-size:10px; cursor:pointer; font-weight:bold;">🟢 Ping لحظي</button>
             <button onclick="openNotificationsModal()" style="flex:1; background:#1e293b; color:#f59e0b; border:1px solid #1e293b; padding:6px; border-radius:6px; font-size:10px; cursor:pointer; font-weight:bold;">⚠️ التنبيهات</button>
             <button onclick="openAddTowerModal()" style="flex:1; background:#38bdf8; color:#090d16; border:none; padding:6px; border-radius:6px; font-weight:bold; font-size:10px; cursor:pointer;">+ برج جديد</button>
         </div>
 
         <input type="text" id="networkSearch" placeholder="🔍 ابحث باسم الجهاز أو الـ IP..." class="search-box" oninput="renderTowersList()">
 
-        <!-- تصفية حسب نوع الجهاز أو حالته -->
+        <!-- تصفية حسب نوع الجهاز -->
         <div style="display:flex; gap:4px; margin-bottom:8px; font-size:10px;">
             <button class="filter-tab active" onclick="setNetFilter('all')">الكل</button>
             <button class="filter-tab" onclick="setNetFilter('Mimosa')">Mimosa</button>
@@ -149,14 +166,14 @@
 <div id="vpnConfigModal" class="modal">
     <div class="modal-content" style="max-width: 380px; border-color: #10b981;">
         <h3 style="margin-top:0; color:#10b981; text-align:center;">🔌 إعدادات الاتصال الآمن (VPN)</h3>
-        <p style="font-size:10px; color:#94a3b8; text-align:center;">ارفع ملفات التوثيق واتصل بالشبكة الافتراضية:</p>
+        <p style="font-size:10px; color:#94a3b8; text-align:center;">اختر ملفات التوثيق (.ovpn / .key / .crt) وأدخل بيانات المزود للاتصال المباشر:</p>
         
         <div id="vpnStatusIndicator" style="background:#0d1526; padding:8px; border-radius:6px; text-align:center; font-size:11px; color:#ef4444; margin-bottom:8px; font-weight:bold;">🔴 غير متصل</div>
 
-        <label style="font-size:11px; color:#cbd5e1;">اختيار الملفات (.ovpn / .key / .crt):</label>
+        <label style="font-size:11px; color:#cbd5e1;">ملفات الشهادات أو الإعداد:</label>
         <input type="file" id="vpnFile" multiple style="font-size:11px; padding:6px;" onchange="loadVpnFiles(event)">
 
-        <label style="font-size:11px; color:#cbd5e1;">اسم المستخدم (إذا يطلبه مزودك):</label>
+        <label style="font-size:11px; color:#cbd5e1;">اسم المستخدم:</label>
         <input type="text" id="vpnUser" placeholder="يوزر الـ VPN" style="direction:ltr; text-align:left;">
 
         <label style="font-size:11px; color:#cbd5e1;">كلمة المرور:</label>
@@ -244,7 +261,7 @@
     </div>
 </div>
 
-<!-- باقي النوافذ القياسية (الحسابات، المشتركين، الرمز، الإشعارات) -->
+<!-- النوافذ القياسية الأخرى -->
 <div id="pinModal" class="modal">
     <div class="modal-content" style="max-width: 300px;">
         <h3 style="margin-top:0; color:#38bdf8; text-align:center;">⚙️ تغيير رمز الدخول</h3>
@@ -340,7 +357,6 @@ function checkDevicesHealthAndPing() {
         let devices = t.devices || {};
         Object.keys(devices).forEach(dKey => {
             let d = devices[dKey];
-            // محاكاة استقرار حقيقي أو انقطاع بناءً على الـ IP
             let isOnline = d.status !== 'offline';
             let ping = d.lastPing || Math.floor(15 + Math.random() * 30);
 
