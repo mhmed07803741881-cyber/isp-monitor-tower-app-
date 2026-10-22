@@ -102,7 +102,7 @@
     <div id="clientInfoBox" class="info-box">
         <div class="info-row"><span class="info-label">اسم المشترك:</span><span class="info-val" id="cName" style="color:#38bdf8"></span></div>
         <div class="info-row"><span class="info-label">يوزر الاشتراك:</span><span class="info-val" id="cUsernameVal" style="color:#10b981"></span></div>
-        <div class="info-row"><span class="info-label">نوع الاشتراك (السرعة):</span><span class="info-val" id="cPkg" style="color:#f59e0b"></span></div>
+        <div class="info-row"><span class="info-label">نوع الاشتراك:</span><span class="info-val" id="cPkg" style="color:#f59e0b"></span></div>
         <div class="info-row"><span class="info-label">حالة الدفع:</span><span class="info-val" id="cStatus"></span></div>
         <div class="info-row"><span class="info-label">مبلغ الاشتراك:</span><span class="info-val" id="cPrice"></span></div>
         <div class="info-row"><span class="info-label">تاريخ التفعيل:</span><span class="info-val" id="cStart" style="color:#38bdf8"></span></div>
@@ -247,7 +247,7 @@ window.onload = function() {
 setInterval(() => {
     if(!foundSubscriber) return;
     sendClientOnlinePresence();
-    checkExpiryAlerts(); // فحص دوري للتنبيه قبل يوم
+    checkExpiryAlerts();
 
     let chats = JSON.parse(localStorage.getItem(`ticket_chat_${foundSubscriber.name}`)) || [];
     if(chats.length > lastChatLength) {
@@ -306,13 +306,16 @@ function loginClient() {
 function showSubscriberDashboard() {
     document.getElementById('cName').innerText = foundSubscriber.name || '-';
     document.getElementById('cUsernameVal').innerText = foundSubscriber.username || '-';
-    document.getElementById('cPkg').innerText = foundSubscriber.pkg || 'اشتراك قياسي';
+    
+    // ربط نوع الاشتراك (السرعة/الباقة) من البرنامج الرئيسي
+    document.getElementById('cPkg').innerText = foundSubscriber.pkg || foundSubscriber.package || 'اشتراك قياسي';
+    
     document.getElementById('cStatus').innerHTML = foundSubscriber.payStatus === 'واصل' ? '<span style="color:#10b981">واصل ✅</span>' : '<span style="color:#f59e0b">أجل ⏳</span>';
     document.getElementById('cPrice').innerText = (foundSubscriber.price || 30000) + " د.ع";
     document.getElementById('cStart').innerText = foundSubscriber.startDate || "غير محدد";
     document.getElementById('cEnd').innerText = foundSubscriber.endDate || "غير محدد";
 
-    // حساب الأيام المتبقية بدقة
+    // حساب الأيام المتبقية بدقة من تاريخ التفعيل إلى الانتهاء (أو الفترة المتبقية الحالية من 30 يوماً)
     if(foundSubscriber.endDate) {
         let now = new Date();
         let endDate = new Date(foundSubscriber.endDate + "T23:59:59");
@@ -320,7 +323,7 @@ function showSubscriberDashboard() {
         let remEl = document.getElementById('cRemainingDays');
         
         if(diffDays > 0) {
-            remEl.innerHTML = `<span style="color:#10b981;">متبقي (${diffDays}) يوم</span>`;
+            remEl.innerHTML = `<span style="color:#10b981;">متبقي (${diffDays}) يوم من أصل 30 يوم</span>`;
         } else if(diffDays === 0) {
             remEl.innerHTML = `<span style="color:#f59e0b;">الاشتراك ينتهي اليوم!</span>`;
         } else {
@@ -379,7 +382,6 @@ function renderUnifiedNotifications() {
         htmlContent += `<div style="margin-bottom:8px; border-bottom:1px solid #1e293b; padding-bottom:6px;"><b style="color:#06b6d4;">📢 إعلان الشبكة العام:</b> ${savedBroadcast}</div>`;
     }
 
-    // إضافة تنبيهات الانتهاء لمركز الإشعارات
     if(foundSubscriber.endDate) {
         let now = new Date();
         let endDate = new Date(foundSubscriber.endDate + "T23:59:59");
@@ -418,7 +420,6 @@ function checkExpiryAlerts() {
     let diffHours = (endDate - now) / (1000 * 60 * 60);
     let warningBanner = document.getElementById('expiryWarningBanner');
 
-    // إذا بقي أقل من 24 ساعة (يوم واحد) ولم يتم تشغيل التنبيه اليومي سابقاً
     let notifKey = `expiry_alert_played_${foundSubscriber.username}_${foundSubscriber.endDate}`;
     let alreadyAlerted = localStorage.getItem(notifKey);
 
@@ -428,7 +429,7 @@ function checkExpiryAlerts() {
         warningBanner.style.display = "block";
 
         if(!alreadyAlerted) {
-            playNotificationSound(); // تشغيل الإنذار الصوتي تلقائياً
+            playNotificationSound(); // تنبيه صوتي تلقائي قبل يوم
             document.getElementById('bellBadgeArea').innerHTML = '<span class="msg-badge">!</span>';
             localStorage.setItem(notifKey, 'true');
         }
