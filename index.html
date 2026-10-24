@@ -33,6 +33,7 @@
         .action-btn.broadcast-btn { background: #06b6d4; color: #090d16; font-weight: bold; border-color: #0891b2; grid-column: span 2; }
         .action-btn.tickets-btn { background: #ec4899; color: #fff; font-weight: bold; border-color: #db2777; grid-column: span 2; }
         .action-btn.accounts-btn { background: #14b8a6; color: #090d16; font-weight: bold; border-color: #0d9488; grid-column: span 2; }
+        .action-btn.expiring-tomorrow-btn { background: #f97316; color: #fff; font-weight: bold; border-color: #ea580c; grid-column: span 2; }
 
         .search-box { width: 100%; padding: 10px; margin-bottom: 8px; background: #131d31; border: 1px solid #1e293b; color: white; border-radius: 8px; box-sizing: border-box; font-size: 12px; }
 
@@ -117,6 +118,7 @@
     <button class="action-btn network-btn" onclick="openNetworkManagerModal()">📡 إدارة وفحص منظومات الإنترنت</button>
     
     <button class="action-btn accounts-btn" onclick="openAccountsModal()">📊 الحسابات والإيرادات المالية</button>
+    <button class="action-btn expiring-tomorrow-btn" onclick="openExpiringTomorrowModal()">⏰ المشتركين المنتهين غداً (<span id="expiringTomorrowBadge">0</span>)</button>
     <button class="action-btn notify-btn" onclick="sendGroupDebtReminder()">📢 تنبيه غير المسددين</button>
     <button class="action-btn online-btn" onclick="openOnlineUsersModal()">🟢 المتواجدون أونلاين على التطبيق (<span id="onlineCountBadge">0</span>)</button>
     <button class="action-btn restore-btn" onclick="openTrashModal()">♻️ سلة المحذوفات (<span id="deletedCount">0</span>)</button>
@@ -128,6 +130,19 @@
 
 <div id="subList">
     <div style="text-align: center; color: #64748b; padding: 30px;">جاري الاتصال بالسيرفر السحابي...</div>
+</div>
+
+<!-- نافذة المشتركين المنتهين غداً -->
+<div id="expiringTomorrowModal" class="modal">
+    <div class="modal-content" style="border-color: #f97316; max-width: 440px;">
+        <h3 style="margin-top:0; color:#f97316; text-align:center;">⏰ المشتركين الذين سينتهي اشتراكهم غداً</h3>
+        <p style="font-size:10px; color:#94a3b8; text-align:center; margin-top:0;" id="tomorrowDateDisplay"></p>
+        
+        <div id="expiringTomorrowListContainer" style="max-height: 250px; overflow-y: auto; margin-bottom: 10px; background:#0d1526; padding:8px; border-radius:6px; font-size:11px;">جاري التحميل...</div>
+        
+        <button class="submit-btn" onclick="sendBatchExpiringTomorrowAlerts()" style="background:#f97316; color:#fff; margin-bottom:6px; font-weight:bold;">📢 إرسال التنبيه للجميع بضغطة زر (واتساب + التطبيق)</button>
+        <button class="cancel-btn" onclick="closeExpiringTomorrowModal()">إغلاق</button>
+    </div>
 </div>
 
 <!-- نافذة إدارة وفحص منظومات الإنترنت والأجهزة -->
@@ -471,6 +486,7 @@ db.ref('ali_isp_subscribers').on('value', (snapshot) => {
     const data = snapshot.val();
     subs = data ? (Array.isArray(data) ? data.filter(i => i !== null) : Object.values(data)) : [];
     renderSubs();
+    updateExpiringTomorrowBadge();
     checkExpiringTomorrow();
 });
 
@@ -716,6 +732,101 @@ function renderCleanTowersList() {
         html += `</div>`;
     });
     container.innerHTML = html;
+}
+
+// دالة جلب قائمة المشتركين المنتهين غداً
+function getExpiringTomorrowList() {
+    let today = new Date();
+    let tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    let tomorrowStr = tomorrow.toISOString().split('T')[0];
+    return subs.filter(s => s.endDate === tomorrowStr);
+}
+
+function updateExpiringTomorrowBadge() {
+    let list = getExpiringTomorrowList();
+    document.getElementById('expiringTomorrowBadge').innerText = list.length;
+}
+
+function openExpiringTomorrowModal() {
+    let today = new Date();
+    let tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    let tomorrowStr = tomorrow.toISOString().split('T')[0];
+    
+    document.getElementById('tomorrowDateDisplay').innerText = `المشتركون الذين ينتهي اشتراكهم بتاريخ غد (${tomorrowStr}):`;
+    
+    let list = getExpiringTomorrowList();
+    let container = document.getElementById('expiringTomorrowListContainer');
+
+    if(list.length === 0) {
+        container.innerHTML = '<div style="text-align:center; color:#10b981; padding:20px; font-weight:bold;">لا يوجد أي مشترك سينتهي اشتراكه غداً.</div>';
+    } else {
+        let html = '';
+        list.forEach((s, idx) => {
+            let priceFormatted = parseFloat(s.price || 30000).toLocaleString();
+            html += `
+                <div style="background:#131d31; border:1px solid #1e293b; padding:8px; border-radius:6px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <div style="font-weight:bold; color:#f97316;">${idx+1}. ${s.name} <span class="ltr-text" style="color:#38bdf8;">(${s.username || '-'})</span></div>
+                        <div style="font-size:10px; color:#cbd5e1;">وقت وتاريخ الانتهاء: <b style="color:#ef4444;">غداً (${s.endDate})</b> | المبلغ المطلوب: <b>${priceFormatted} د.ع</b></div>
+                        <div style="font-size:10px; color:#94a3b8;">هاتف: ${s.phone || 'بدون'}</div>
+                    </div>
+                    ${s.phone ? `<button onclick="sendSingleExpiringAlert('${s.name}', '${s.username}', '${s.phone}', '${s.endDate}', '${s.price}')" style="background:#25d366; color:#fff; border:none; padding:4px 8px; border-radius:4px; font-size:10px; cursor:pointer;">💬 تنبيه</button>` : ''}
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
+
+    document.getElementById('expiringTomorrowModal').style.display = 'flex';
+}
+function closeExpiringTomorrowModal() { document.getElementById('expiringTomorrowModal').style.display = 'none'; }
+
+function sendSingleExpiringAlert(name, username, phone, endDate, price) {
+    let priceFormatted = parseFloat(price || 30000).toLocaleString();
+    let alertMsg = `⚠️ تنبيه هام من مكتب مهندس علي للإنترنت:\n\nعزيزنا المشترك (${name})، يودعك اشتراكك وينتهي غداً بتاريخ (${endDate}).\n• يوزر الاشتراك: ${username || name}\n• المبلغ المطلوب للتجديد: ${priceFormatted} د.ع\n\nيرجى التجديد لضمان استمرار الخدمة دون انقطاع. شكراً لاختياركم خدماتنا.`;
+
+    // تخزين في تكت المشترك
+    let chats = JSON.parse(localStorage.getItem(`ticket_chat_${name}`)) || [];
+    chats.push({ sender: "مهندس علي (تنبيه انتهاء غداً)", text: alertMsg });
+    localStorage.setItem(`ticket_chat_${name}`, JSON.stringify(chats));
+
+    if(phone && phone.trim() !== "") {
+        let cleanPhone = phone.replace(/\D/g, '');
+        if(cleanPhone.startsWith('0')) cleanPhone = '964' + cleanPhone.substring(1);
+        window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(alertMsg)}`, '_blank');
+    }
+}
+
+function sendBatchExpiringTomorrowAlerts() {
+    let list = getExpiringTomorrowList();
+    let validList = list.filter(s => s.phone && s.phone.trim() !== "");
+
+    if(list.length === 0) { alert("لا توجد اشتراكات تنتهي غداً لإرسال تنبيهات لها."); return; }
+
+    if(confirm(`سيتم إرسال رسائل التنبيه إلى (${list.length}) مشترك (عبر التطبيق والواتساب لمن يمتلك رقماً). هل تريد المتابعة؟`)) {
+        list.forEach((s, index) => {
+            setTimeout(() => {
+                let priceFormatted = parseFloat(s.price || 30000).toLocaleString();
+                let alertMsg = `⚠️ تنبيه هام من مكتب مهندس علي للإنترنت:\n\nعزيزنا المشترك (${s.name})، ينتهي اشتراكك غداً بتاريخ (${s.endDate}).\n• يوزر الاشتراك: ${s.username || s.name}\n• المبلغ المطلوب للتجديد: ${priceFormatted} د.ع\n\nيرجى التجديد لضمان استمرار الخدمة.`;
+
+                // تخزين تلقائي في تطبيق المشترك (التكتات)
+                let chats = JSON.parse(localStorage.getItem(`ticket_chat_${s.name}`)) || [];
+                chats.push({ sender: "مهندس علي (تنبيه انتهاء غداً)", text: alertMsg });
+                localStorage.setItem(`ticket_chat_${s.name}`, JSON.stringify(chats));
+
+                // فتح واتساب إذا وجد رقم هاتف
+                if(s.phone && s.phone.trim() !== "") {
+                    let cleanPhone = s.phone.replace(/\D/g, '');
+                    if(cleanPhone.startsWith('0')) cleanPhone = '964' + cleanPhone.substring(1);
+                    window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(alertMsg)}`, '_blank');
+                }
+            }, index * 1200);
+        });
+        alert("✅ جاري إرسال التنبيهات تدريجياً عبر الواتساب وتطبيق المشتركين!");
+        closeExpiringTomorrowModal();
+    }
 }
 
 setInterval(() => {
@@ -1319,8 +1430,8 @@ function confirmRenewSubscription() {
         syncToCloud();
         renderSubs();
         closeRenewModal();
+        updateExpiringTomorrowBadge();
 
-        // إرسال الإشعار والتفاصيل عبر تكت المشترك التطبيق + الواتساب تلقائياً
         let paidAmountForReceipt = chosenPayType === 'واصل' ? (parseFloat(s.price) || 30000) : chosenPartialPaid;
         let totalDebtCalc = (parseFloat(s.price || 30000) * chosenDebtMonths);
         let remainingCalc = chosenPayType === 'أجل' ? (totalDebtCalc - chosenPartialPaid) : 0;
@@ -1411,12 +1522,10 @@ function confirmPartialPayment() {
 function sendNotificationToClientAndWhatsapp(sub, messageText) {
     if(!sub || !sub.name) return;
 
-    // 1. إرسال إلى تطبيق المشترك (تخزين في محادثة التكتات الخاصة به)
     let chats = JSON.parse(localStorage.getItem(`ticket_chat_${sub.name}`)) || [];
     chats.push({ sender: "مهندس علي (الإدارة)", text: messageText });
     localStorage.setItem(`ticket_chat_${sub.name}`, JSON.stringify(chats));
 
-    // 2. إرسال إلى الواتساب إذا كان رقم الهاتف متوفراً
     if(sub.phone && sub.phone.trim() !== "") {
         let cleanPhone = sub.phone.replace(/\D/g, '');
         if(cleanPhone.startsWith('0')) cleanPhone = '964' + cleanPhone.substring(1);
@@ -1467,6 +1576,7 @@ function deleteSub(id) {
         subs = subs.filter(s => String(s.id) !== String(id));
         syncToCloud();
         renderSubs();
+        updateExpiringTomorrowBadge();
     }
 }
 
@@ -1562,6 +1672,7 @@ function restoreSubscriber(id) {
         syncToCloud();
         renderTrashList();
         renderSubs();
+        updateExpiringTomorrowBadge();
         alert(`تم استرجاع المشترك (${target.name}) بنجاح.`);
     }
 }
