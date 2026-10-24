@@ -332,7 +332,7 @@
             </div>
             <div style="width: 110px;">
                 <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">وقت التفعيل:</label>
-                <input type="time" id="startTime" value="12:00">
+                <input type="time" id="startTime" onchange="calcEnd()" oninput="calcEnd()">
             </div>
         </div>
 
@@ -343,7 +343,7 @@
             </div>
             <div style="width: 110px;">
                 <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">وقت الانتهاء:</label>
-                <input type="time" id="endTime" value="12:00">
+                <input type="time" id="endTime">
             </div>
         </div>
         
@@ -565,10 +565,10 @@ function processImportedData(dataArray) {
         if(name) {
             let today = new Date();
             let startStr = today.toISOString().split('T')[0];
-            let startTimeStr = "12:00";
+            let startTimeStr = today.toTimeString().substring(0, 5);
             today.setDate(today.getDate() + 30);
             let endStr = today.toISOString().split('T')[0];
-            let endTimeStr = "12:00";
+            let endTimeStr = startTimeStr;
 
             subs.push({
                 id: Date.now() + Math.random(),
@@ -1421,9 +1421,9 @@ function openEditModalFromDetails() {
     }
 
     document.getElementById('startDate').value = s.startDate || new Date().toISOString().split('T')[0];
-    document.getElementById('startTime').value = s.startTime || "12:00";
+    document.getElementById('startTime').value = s.startTime || new Date().toTimeString().substring(0, 5);
     document.getElementById('endDate').value = s.endDate || "";
-    document.getElementById('endTime').value = s.endTime || "12:00";
+    document.getElementById('endTime').value = s.endTime || s.startTime || "12:00";
     document.getElementById('saveBtnText').innerText = "تحديث وتعديل البيانات";
     document.getElementById('addSubModal').style.display = 'flex';
 }
@@ -1440,9 +1440,9 @@ function saveSub() {
     let debtMonths = payStatus === 'أجل' ? (parseInt(document.getElementById('debtMonths').value) || 1) : 1;
     let partialPaid = payStatus === 'أجل' ? (parseFloat(document.getElementById('partialPaidAmount').value) || 0) : 0;
     let startDate = document.getElementById('startDate').value;
-    let startTime = document.getElementById('startTime').value || "12:00";
+    let startTime = document.getElementById('startTime').value || new Date().toTimeString().substring(0, 5);
     let endDate = document.getElementById('endDate').value;
-    let endTime = document.getElementById('endTime').value || "12:00";
+    let endTime = document.getElementById('endTime').value || startTime;
     
     if(!name || !startDate || !endDate) { alert("يرجى ملء اسم المشترك والتواريخ الأساسية"); return; }
     
@@ -1501,7 +1501,7 @@ function confirmRenewSubscription() {
         s.startTime = now.toTimeString().substring(0, 5);
         now.setDate(now.getDate() + 30);
         s.endDate = now.toISOString().split('T')[0];
-        s.endTime = s.startTime;
+        s.endTime = s.startTime; // يحدد وقت الانتهاء نفس وقت التفعيل تلقائياً وبدقة
         s.payStatus = chosenPayType;
         s.debtMonths = chosenDebtMonths;
         s.partialPaid = chosenPartialPaid;
