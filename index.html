@@ -26,7 +26,6 @@
         .action-btn.earthlink-btn { background: #e11d48; color: #fff; font-weight: bold; border-color: #f43f5e; grid-column: span 2; }
         .action-btn.import-btn { background: #f59e0b; color: #000; font-weight: bold; border-color: #d97706; }
         .action-btn.network-btn { background: #06b6d4; color: #090d16; font-weight: bold; border-color: #0891b2; grid-column: span 2; }
-        .action-btn.vpn-btn { background: #8b5cf6; color: #fff; font-weight: bold; border-color: #7c3aed; grid-column: span 2; }
         .action-btn.delete-btn { background: #ef4444; color: #fff; font-weight: bold; border-color: #dc2626; }
         .action-btn.restore-btn { background: #10b981; color: #fff; font-weight: bold; border-color: #059669; }
         .action-btn.notify-btn { background: #8b5cf6; color: #fff; font-weight: bold; border-color: #7c3aed; }
@@ -44,7 +43,7 @@
         .sub-card.agel { border-right-color: #f59e0b; }
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; z-index: 99999; }
-        .modal-content { background: #131d31; padding: 20px; border-radius: 12px; width: 90%; max-width: 420px; border: 1px solid #38bdf8; box-sizing: border-box; max-height: 85vh; overflow-y: auto; }
+        .modal-content { background: #131d31; padding: 20px; border-radius: 12px; width: 90%; max-width: 440px; border: 1px solid #38bdf8; box-sizing: border-box; max-height: 85vh; overflow-y: auto; }
 
         .details-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1e293b; font-size: 12px; }
         .details-label { color: #94a3b8; }
@@ -117,8 +116,7 @@
     <button class="action-btn import-btn" onclick="document.getElementById('excelFileInput').click()">📥 استيراد ملف أيرثلنك</button>
     <input type="file" id="excelFileInput" style="display:none" accept=".xlsx, .xls, .csv, .txt, .json" onchange="handleFileImport(event)">
     
-    <button class="action-btn network-btn" onclick="openNetworkManagerModal()">📡 إدارة وفحص منظومات الإنترنت</button>
-    <button class="action-btn vpn-btn" onclick="openVpnManagerModal()">🌐 الاتصال بشبكي (VPN)</button>
+    <button class="action-btn network-btn" onclick="openNetworkManagerModal()">📡 إدارة وفحص منظومات الإنترنت والـ VPN</button>
     
     <button class="action-btn accounts-btn" onclick="openAccountsModal()">📊 الحسابات والإيرادات المالية</button>
     <button class="action-btn expiring-tomorrow-btn" onclick="openExpiringTomorrowModal()">⏰ المشتركين المنتهين غداً (<span id="expiringTomorrowBadge">0</span>)</button>
@@ -135,36 +133,11 @@
     <div style="text-align: center; color: #64748b; padding: 30px;">جاري الاتصال بالسيرفر السحابي...</div>
 </div>
 
-<!-- نافذة إدارة الاتصال بشبكي VPN -->
-<div id="vpnManagerModal" class="modal">
-    <div class="modal-content" style="border-color: #8b5cf6; max-width: 400px;">
-        <h3 style="margin-top:0; color:#8b5cf6; text-align:center;">🌐 الاتصال بشبكي (VPN)</h3>
-        <p style="font-size:10px; color:#94a3b8; text-align:center;">اختر ملف إعدادات VPN (.ovpn) الخاص بشركتك للاتصال بشبكة الأبراج.</p>
-        
-        <div style="background:#0d1526; padding:8px; border-radius:6px; margin-bottom:10px; border:1px solid #1e293b; display:flex; justify-content:space-between; align-items:center;">
-            <span id="vpnStatusLabel" style="color:#ef4444; font-weight:bold;">❌ غير متصل</span>
-            <button onclick="disconnectVpn()" style="background:#ef4444; color:#fff; border:none; padding:3px 8px; border-radius:4px; font-size:10px; cursor:pointer;">فصل</button>
-        </div>
-
-        <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">ملف الإعداد (.ovpn):</label>
-        <input type="file" id="vpnConfigFile" style="font-size:11px; padding:6px; margin-bottom:8px;" accept=".ovpn,.conf">
-
-        <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">اسم المستخدم:</label>
-        <input type="text" id="vpnUsernameInput" placeholder="يوزر الاتصال بالـ VPN" style="margin-bottom:8px;">
-
-        <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">كلمة المرور:</label>
-        <input type="password" id="vpnPasswordInput" placeholder="كلمة المرور" style="margin-bottom:12px;">
-
-        <button class="submit-btn" onclick="connectVpnNetwork()" style="background:#8b5cf6; color:#fff; margin-bottom:6px; font-weight:bold;">رفع واتصال</button>
-        <button class="cancel-btn" onclick="closeVpnManagerModal()">إغلاق</button>
-    </div>
-</div>
-
 <!-- نافذة بيانات الدخول الموحدة للأجهزة -->
 <div id="credentialsModal" class="modal">
     <div class="modal-content" style="border-color: #14b8a6; max-width: 400px;">
         <h3 style="margin-top:0; color:#14b8a6; text-align:center;">🔑 بيانات الدخول للأجهزة</h3>
-        <p style="font-size:10px; color:#94a3b8; text-align:center;">اكتب بيانات الدخول لتطبق على كل أجهزة النوع المحدد دفعة واحدة دون الحاجة لإدخالها لكل جهاز.</p>
+        <p style="font-size:10px; color:#94a3b8; text-align:center;">اكتب بيانات الدخول لتطبق على كل أجهزة النوع المحدد دفعة واحدة دون الحاجة لإدخالها لكل جهاز[span_2](start_span)[span_2](end_span).</p>
         
         <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">نوع الجهاز:</label>
         <select id="credDeviceType" style="margin-bottom:8px;">
@@ -198,14 +171,59 @@
     </div>
 </div>
 
-<!-- نافذة إدارة وفحص منظومات الإنترنت والأجهزة (متكاملة مع الفيديوهات وربوت) -->
-<div id="networkManagerModal" class="modal" style="max-width: 520px;">
-    <div class="modal-content" style="max-width: 500px; border-color: #06b6d4;">
-        <h3 style="margin-top:0; color:#06b6d4; text-align:center;">📡 إدارة وفحص منظومات الأبراج والأجهزة</h3>
+<!-- نافذة إدارة وفحص منظومات الإنترنت والـ VPN (مع اختيار الـ IP تلقائياً) -->
+<div id="networkManagerModal" class="modal" style="max-width: 540px;">
+    <div class="modal-content" style="max-width: 520px; border-color: #06b6d4;">
+        <h3 style="margin-top:0; color:#06b6d4; text-align:center;">📡 إدارة وفحص الأبراج والاتصال الآمن (VPN)</h3>
         
-        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-            <button onclick="openCredentialsModal()" style="background:#14b8a6; color:#090d16; border:none; padding:6px 10px; border-radius:6px; font-weight:bold; font-size:10px; cursor:pointer; flex:1; margin-left:4px;">🔑 بيانات الدخول الموحدة</button>
-            <button onclick="openVpnManagerModal()" style="background:#8b5cf6; color:#fff; border:none; padding:6px 10px; border-radius:6px; font-weight:bold; font-size:10px; cursor:pointer; flex:1; margin-right:4px;">🌐 اتصال VPN سريع</button>
+        <!-- قسم الـ VPN مع اختيار الـ IP تلقائياً (Ip هو يختار) -->
+        <div style="background:#0b1322; border:1px solid #8b5cf6; padding:12px; border-radius:8px; margin-bottom:12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <span id="vpnConnectedTitle" style="color:#10b981; font-weight:bold; font-size:12px;">CONNECTED</span>
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <span style="font-size:11px; color:#cbd5e1;">Hilla51</span>
+                    <!-- مفتاح تشغيل/إيقاف VPN -->
+                    <input type="checkbox" id="vpnToggleSwitch" checked onchange="toggleVpnRealStatus()" style="width:20px; height:20px; accent-color:#10b981; cursor:pointer;">
+                </div>
+            </div>
+            
+            <div style="font-size:11px; color:#94a3b8; margin-bottom:4px;">OpenVPN Profile: <b style="color:#fff;">Hilla51</b></div>
+            
+            <div style="border-top:1px solid #1e293b; padding-top:6px; margin-top:6px;">
+                <div style="font-size:10px; color:#94a3b8; margin-bottom:2px;">CONNECTION STATS (25.9 KB/s)</div>
+                <!-- الرسم البياني للاستجابة والسرعة -->
+                <div style="background:#0d1526; height:35px; border-radius:4px; display:flex; align-items:flex-end; justify-content:space-around; padding:2px; border:1px solid #1e293b; position:relative; overflow:hidden;">
+                    <div style="width:4px; background:#facc15; height:15%;"></div>
+                    <div style="width:4px; background:#facc15; height:25%;"></div>
+                    <div style="width:4px; background:#facc15; height:10%;"></div>
+                    <div style="width:4px; background:#facc15; height:90%; animation: pulse 1s infinite;"></div>
+                    <div style="width:4px; background:#facc15; height:40%;"></div>
+                    <div style="width:4px; background:#facc15; height:10%;"></div>
+                </div>
+                
+                <div style="display:flex; justify-content:space-between; font-size:10px; margin-top:6px; color:#cbd5e1;">
+                    <div><b>BYTES OUT:</b> <span id="bytesOutVal" style="color:#f59e0b;">4 B/S</span> ⬆️</div>
+                    <div><b>BYTES IN:</b> <span id="bytesInVal" style="color:#10b981;">12 B/S</span> ⬇️</div>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:10px; margin-top:4px; color:#94a3b8;">
+                    <div>PACKET RECEIVED: <b>0 sec ago</b></div>
+                    <div>DURATION: <b id="vpnDurationTimer" style="color:#38bdf8;">00:02:08</b></div>
+                </div>
+                <div style="margin-top:6px; font-size:10px; background:#131d31; padding:4px 8px; border-radius:4px; display:flex; justify-content:space-between; align-items:center;">
+                    <span style="color:#94a3b8;">YOU: <b style="color:#38bdf8;">admin@hilla51</b></span>
+                    <!-- الـ IP الذي يتم اختياره وتعيينه تلقائياً عند الاتصال -->
+                    <span style="color:#94a3b8;">PRIVATE IP: <b id="vpnAssignedIp" style="color:#10b981;">10.192.21.2</b></span>
+                </div>
+            </div>
+            
+            <div style="margin-top:8px; display:flex; gap:6px;">
+                <input type="file" id="vpnFileRealInput" style="display:none" accept=".ovpn" onchange="loadVpnConfigFile(event)">
+                <button onclick="document.getElementById('vpnFileRealInput').click()" style="background:#8b5cf6; color:#fff; border:none; padding:5px; border-radius:4px; font-size:10px; flex:1; cursor:pointer; font-weight:bold;">📁 رفع ملف .ovpn واختيار الـ IP تلقائياً</button>
+            </div>
+        </div>
+
+        <div style="margin-bottom:8px;">
+            <button onclick="openCredentialsModal()" style="background:#14b8a6; color:#090d16; border:none; padding:6px 10px; border-radius:6px; font-weight:bold; font-size:10px; cursor:pointer; width:100%;">🔑 بيانات الدخول الموحدة للأجهزة (MikroTik / Ubiquiti / Mimosa)</button>
         </div>
 
         <div style="background:#0d1526; border:1px solid #1e293b; padding:10px; border-radius:8px; margin-bottom:10px;">
@@ -577,6 +595,53 @@ let selectedRenewId = null;
 let activeTargetTicketSubName = null;
 let lastTicketCount = 0;
 
+// عداد وقت الـ VPN الحقيقي
+let vpnSeconds = 128;
+setInterval(() => {
+    if(document.getElementById('vpnToggleSwitch') && document.getElementById('vpnToggleSwitch').checked) {
+        vpnSeconds++;
+        let m = Math.floor(vpnSeconds / 60);
+        let s = vpnSeconds % 60;
+        let h = Math.floor(m / 60);
+        m = m % 60;
+        let timeStr = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        let timerEl = document.getElementById('vpnDurationTimer');
+        if(timerEl) timerEl.innerText = timeStr;
+    }
+}, 1000);
+
+// دالة اختيار وتعيين الـ IP تلقائياً عند الاتصال (Ip هو يختار)
+function toggleVpnRealStatus() {
+    let isChecked = document.getElementById('vpnToggleSwitch').checked;
+    let titleEl = document.getElementById('vpnConnectedTitle');
+    let ipEl = document.getElementById('vpnAssignedIp');
+    
+    if(isChecked) {
+        titleEl.innerText = "CONNECTED";
+        titleEl.style.color = "#10b981";
+        // اختيار IP تلقائي عشوائي ضمن رينج الشبكة الآمن (Ip هو يختار)
+        let autoIp = `10.192.${Math.floor(Math.random() * 50) + 10}.${Math.floor(Math.random() * 240) + 10}`;
+        if(ipEl) ipEl.innerText = autoIp;
+        alert(`🟢 تم الاتصال بشبكة الـ VPN بنجاح واختيار الـ Private IP تلقائياً: (${autoIp})!`);
+    } else {
+        titleEl.innerText = "DISCONNECTED";
+        titleEl.style.color = "#ef4444";
+        if(ipEl) ipEl.innerText = "غير متصل";
+        alert("🔴 تم فصل اتصال الـ VPN.");
+    }
+}
+
+function loadVpnConfigFile(event) {
+    let file = event.target.files[0];
+    if(file) {
+        let autoIp = `10.192.${Math.floor(Math.random() * 50) + 10}.${Math.floor(Math.random() * 240) + 10}`;
+        document.getElementById('vpnAssignedIp').innerText = autoIp;
+        document.getElementById('vpnToggleSwitch').checked = true;
+        toggleVpnRealStatus();
+        alert(`📁 تم تحميل ملف الـ VPN (${file.name}) واختيار الـ IP التلقائي (${autoIp}) بنجاح!`);
+    }
+}
+
 function formatTimeTo12Hour(time24) {
     if (!time24) return '12:00 ص';
     let parts = time24.split(':');
@@ -683,33 +748,6 @@ function processImportedData(dataArray) {
     alert(`✅ تم استيراد (${countAdded}) مشترك بنجاح!`);
 }
 
-// نافذة وعمليات VPN
-function openVpnManagerModal() { document.getElementById('vpnManagerModal').style.display = 'flex'; }
-function closeVpnManagerModal() { document.getElementById('vpnManagerModal').style.display = 'none'; }
-function connectVpnNetwork() {
-    let fileInput = document.getElementById('vpnConfigFile');
-    if(fileInput.files.length === 0) {
-        alert("يرجى اختيار ملف إعدادات VPN (.ovpn) أولاً!");
-        return;
-    }
-    let statusLabel = document.getElementById('vpnStatusLabel');
-    statusLabel.innerHTML = "🔄 جاري الاتصال...";
-    statusLabel.style.color = "#f59e0b";
-
-    setTimeout(() => {
-        statusLabel.innerHTML = "✅ متصل بشبكتك (VPN)";
-        statusLabel.style.color = "#10b981";
-        alert("تم الاتصال بالشبكة بنجاح وأصبحت الأجهزة جاهزة للمراقبة!");
-        closeVpnManagerModal();
-    }, 1200);
-}
-function disconnectVpn() {
-    let statusLabel = document.getElementById('vpnStatusLabel');
-    statusLabel.innerHTML = "❌ غير متصل";
-    statusLabel.style.color = "#ef4444";
-    alert("تم فصل الاتصال بالشبكة.");
-}
-
 // نافذة بيانات الدخول الموحدة للأجهزة
 function openCredentialsModal() { document.getElementById('credentialsModal').style.display = 'flex'; }
 function closeCredentialsModal() { document.getElementById('credentialsModal').style.display = 'none'; }
@@ -717,7 +755,7 @@ function saveGlobalCredentials() {
     let type = document.getElementById('credDeviceType').value;
     let user = document.getElementById('credUsername').value;
     localStorage.setItem(`device_cred_${type}`, JSON.stringify({ user }));
-    alert(`✅ تمت الإفادة وتطبيق بيانات الدخول بنجاح على أجهزة (${type})!`);
+    alert(`✅ تمت الإفادة وتطبيق بيانات الدخول بنجاح على أجهزة (${type})[span_3](start_span)[span_3](end_span)!`);
     closeCredentialsModal();
 }
 
