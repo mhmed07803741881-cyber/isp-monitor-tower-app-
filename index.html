@@ -798,10 +798,10 @@ function openExpiringTomorrowModal() {
                 <div style="background:#131d31; border:1px solid #1e293b; padding:8px; border-radius:6px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
                     <div>
                         <div style="font-weight:bold; color:#f97316;">${idx+1}. ${s.name} <span class="ltr-text" style="color:#38bdf8;">(${s.username || '-'})</span></div>
-                        <div style="font-size:10px; color:#cbd5e1;">الانتهاء: <b style="color:#ef4444;">غداً (${s.endDate} - ${s.endTime || '12:00'})</b>${debtDetailsText}</div>
+                        <div style="font-size:10px; color:#cbd5e1;">الانتهاء: <b style="color:#ef4444;">غداً (${s.endDate})</b>${debtDetailsText}</div>
                         <div style="font-size:10px; color:#94a3b8;">هاتف: ${s.phone || 'بدون'}</div>
                     </div>
-                    ${s.phone ? `<button onclick="sendSingleExpiringAlert('${s.name}', '${s.username}', '${s.phone}', '${s.endDate}', '${s.endTime}', '${s.price}', '${s.payStatus}', '${s.debtMonths}', '${s.partialPaid}')" style="background:#25d366; color:#fff; border:none; padding:4px 8px; border-radius:4px; font-size:10px; cursor:pointer; font-weight:bold;">💬 واتساب أعمال</button>` : ''}
+                    ${s.phone ? `<button onclick="sendSingleExpiringAlert('${s.name}', '${s.username}', '${s.phone}', '${s.endDate}', '${s.price}', '${s.payStatus}', '${s.debtMonths}', '${s.partialPaid}')" style="background:#25d366; color:#fff; border:none; padding:4px 8px; border-radius:4px; font-size:10px; cursor:pointer; font-weight:bold;">💬 واتساب أعمال</button>` : ''}
                 </div>
             `;
         });
@@ -812,7 +812,7 @@ function openExpiringTomorrowModal() {
 }
 function closeExpiringTomorrowModal() { document.getElementById('expiringTomorrowModal').style.display = 'none'; }
 
-function sendSingleExpiringAlert(name, username, phone, endDate, endTime, price, payStatus, debtMonths, partialPaid) {
+function sendSingleExpiringAlert(name, username, phone, endDate, price, payStatus, debtMonths, partialPaid) {
     let priceFormatted = parseFloat(price || 30000).toLocaleString();
     let debtText = "";
     
@@ -825,7 +825,7 @@ function sendSingleExpiringAlert(name, username, phone, endDate, endTime, price,
         debtText = `\n⚠️ تنبيه مالي: أنت مطلوب بمبلغ إجمالي قدره (${remaining.toLocaleString()} د.ع) يرجى تسديده مع التجديد.`;
     }
 
-    let alertMsg = `*تحية طيبة عزيزي المشترك*\n\nعزيزنا المشترك (${name})، ينتهي اشتراكك غداً بتاريخ (${endDate} - ${endTime || '12:00'}).\n• يوزر الاشتراك: ${username || name}\n• المبلغ المطلوب للتجديد: ${priceFormatted} د.ع${debtText}\n\n*ملاحظة*\n*(يمكنك تفعيل الاشتراك قبل الانتهاء ويتم إضافة الايام المتبقية الى الاشتراك)*\n\n*يمكنك تسديد الاشتراك عن طريق*\n*(بطاقة كي كارد)*\n*رقم سوبر كي (07724850876 )*\n*رقم تحويل بطاقة كي كارد (3627952355 )*\n\nرقم المكتب : 07724850876 📱\nالمكتب : محاويل - قرية السورة\n*(هذه الرسالة يتم ارسالها تلقائيا من النظام)*`;
+    let alertMsg = `*تحية طيبة عزيزي المشترك*\n\nعزيزنا المشترك (${name})، ينتهي اشتراكك غداً بتاريخ (${endDate}).\n• يوزر الاشتراك: ${username || name}\n• المبلغ المطلوب للتجديد: ${priceFormatted} د.ع${debtText}\n\n*ملاحظة*\n*(يمكنك تفعيل الاشتراك قبل الانتهاء ويتم إضافة الايام المتبقية الى الاشتراك)*\n\n*يمكنك تسديد الاشتراك عن طريق*\n*(بطاقة كي كارد)*\n*رقم سوبر كي (07724850876 )*\n*رقم تحويل بطاقة كي كارد (3627952355 )*\n\nرقم المكتب : 07724850876 📱\nالمكتب : محاويل - قرية السورة\n*(هذه الرسالة يتم ارسالها تلقائيا من النظام)*`;
 
     let chats = JSON.parse(localStorage.getItem(`ticket_chat_${name}`)) || [];
     chats.push({ sender: "مهندس علي (تنبيه انتهاء غداً)", text: alertMsg });
@@ -834,7 +834,8 @@ function sendSingleExpiringAlert(name, username, phone, endDate, endTime, price,
     if(phone && phone.trim() !== "") {
         let cleanPhone = phone.replace(/\D/g, '');
         if(cleanPhone.startsWith('0')) cleanPhone = '964' + cleanPhone.substring(1);
-        window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(alertMsg)}`, '_blank');
+        // فتح تطبيق واتساب مباشرة بدون صفحة ويب وسيطة
+        window.open(`whatsapp://send?phone=${cleanPhone}&text=${encodeURIComponent(alertMsg)}`, '_blank');
     }
 }
 
@@ -845,7 +846,7 @@ function sendBatchExpiringTomorrowAlerts() {
     if(confirm(`سيتم إرسال تنبيهات انتهاء الاشتراك لـ (${list.length}) مشترك. هل تريد المتابعة؟`)) {
         list.forEach((s, index) => {
             setTimeout(() => {
-                sendSingleExpiringAlert(s.name, s.username, s.phone, s.endDate, s.endTime, s.price, s.payStatus, s.debtMonths, s.partialPaid);
+                sendSingleExpiringAlert(s.name, s.username, s.phone, s.endDate, s.price, s.payStatus, s.debtMonths, s.partialPaid);
             }, index * 1200);
         });
         alert("✅ جاري إرسال التنبيهات تدريجياً عبر واتساب وتطبيق المشتركين!");
@@ -936,7 +937,7 @@ function sendBroadcastToAll() {
                 let cleanPhone = s.phone.replace(/\D/g, '');
                 if(cleanPhone.startsWith('0')) cleanPhone = '964' + cleanPhone.substring(1);
                 let waText = `*تحية طيبة عزيزي المشترك*\n\n${msg}\n\nرقم المكتب : 07724850876 📱\nالمكتب : محاويل - قرية السورة\n*(هذه الرسالة يتم ارسالها تلقائيا من النظام)*`;
-                window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(waText)}`, '_blank');
+                window.open(`whatsapp://send?phone=${cleanPhone}&text=${encodeURIComponent(waText)}`, '_blank');
             }, index * 1200);
         });
     }
@@ -1022,7 +1023,7 @@ function checkExpiringTomorrow() {
     let expiringSoon = subs.filter(s => s.endDate === tomorrowStr);
     if (expiringSoon.length > 0) {
         expiringSoon.forEach(s => {
-            sendSingleExpiringAlert(s.name, s.username, s.phone, s.endDate, s.endTime, s.price, s.payStatus, s.debtMonths, s.partialPaid);
+            sendSingleExpiringAlert(s.name, s.username, s.phone, s.endDate, s.price, s.payStatus, s.debtMonths, s.partialPaid);
         });
         localStorage.setItem('ali_last_expiry_check', todayStr);
     }
@@ -1081,7 +1082,7 @@ function sendGroupDebtReminder() {
                 let remaining = totalDebt - partialPaid;
                 
                 let msg = `*تحية طيبة عزيزي المشترك*\n\nعزيزي المشترك (${s.name}) ⏳\nنود تذكيرك بوجود مبالغ اشتراك معلقة (أجل) في مكتب مهندس علي لخدمات الإنترنت.\n\n• يوزر الاشتراك: ${s.username || s.name}\n• المبلغ المطلوب سداده: ${remaining.toLocaleString()} د.ع\n\n*ملاحظة*\n*(يمكنك تفعيل الاشتراك قبل الانتهاء ويتم إضافة الايام المتبقية الى الاشتراك)*\n\n*يمكنك تسديد الاشتراك عن طريق*\n*(بطاقة كي كارد)*\n*رقم سوبر كي (07724850876 )*\n*رقم تحويل بطاقة كي كارد (3627952355 )*\n\nرقم المكتب : 07724850876 📱\nالمكتب : محاويل - قرية السورة\n*(هذه الرسالة يتم ارسالها تلقائيا من النظام)*`;
-                window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`, '_blank');
+                window.open(`whatsapp://send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`, '_blank');
             }, index * 1200);
         });
     }
@@ -1133,7 +1134,7 @@ function calcEnd() {
         let date = new Date(startVal);
         date.setDate(date.getDate() + 30);
         document.getElementById('endDate').value = date.toISOString().split('T')[0];
-        document.getElementById('endTime').value = timeVal || "12:00";
+        document.getElementById('endTime').value = timeVal; // تطابق وقت التفعيل والانتهاء تماماً تلقائياً
     }
 }
 
@@ -1587,7 +1588,8 @@ function sendNotificationToClientAndWhatsapp(sub, messageText) {
     if(sub.phone && sub.phone.trim() !== "") {
         let cleanPhone = sub.phone.replace(/\D/g, '');
         if(cleanPhone.startsWith('0')) cleanPhone = '964' + cleanPhone.substring(1);
-        window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(messageText)}`, '_blank');
+        // فتح تطبيق واتساب مباشرة بدون صفحة ويب وسيطة
+        window.open(`whatsapp://send?phone=${cleanPhone}&text=${encodeURIComponent(messageText)}`, '_blank');
     }
 }
 
@@ -1605,7 +1607,7 @@ function sendWhatsappReceipt(subId, unitPrice) {
     if(s.phone && s.phone.trim() !== "") {
         let cleanPhone = s.phone.replace(/\D/g, '');
         if(cleanPhone.startsWith('0')) cleanPhone = '964' + cleanPhone.substring(1);
-        window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`, '_blank');
+        window.open(`whatsapp://send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`, '_blank');
     } else {
         alert("رقم الهاتف غير مسجل لهذا المشترك.");
     }
