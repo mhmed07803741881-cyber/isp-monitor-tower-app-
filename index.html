@@ -92,7 +92,7 @@
 <div class="top-header">
     <div class="title-area">
         <h1>مهندس علي لخدمات الإنترنت</h1>
-        <p>هواتف المكتب: 07818627764 - 07724850876</p>
+        <p>المحاويل - قرية السورة | 07724850876</p>
     </div>
     <div class="header-btns">
         <button class="action-btn" onclick="openNotificationsModal()" style="padding: 6px 10px; font-size:11px; background:#1e293b; color:#f59e0b;">🔔 الإشعارات</button>
@@ -279,7 +279,7 @@
     </div>
 </div>
 
-<!-- نافذة إضافة / تعديل مشترك مع دعم وقت وتاريخ التفعيل والانتهاء -->
+<!-- نافذة إضافة / تعديل مشترك مع دعم وقت وتاريخ التفعيل والانتهاء تلقائياً -->
 <div id="addSubModal" class="modal">
     <div class="modal-content">
         <h3 style="margin-top:0; color:#38bdf8;" id="modalTitle">اشتراك جديد (30 يوماً)</h3>
@@ -352,7 +352,7 @@
     </div>
 </div>
 
-<!-- نافذة التسديد الجزئي السريع (عند الضغط على تسديد) -->
+<!-- نافذة التسديد الجزئي السريع -->
 <div id="partialPayModal" class="modal">
     <div class="modal-content" style="border-color: #10b981; max-width: 320px;">
         <h3 style="margin-top:0; color:#10b981; text-align:center;">💵 تسديد جزء أو كل الدين</h3>
@@ -373,7 +373,7 @@
     </div>
 </div>
 
-<!-- نافذة التفاصيل مع عرض الوقت والتاريخ -->
+<!-- نافذة التفاصيل -->
 <div id="subDetailsModal" class="modal">
     <div class="modal-content" style="border-color: #10b981;">
         <h3 style="margin-top:0; color:#38bdf8; text-align:center;" id="dName">تفاصيل المشترك</h3>
@@ -433,15 +433,16 @@
 <div id="printArea">
     <div style="text-align: center; border-bottom: 2px dashed #000; padding-bottom: 8px; margin-bottom: 8px;">
         <h3 style="margin:0; font-size:13px;">مكتب مهندس علي لخدمات الإنترنت</h3>
-        <p style="margin:2px 0; font-size:9px;">هواتف المكتب: 07818627764 - 07724850876</p>
+        <p style="margin:2px 0; font-size:9px;">المحاويل - قرية السورة | هاتف: 07724850876</p>
         <p style="margin:2px 0; font-size:11px; font-weight:bold;" id="receiptTitle">وصل قبض اشتراك</p>
     </div>
     <div style="font-size: 11px; line-height: 1.6;">
         <div><b>اسم المشترك:</b> <span id="pName"></span></div>
         <div><b>يوزر الاشتراك:</b> <span id="pUsername" class="ltr-text"></span></div>
-        <div><b>المبلغ القبض:</b> <span id="pPrice"></span> د.ع</div>
+        <div><b>المبلغ المستلم:</b> <span id="pPrice"></span> د.ع</div>
+        <div><b>المبلغ الأصلي:</b> <span id="pOriginal"></span> د.ع</div>
+        <div id="printRemainingLine" style="display:none;"><b>المبلغ المتبقي:</b> <span id="pRemaining"></span> د.ع</div>
         <div><b>الحالة:</b> <span id="pPayStatus"></span></div>
-        <div id="printRemainingLine" style="display:none;"><b>المبلغ الباقي بالذمة:</b> <span id="pRemaining"></span> د.ع</div>
         <div><b>تفعيل:</b> <span id="pStart"></span></div>
         <div><b>انتهاء:</b> <span id="pEnd"></span></div>
     </div>
@@ -451,7 +452,7 @@
 <div id="printDebtsArea">
     <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px;">
         <h2 style="margin:0; font-size:18px;">مكتب مهندس علي لخدمات الإنترنت</h2>
-        <p style="margin:4px 0; font-size:12px;">تقرير الديون والمعلقات والمتبقيات (أجل)</p>
+        <p style="margin:4px 0; font-size:12px;">تقرير الديون والمعلقات والمتبقيات (أجل) - قرية السورة</p>
         <p style="margin:2px 0; font-size:11px;" id="printDebtsDate"></p>
     </div>
     <table style="width:100%; border-collapse: collapse; font-size:12px;" border="1">
@@ -754,7 +755,6 @@ function renderCleanTowersList() {
     container.innerHTML = html;
 }
 
-// دالة جلب المشتركين المنتهين غداً
 function getExpiringTomorrowList() {
     let today = new Date();
     let tomorrow = new Date(today);
@@ -784,7 +784,6 @@ function openExpiringTomorrowModal() {
     } else {
         let html = '';
         list.forEach((s, idx) => {
-            let priceFormatted = parseFloat(s.price || 30000).toLocaleString();
             let debtDetailsText = "";
             if (s.payStatus === 'أجل') {
                 let months = parseInt(s.debtMonths) || 1;
@@ -826,9 +825,8 @@ function sendSingleExpiringAlert(name, username, phone, endDate, endTime, price,
         debtText = `\n⚠️ تنبيه مالي: أنت مطلوب بمبلغ إجمالي قدره (${remaining.toLocaleString()} د.ع) يرجى تسديده مع التجديد.`;
     }
 
-    let alertMsg = `⚠️ تنبيه هام من مكتب مهندس علي للإنترنت:\n\nعزيزنا المشترك (${name})، ينتهي اشتراكك غداً بتاريخ (${endDate} في تمام الساعة ${endTime || '12:00'}).\n• يوزر الاشتراك: ${username || name}\n• المبلغ المطلوب للتجديد: ${priceFormatted} د.ع${debtText}\n\nيرجى التجديد لضمان استمرار الخدمة دون انقطاع. شكراً لاختياركم خدماتنا.`;
+    let alertMsg = `*تحية طيبة عزيزي المشترك*\n\nعزيزنا المشترك (${name})، ينتهي اشتراكك غداً بتاريخ (${endDate} - ${endTime || '12:00'}).\n• يوزر الاشتراك: ${username || name}\n• المبلغ المطلوب للتجديد: ${priceFormatted} د.ع${debtText}\n\n*ملاحظة*\n*(يمكنك تفعيل الاشتراك قبل الانتهاء ويتم إضافة الايام المتبقية الى الاشتراك)*\n\n*يمكنك تسديد الاشتراك عن طريق*\n*(بطاقة كي كارد)*\n*رقم سوبر كي (07724850876 )*\n*رقم تحويل بطاقة كي كارد (3627952355 )*\n\nرقم المكتب : 07724850876 📱\nالمكتب : محاويل - قرية السورة\n*(هذه الرسالة يتم ارسالها تلقائيا من النظام)*`;
 
-    // تخزين في تكت المشترك (تطبيق المشترك)
     let chats = JSON.parse(localStorage.getItem(`ticket_chat_${name}`)) || [];
     chats.push({ sender: "مهندس علي (تنبيه انتهاء غداً)", text: alertMsg });
     localStorage.setItem(`ticket_chat_${name}`, JSON.stringify(chats));
@@ -844,34 +842,10 @@ function sendBatchExpiringTomorrowAlerts() {
     let list = getExpiringTomorrowList();
     if(list.length === 0) { alert("لا توجد اشتراكات تنتهي غداً لإرسال تنبيهات لها."); return; }
 
-    if(confirm(`سيتم إرسال تنبيهات انتهاء الاشتراك لـ (${list.length}) مشترك (عبر تطبيق المشتركين وواتساب أعمال لمن يمتلك رقماً). هل تريد المتابعة؟`)) {
+    if(confirm(`سيتم إرسال تنبيهات انتهاء الاشتراك لـ (${list.length}) مشترك. هل تريد المتابعة؟`)) {
         list.forEach((s, index) => {
             setTimeout(() => {
-                let priceFormatted = parseFloat(s.price || 30000).toLocaleString();
-                let debtText = "";
-                
-                if (s.payStatus === 'أجل') {
-                    let months = parseInt(s.debtMonths) || 1;
-                    let total = parseFloat(s.price || 0) * months;
-                    let partial = parseFloat(s.partialPaid) || 0;
-                    let remaining = total - partial;
-                    if(remaining < 0) remaining = 0;
-                    debtText = `\n⚠️ تنبيه مالي: أنت مطلوب بمبلغ إجمالي قدره (${remaining.toLocaleString()} د.ع).`;
-                }
-
-                let alertMsg = `⚠️ تنبيه هام من مكتب مهندس علي للإنترنت:\n\nعزيزنا المشترك (${s.name})، ينتهي اشتراكك غداً بتاريخ (${s.endDate} - ${s.endTime || '12:00'}).\n• يوزر الاشتراك: ${s.username || s.name}\n• المبلغ المطلوب للتجديد: ${priceFormatted} د.ع${debtText}\n\nيرجى التجديد لضمان استمرار الخدمة.`;
-
-                // تخزين في التطبيق تلقائياً
-                let chats = JSON.parse(localStorage.getItem(`ticket_chat_${s.name}`)) || [];
-                chats.push({ sender: "مهندس علي (تنبيه انتهاء غداً)", text: alertMsg });
-                localStorage.setItem(`ticket_chat_${s.name}`, JSON.stringify(chats));
-
-                // فتح واتساب أعمال
-                if(s.phone && s.phone.trim() !== "") {
-                    let cleanPhone = s.phone.replace(/\D/g, '');
-                    if(cleanPhone.startsWith('0')) cleanPhone = '964' + cleanPhone.substring(1);
-                    window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(alertMsg)}`, '_blank');
-                }
+                sendSingleExpiringAlert(s.name, s.username, s.phone, s.endDate, s.endTime, s.price, s.payStatus, s.debtMonths, s.partialPaid);
             }, index * 1200);
         });
         alert("✅ جاري إرسال التنبيهات تدريجياً عبر واتساب وتطبيق المشتركين!");
@@ -961,7 +935,7 @@ function sendBroadcastToAll() {
             setTimeout(() => {
                 let cleanPhone = s.phone.replace(/\D/g, '');
                 if(cleanPhone.startsWith('0')) cleanPhone = '964' + cleanPhone.substring(1);
-                let waText = `📢 إشعار هام من مكتب مهندس علي للإنترنت:\n\n${msg}`;
+                let waText = `*تحية طيبة عزيزي المشترك*\n\n${msg}\n\nرقم المكتب : 07724850876 📱\nالمكتب : محاويل - قرية السورة\n*(هذه الرسالة يتم ارسالها تلقائيا من النظام)*`;
                 window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(waText)}`, '_blank');
             }, index * 1200);
         });
@@ -1048,28 +1022,7 @@ function checkExpiringTomorrow() {
     let expiringSoon = subs.filter(s => s.endDate === tomorrowStr);
     if (expiringSoon.length > 0) {
         expiringSoon.forEach(s => {
-            let priceFormatted = parseFloat(s.price || 30000).toLocaleString();
-            let debtText = "";
-            if (s.payStatus === 'أجل') {
-                let months = parseInt(s.debtMonths) || 1;
-                let total = parseFloat(s.price || 0) * months;
-                let partial = parseFloat(s.partialPaid) || 0;
-                let remaining = total - partial;
-                if(remaining < 0) remaining = 0;
-                debtText = `\n⚠️ المبلغ المطلوب سداده: (${remaining.toLocaleString()} د.ع).`;
-            }
-
-            let alertMsg = `⚠️ تنبيه هام:\nعزيزنا المشترك، اشتراكك في مكتب مهندس علي سينتهي غداً (${s.endDate} - ${s.endTime || '12:00'}).\n• يوزر الاشتراك: ${s.username || s.name}\n• مبلغ التجديد: ${priceFormatted} د.ع${debtText}\nيرجى التجديد لضمان استمرار الخدمة دون انقطاع.`;
-
-            let chats = JSON.parse(localStorage.getItem(`ticket_chat_${s.name}`)) || [];
-            chats.push({ sender: "النظام (تنبيه انتهاء)", text: alertMsg });
-            localStorage.setItem(`ticket_chat_${s.name}`, JSON.stringify(chats));
-
-            if (s.phone && s.phone.trim() !== "") {
-                let cleanPhone = s.phone.replace(/\D/g, '');
-                if (cleanPhone.startsWith('0')) cleanPhone = '964' + cleanPhone.substring(1);
-                window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(alertMsg)}`, '_blank');
-            }
+            sendSingleExpiringAlert(s.name, s.username, s.phone, s.endDate, s.endTime, s.price, s.payStatus, s.debtMonths, s.partialPaid);
         });
         localStorage.setItem('ali_last_expiry_check', todayStr);
     }
@@ -1127,7 +1080,7 @@ function sendGroupDebtReminder() {
                 let partialPaid = parseFloat(s.partialPaid) || 0;
                 let remaining = totalDebt - partialPaid;
                 
-                let msg = `عزيزي المشترك (${s.name}) ⏳\nنود تذكيرك بوجود مبالغ اشتراك معلقة (أجل) في مكتب مهندس علي لخدمات الإنترنت.\n\n• يوزر الاشتراك: ${s.username || s.name}\n• المبلغ الباقي (المطلوب سداده): ${remaining.toLocaleString()} د.ع\n\nيرجى التسديد لضمان استمرار الخدمة. شكراً لتفهمكم.`;
+                let msg = `*تحية طيبة عزيزي المشترك*\n\nعزيزي المشترك (${s.name}) ⏳\nنود تذكيرك بوجود مبالغ اشتراك معلقة (أجل) في مكتب مهندس علي لخدمات الإنترنت.\n\n• يوزر الاشتراك: ${s.username || s.name}\n• المبلغ المطلوب سداده: ${remaining.toLocaleString()} د.ع\n\n*ملاحظة*\n*(يمكنك تفعيل الاشتراك قبل الانتهاء ويتم إضافة الايام المتبقية الى الاشتراك)*\n\n*يمكنك تسديد الاشتراك عن طريق*\n*(بطاقة كي كارد)*\n*رقم سوبر كي (07724850876 )*\n*رقم تحويل بطاقة كي كارد (3627952355 )*\n\nرقم المكتب : 07724850876 📱\nالمكتب : محاويل - قرية السورة\n*(هذه الرسالة يتم ارسالها تلقائيا من النظام)*`;
                 window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`, '_blank');
             }, index * 1200);
         });
@@ -1281,7 +1234,7 @@ function openDebtsListModal() {
                         <div style="font-weight:bold; color:#38bdf8;">${idx+1}. ${s.name} <span class="ltr-text">${s.username ? '('+s.username+')' : ''}</span></div>
                         <div style="font-size:10px; color:#94a3b8;">هاتف: ${s.phone || 'بدون'} | الدين: ${total.toLocaleString()} | مسدد: <b style="color:#10b981;">${partial.toLocaleString()}</b> | المطلوب: <span style="color:#ef4444; font-weight:bold;">${remaining.toLocaleString()} د.ع</span></div>
                     </div>
-                    ${s.phone ? `<button onclick="sendWhatsapp('${s.phone}', '${s.name}', '${s.username}', '${s.endDate}', '${s.payStatus}', '${s.price}', '${s.startDate}', '${months}', '${partial}')" style="background:#25d366; color:#fff; border:none; padding:4px 8px; border-radius:4px; font-size:10px; cursor:pointer;">💬 واتساب</button>` : ''}
+                    ${s.phone ? `<button onclick="sendWhatsappReceipt('${s.id}', '${s.price}')" style="background:#25d366; color:#fff; border:none; padding:4px 8px; border-radius:4px; font-size:10px; cursor:pointer;">💬 واتساب</button>` : ''}
                 </div>
             `;
         });
@@ -1501,7 +1454,7 @@ function confirmRenewSubscription() {
         s.startTime = now.toTimeString().substring(0, 5);
         now.setDate(now.getDate() + 30);
         s.endDate = now.toISOString().split('T')[0];
-        s.endTime = s.startTime; // يحدد وقت الانتهاء نفس وقت التفعيل تلقائياً وبدقة
+        s.endTime = s.startTime;
         s.payStatus = chosenPayType;
         s.debtMonths = chosenDebtMonths;
         s.partialPaid = chosenPartialPaid;
@@ -1515,13 +1468,13 @@ function confirmRenewSubscription() {
         let totalDebtCalc = (parseFloat(s.price || 30000) * chosenDebtMonths);
         let remainingCalc = chosenPayType === 'أجل' ? (totalDebtCalc - chosenPartialPaid) : 0;
 
-        sendNotificationToClientAndWhatsapp(s, `🔄 تم تجديد اشتراكك بنجاح في مكتب مهندس علي!\n\n• يوزر الاشتراك: ${s.username || s.name}\n• حالة الدفع: ${s.payStatus}\n• تفعيل: ${s.startDate} (${s.startTime})\n• انتهاء: ${s.endDate} (${s.endTime})\n• المبلغ المسدد: ${paidAmountForReceipt.toLocaleString()} د.ع\n${remainingCalc > 0 ? '• المبلغ المطلوب سداده: ' + remainingCalc.toLocaleString() + ' د.ع\n' : ''}\nشكراً لتجديد اشتراكك معنا!`);
+        let receiptMsg = generateReceiptMessageText(s, paidAmountForReceipt, totalDebtCalc, remainingCalc, `تجديد اشتراك (${chosenPayType})`);
+        sendNotificationToClientAndWhatsapp(s, receiptMsg);
 
-        printReceipt(s.name, s.username, paidAmountForReceipt, `${s.startDate} (${s.startTime})`, `${s.endDate} (${s.endTime})`, `تجديد اشتراك (${chosenPayType})`, remainingCalc);
+        printReceipt(s.name, s.username, paidAmountForReceipt, totalDebtCalc, remainingCalc, `${s.startDate} (${s.startTime})`, `${s.endDate} (${s.endTime})`, `تجديد اشتراك (${chosenPayType})`);
     }
 }
 
-// نافذة التسديد الجزئي
 function openPartialPayModal(id) {
     let s = subs.find(item => String(item.id) === String(id));
     if(!s) return;
@@ -1582,22 +1535,48 @@ function confirmPartialPayment() {
         renderSubs();
         closePartialPayModal();
 
-        sendNotificationToClientAndWhatsapp(s, `✅ تم استلام دفعتك المالية وسداد كامل الدين بنجاح في مكتب مهندس علي!\n\n• يوزر الاشتراك: ${s.username || s.name}\n• المبلغ الواصل: ${paidNow.toLocaleString()} د.ع\n• الحالة الحالية: واصل (تمت تسوية الحساب بالكامل)\n• تاريخ الانتهاء: ${s.endDate} (${s.endTime || '12:00'})\n\nشكراً لالتزامكم!`);
+        let receiptMsg = generateReceiptMessageText(s, paidNow, total, 0, 'واصل (تم سداد كامل الدين)');
+        sendNotificationToClientAndWhatsapp(s, receiptMsg);
 
-        printReceipt(s.name, s.username, paidNow, `${s.startDate} (${s.startTime || '12:00'})`, `${s.endDate} (${s.endTime || '12:00'})`, 'واصل (تم سداد كامل الدين وتسوية الحساب)', 0);
+        printReceipt(s.name, s.username, paidNow, total, 0, `${s.startDate} (${s.startTime || '12:00'})`, `${s.endDate} (${s.endTime || '12:00'})`, 'واصل (تم سداد كامل الدين)');
     } else {
         s.partialPaid = newPartial;
         syncToCloud();
         renderSubs();
         closePartialPayModal();
 
-        sendNotificationToClientAndWhatsapp(s, `💵 تم استلام دفعتك الجزئية بنجاح في مكتب مهندس علي!\n\n• يوزر الاشتراك: ${s.username || s.name}\n• المبلغ المسدد الآن: ${paidNow.toLocaleString()} د.ع\n• إجمالي الدين: ${total.toLocaleString()} د.ع\n• إجمالي المسدد: ${newPartial.toLocaleString()} د.ع\n• المبلغ المطلوب (المتبقي): ${remaining.toLocaleString()} د.ع\n\nشكراً لتعاونكم!`);
+        let receiptMsg = generateReceiptMessageText(s, paidNow, total, remaining, 'تسديد جزئي');
+        sendNotificationToClientAndWhatsapp(s, receiptMsg);
 
-        printReceipt(s.name, s.username, paidNow, `${s.startDate} (${s.startTime || '12:00'})`, `${s.endDate} (${s.endTime || '12:00'})`, 'تسديد جزئي', remaining);
+        printReceipt(s.name, s.username, paidNow, total, remaining, `${s.startDate} (${s.startTime || '12:00'})`, `${s.endDate} (${s.endTime || '12:00'})`, 'تسديد جزئي');
     }
 }
 
-// دالة مساعدة مركزية لإرسال الإشعار والتفاصيل لتطبيق المشترك وللواتساب أعمال معاً
+function generateReceiptMessageText(sub, paidAmount, originalAmount, remainingAmount, payStatusTitle) {
+    let receiptNo = 'RCP-' + Math.floor(100000 + Math.random() * 900000);
+    return `*تحية طيبة عزيزي المشترك*
+يوزر الاشتراك : ${sub.username || sub.name}
+اسم المشترك : ${sub.name}
+*تم استلام مبلغ قدره* : ** ${paidAmount.toLocaleString()} د.ع 
+من اصل : ** ${originalAmount.toLocaleString()} د.ع 
+المبلغ المتبقي : ** ${remainingAmount.toLocaleString()} د.ع 
+رقم الوصل : ${receiptNo}
+تم الاستلام بواسطة : المكتب
+*(هذه الرسالة يتم ارسالها تلقائيا من النظام)*
+
+*ملاحظة*
+*(يمكنك تفعيل الاشتراك قبل الانتهاء ويتم إضافة الايام المتبقية الى الاشتراك)*
+
+*يمكنك تسديد الاشتراك عن طريق* 
+*(بطاقة كي كارد)*
+*رقم سوبر كي (07724850876 )*
+*رقم تحويل بطاقة كي كارد (3627952355 )*
+
+رقم المكتب : 07724850876 📱
+
+المكتب : محاويل - قرية السورة`;
+}
+
 function sendNotificationToClientAndWhatsapp(sub, messageText) {
     if(!sub || !sub.name) return;
 
@@ -1612,37 +1591,41 @@ function sendNotificationToClientAndWhatsapp(sub, messageText) {
     }
 }
 
-function sendWhatsapp(phone, name, username, endDate, payStatus, price, startDate, debtMonths = 1, partialPaid = 0) {
-    if(!phone) { alert("رقم الهاتف غير متوفر"); return; }
-    let cleanPhone = phone.replace(/\D/g, '');
-    if(cleanPhone.startsWith('0')) cleanPhone = '964' + cleanPhone.substring(1);
-    let months = parseInt(debtMonths) || 1;
-    let totalDebt = parseFloat(price || 0) * months;
-    let paid = parseFloat(partialPaid) || 0;
-    let remaining = totalDebt - paid;
+function sendWhatsappReceipt(subId, unitPrice) {
+    let s = subs.find(item => String(item.id) === String(subId));
+    if(!s) return;
+    let months = parseInt(s.debtMonths) || 1;
+    let original = parseFloat(s.price || 0) * months;
+    let partial = parseFloat(s.partialPaid) || 0;
+    let remaining = original - partial;
     if(remaining < 0) remaining = 0;
 
-    let msg = payStatus === 'أجل' ? 
-        `عزيزي المشترك (${name}) ⏳\nتذكير بمبلغ الاشتراك المعلق (أجل) في مكتب مهندس علي للإنترنت.\n\n• يوزر الاشتراك: ${username || name}\n• إجمالي الدين: ${totalDebt.toLocaleString()} د.ع\n• المسدد: ${paid.toLocaleString()} د.ع\n• المبلغ المطلوب سداده: ${remaining.toLocaleString()} د.ع\n• تاريخ الانتهاء: ${endDate || '-'}` : 
-        `عزيزي المشترك (${name}) 📡\nيوزر الاشتراك: ${username || name}\nاشتراكك سينتهي بتاريخ ${endDate}. شكراً لاختياركم خدماتنا.`;
-        
-    window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`, '_blank');
+    let msg = generateReceiptMessageText(s, partial, original, remaining, s.payStatus);
+    
+    if(s.phone && s.phone.trim() !== "") {
+        let cleanPhone = s.phone.replace(/\D/g, '');
+        if(cleanPhone.startsWith('0')) cleanPhone = '964' + cleanPhone.substring(1);
+        window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`, '_blank');
+    } else {
+        alert("رقم الهاتف غير مسجل لهذا المشترك.");
+    }
 }
 
-function printReceipt(name, username, price, start, end, payStatus, remainingDebt = 0) {
+function printReceipt(name, username, paid, original, remaining, start, end, payStatus) {
     document.getElementById('receiptTitle').innerText = 'وصل قبض اشتراك';
     document.getElementById('pName').innerText = name;
     document.getElementById('pUsername').innerText = username || 'غير متوفر';
-    document.getElementById('pPrice').innerText = parseFloat(price || 0).toLocaleString();
-    document.getElementById('pPayStatus').innerText = payStatus;
+    document.getElementById('pPrice').innerText = parseFloat(paid || 0).toLocaleString();
+    document.getElementById('pOriginal').innerText = parseFloat(original || 0).toLocaleString();
     
-    if(remainingDebt > 0) {
+    if(remaining > 0) {
         document.getElementById('printRemainingLine').style.display = 'block';
-        document.getElementById('pRemaining').innerText = remainingDebt.toLocaleString();
+        document.getElementById('pRemaining').innerText = remaining.toLocaleString();
     } else {
         document.getElementById('printRemainingLine').style.display = 'none';
     }
 
+    document.getElementById('pPayStatus').innerText = payStatus;
     document.getElementById('pStart').innerText = start;
     document.getElementById('pEnd').innerText = end;
     window.print();
@@ -1701,8 +1684,8 @@ function renderSubs() {
                 <div style="display:flex; flex-direction:column; gap:3px;" onclick="event.stopPropagation()">
                     ${s.payStatus === 'أجل' ? `<button onclick="openPartialPayModal(${s.id})" style="background:#10b981; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">💵 تسديد</button>` : ''}
                     <button onclick="openRenewModal(${s.id})" style="background:#0284c7; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">🔄 تفعيل</button>
-                    <button onclick="sendWhatsapp('${s.phone}', '${s.name}', '${s.username}', '${s.endDate}', '${s.payStatus}', '${s.price}', '${s.startDate}', '${months}', '${partial}')" style="background:#25d366; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">💬 واتساب</button>
-                    <button onclick="printReceipt('${s.name}', '${s.username}', '${s.price || 0}', '${s.startDate} (${s.startTime || '12:00'})', '${s.endDate} (${s.endTime || '12:00'})', '${s.payStatus}', 0)" style="background:#475569; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">🖨️ وصل</button>
+                    <button onclick="sendWhatsappReceipt('${s.id}', '${s.price}')" style="background:#25d366; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">💬 واتساب</button>
+                    <button onclick="printReceipt('${s.name}', '${s.username}', ${s.payStatus === 'واصل' ? s.price : partial}, ${totalDebt}, ${remaining}, '${s.startDate} (${s.startTime || '12:00'})', '${s.endDate} (${s.endTime || '12:00'})', '${s.payStatus}')" style="background:#475569; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">🖨️ وصل</button>
                     <button onclick="deleteSub(${s.id})" style="background:#ef4444; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">🗑️ حذف</button>
                 </div>
             </div>
