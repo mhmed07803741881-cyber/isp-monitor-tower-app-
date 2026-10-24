@@ -140,7 +140,7 @@
         
         <div id="expiringTomorrowListContainer" style="max-height: 250px; overflow-y: auto; margin-bottom: 10px; background:#0d1526; padding:8px; border-radius:6px; font-size:11px;">جاري التحميل...</div>
         
-        <button class="submit-btn" onclick="sendBatchExpiringTomorrowAlerts()" style="background:#f97316; color:#fff; margin-bottom:6px; font-weight:bold;">📢 إرسال التنبيه للجميع بضغطة زر (واتساب + التطبيق)</button>
+        <button class="submit-btn" onclick="sendBatchExpiringTomorrowAlerts()" style="background:#f97316; color:#fff; margin-bottom:6px; font-weight:bold;">📢 إرسال التنبيه للجميع بضغطة زر (واتساب أعمال + التطبيق)</button>
         <button class="cancel-btn" onclick="closeExpiringTomorrowModal()">إغلاق</button>
     </div>
 </div>
@@ -279,7 +279,7 @@
     </div>
 </div>
 
-<!-- نافذة إضافة / تعديل مشترك -->
+<!-- نافذة إضافة / تعديل مشترك مع دعم وقت وتاريخ التفعيل والانتهاء -->
 <div id="addSubModal" class="modal">
     <div class="modal-content">
         <h3 style="margin-top:0; color:#38bdf8;" id="modalTitle">اشتراك جديد (30 يوماً)</h3>
@@ -325,13 +325,29 @@
             <div id="partialDebtPreview" style="font-size:11px; color:#38bdf8; text-align:center; margin-top:6px; font-weight:bold;"></div>
         </div>
 
-        <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">تاريخ التفعيل:</label>
-        <input type="date" id="startDate" onchange="calcEnd()">
+        <div style="display: flex; gap: 6px;">
+            <div style="flex: 1;">
+                <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">تاريخ التفعيل:</label>
+                <input type="date" id="startDate" onchange="calcEnd()">
+            </div>
+            <div style="width: 110px;">
+                <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">وقت التفعيل:</label>
+                <input type="time" id="startTime" value="12:00">
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 6px; margin-top: 4px;">
+            <div style="flex: 1;">
+                <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">تاريخ الانتهاء:</label>
+                <input type="date" id="endDate">
+            </div>
+            <div style="width: 110px;">
+                <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">وقت الانتهاء:</label>
+                <input type="time" id="endTime" value="12:00">
+            </div>
+        </div>
         
-        <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">تاريخ الانتهاء:</label>
-        <input type="date" id="endDate">
-        
-        <button class="submit-btn" onclick="saveSub()" id="saveBtnText">حفظ المشترك</button>
+        <button class="submit-btn" onclick="saveSub()" id="saveBtnText" style="margin-top:10px;">حفظ المشترك</button>
         <button class="cancel-btn" onclick="closeModal()">إغلاق</button>
     </div>
 </div>
@@ -357,7 +373,7 @@
     </div>
 </div>
 
-<!-- نافذة التفاصيل -->
+<!-- نافذة التفاصيل مع عرض الوقت والتاريخ -->
 <div id="subDetailsModal" class="modal">
     <div class="modal-content" style="border-color: #10b981;">
         <h3 style="margin-top:0; color:#38bdf8; text-align:center;" id="dName">تفاصيل المشترك</h3>
@@ -371,10 +387,10 @@
         <div class="details-row" id="dTotalDebtRow" style="display:none;"><span class="details-label" style="color:#f59e0b;">إجمالي الدين المطلوب:</span><span class="details-value" id="dTotalDebtVal" style="color:#f59e0b;">-</span></div>
         <div class="details-row" id="dPaidPartialRow" style="display:none;"><span class="details-label" style="color:#10b981;">المبلغ المسدد مسبقاً:</span><span class="details-value" id="dPaidPartialVal" style="color:#10b981;">-</span></div>
         <div class="details-row" id="dRemainingRow" style="display:none;"><span class="details-label" style="color:#ef4444;">المبلغ الباقي (المتبقي):</span><span class="details-value" id="dRemainingVal" style="color:#ef4444;">-</span></div>
-        <div class="details-row"><span class="details-label">تاريخ التفعيل:</span><span class="details-value" id="dStart">-</span></div>
-        <div class="details-row"><span class="details-label">تاريخ الانتهاء:</span><span class="details-value" id="dEnd">-</span></div>
+        <div class="details-row"><span class="details-label">وقت وتاريخ التفعيل:</span><span class="details-value" id="dStart" style="color:#38bdf8;">-</span></div>
+        <div class="details-row"><span class="details-label">وقت وتاريخ الانتهاء:</span><span class="details-value" id="dEnd" style="color:#ef4444;">-</span></div>
         
-        <button class="submit-btn" onclick="openEditModalFromDetails()" style="background:#f59e0b; color:#090d16; margin-top:10px;">✏️ تعديل معلومات المشترك</button>
+        <button class="submit-btn" onclick="openEditModalFromDetails()" style="background:#f59e0b; color:#090d16; margin-top:10px;">✏️ تعديل معلومات المشترك والوقت</button>
         <button class="cancel-btn" onclick="closeDetailsModal()">إغلاق</button>
     </div>
 </div>
@@ -426,8 +442,8 @@
         <div><b>المبلغ القبض:</b> <span id="pPrice"></span> د.ع</div>
         <div><b>الحالة:</b> <span id="pPayStatus"></span></div>
         <div id="printRemainingLine" style="display:none;"><b>المبلغ الباقي بالذمة:</b> <span id="pRemaining"></span> د.ع</div>
-        <div><b>تاريخ التفعيل:</b> <span id="pStart"></span></div>
-        <div><b>تاريخ الانتهاء:</b> <span id="pEnd"></span></div>
+        <div><b>تفعيل:</b> <span id="pStart"></span></div>
+        <div><b>انتهاء:</b> <span id="pEnd"></span></div>
     </div>
 </div>
 
@@ -549,8 +565,10 @@ function processImportedData(dataArray) {
         if(name) {
             let today = new Date();
             let startStr = today.toISOString().split('T')[0];
+            let startTimeStr = "12:00";
             today.setDate(today.getDate() + 30);
             let endStr = today.toISOString().split('T')[0];
+            let endTimeStr = "12:00";
 
             subs.push({
                 id: Date.now() + Math.random(),
@@ -563,7 +581,9 @@ function processImportedData(dataArray) {
                 debtMonths: 1,
                 partialPaid: 0,
                 startDate: startStr,
-                endDate: endStr
+                startTime: startTimeStr,
+                endDate: endStr,
+                endTime: endTimeStr
             });
             countAdded++;
         }
@@ -734,7 +754,7 @@ function renderCleanTowersList() {
     container.innerHTML = html;
 }
 
-// دالة جلب قائمة المشتركين المنتهين غداً
+// دالة جلب المشتركين المنتهين غداً
 function getExpiringTomorrowList() {
     let today = new Date();
     let tomorrow = new Date(today);
@@ -765,14 +785,24 @@ function openExpiringTomorrowModal() {
         let html = '';
         list.forEach((s, idx) => {
             let priceFormatted = parseFloat(s.price || 30000).toLocaleString();
+            let debtDetailsText = "";
+            if (s.payStatus === 'أجل') {
+                let months = parseInt(s.debtMonths) || 1;
+                let total = parseFloat(s.price || 0) * months;
+                let partial = parseFloat(s.partialPaid) || 0;
+                let remaining = total - partial;
+                if(remaining < 0) remaining = 0;
+                debtDetailsText = ` | <b style="color:#ef4444;">مطلوب بمبلغ: ${remaining.toLocaleString()} د.ع</b>`;
+            }
+
             html += `
                 <div style="background:#131d31; border:1px solid #1e293b; padding:8px; border-radius:6px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
                     <div>
                         <div style="font-weight:bold; color:#f97316;">${idx+1}. ${s.name} <span class="ltr-text" style="color:#38bdf8;">(${s.username || '-'})</span></div>
-                        <div style="font-size:10px; color:#cbd5e1;">وقت وتاريخ الانتهاء: <b style="color:#ef4444;">غداً (${s.endDate})</b> | المبلغ المطلوب: <b>${priceFormatted} د.ع</b></div>
+                        <div style="font-size:10px; color:#cbd5e1;">الانتهاء: <b style="color:#ef4444;">غداً (${s.endDate} - ${s.endTime || '12:00'})</b>${debtDetailsText}</div>
                         <div style="font-size:10px; color:#94a3b8;">هاتف: ${s.phone || 'بدون'}</div>
                     </div>
-                    ${s.phone ? `<button onclick="sendSingleExpiringAlert('${s.name}', '${s.username}', '${s.phone}', '${s.endDate}', '${s.price}')" style="background:#25d366; color:#fff; border:none; padding:4px 8px; border-radius:4px; font-size:10px; cursor:pointer;">💬 تنبيه</button>` : ''}
+                    ${s.phone ? `<button onclick="sendSingleExpiringAlert('${s.name}', '${s.username}', '${s.phone}', '${s.endDate}', '${s.endTime}', '${s.price}', '${s.payStatus}', '${s.debtMonths}', '${s.partialPaid}')" style="background:#25d366; color:#fff; border:none; padding:4px 8px; border-radius:4px; font-size:10px; cursor:pointer; font-weight:bold;">💬 واتساب أعمال</button>` : ''}
                 </div>
             `;
         });
@@ -783,11 +813,22 @@ function openExpiringTomorrowModal() {
 }
 function closeExpiringTomorrowModal() { document.getElementById('expiringTomorrowModal').style.display = 'none'; }
 
-function sendSingleExpiringAlert(name, username, phone, endDate, price) {
+function sendSingleExpiringAlert(name, username, phone, endDate, endTime, price, payStatus, debtMonths, partialPaid) {
     let priceFormatted = parseFloat(price || 30000).toLocaleString();
-    let alertMsg = `⚠️ تنبيه هام من مكتب مهندس علي للإنترنت:\n\nعزيزنا المشترك (${name})، يودعك اشتراكك وينتهي غداً بتاريخ (${endDate}).\n• يوزر الاشتراك: ${username || name}\n• المبلغ المطلوب للتجديد: ${priceFormatted} د.ع\n\nيرجى التجديد لضمان استمرار الخدمة دون انقطاع. شكراً لاختياركم خدماتنا.`;
+    let debtText = "";
+    
+    if (payStatus === 'أجل') {
+        let months = parseInt(debtMonths) || 1;
+        let total = parseFloat(price || 0) * months;
+        let partial = parseFloat(partialPaid) || 0;
+        let remaining = total - partial;
+        if(remaining < 0) remaining = 0;
+        debtText = `\n⚠️ تنبيه مالي: أنت مطلوب بمبلغ إجمالي قدره (${remaining.toLocaleString()} د.ع) يرجى تسديده مع التجديد.`;
+    }
 
-    // تخزين في تكت المشترك
+    let alertMsg = `⚠️ تنبيه هام من مكتب مهندس علي للإنترنت:\n\nعزيزنا المشترك (${name})، ينتهي اشتراكك غداً بتاريخ (${endDate} في تمام الساعة ${endTime || '12:00'}).\n• يوزر الاشتراك: ${username || name}\n• المبلغ المطلوب للتجديد: ${priceFormatted} د.ع${debtText}\n\nيرجى التجديد لضمان استمرار الخدمة دون انقطاع. شكراً لاختياركم خدماتنا.`;
+
+    // تخزين في تكت المشترك (تطبيق المشترك)
     let chats = JSON.parse(localStorage.getItem(`ticket_chat_${name}`)) || [];
     chats.push({ sender: "مهندس علي (تنبيه انتهاء غداً)", text: alertMsg });
     localStorage.setItem(`ticket_chat_${name}`, JSON.stringify(chats));
@@ -801,22 +842,31 @@ function sendSingleExpiringAlert(name, username, phone, endDate, price) {
 
 function sendBatchExpiringTomorrowAlerts() {
     let list = getExpiringTomorrowList();
-    let validList = list.filter(s => s.phone && s.phone.trim() !== "");
-
     if(list.length === 0) { alert("لا توجد اشتراكات تنتهي غداً لإرسال تنبيهات لها."); return; }
 
-    if(confirm(`سيتم إرسال رسائل التنبيه إلى (${list.length}) مشترك (عبر التطبيق والواتساب لمن يمتلك رقماً). هل تريد المتابعة؟`)) {
+    if(confirm(`سيتم إرسال تنبيهات انتهاء الاشتراك لـ (${list.length}) مشترك (عبر تطبيق المشتركين وواتساب أعمال لمن يمتلك رقماً). هل تريد المتابعة؟`)) {
         list.forEach((s, index) => {
             setTimeout(() => {
                 let priceFormatted = parseFloat(s.price || 30000).toLocaleString();
-                let alertMsg = `⚠️ تنبيه هام من مكتب مهندس علي للإنترنت:\n\nعزيزنا المشترك (${s.name})، ينتهي اشتراكك غداً بتاريخ (${s.endDate}).\n• يوزر الاشتراك: ${s.username || s.name}\n• المبلغ المطلوب للتجديد: ${priceFormatted} د.ع\n\nيرجى التجديد لضمان استمرار الخدمة.`;
+                let debtText = "";
+                
+                if (s.payStatus === 'أجل') {
+                    let months = parseInt(s.debtMonths) || 1;
+                    let total = parseFloat(s.price || 0) * months;
+                    let partial = parseFloat(s.partialPaid) || 0;
+                    let remaining = total - partial;
+                    if(remaining < 0) remaining = 0;
+                    debtText = `\n⚠️ تنبيه مالي: أنت مطلوب بمبلغ إجمالي قدره (${remaining.toLocaleString()} د.ع).`;
+                }
 
-                // تخزين تلقائي في تطبيق المشترك (التكتات)
+                let alertMsg = `⚠️ تنبيه هام من مكتب مهندس علي للإنترنت:\n\nعزيزنا المشترك (${s.name})، ينتهي اشتراكك غداً بتاريخ (${s.endDate} - ${s.endTime || '12:00'}).\n• يوزر الاشتراك: ${s.username || s.name}\n• المبلغ المطلوب للتجديد: ${priceFormatted} د.ع${debtText}\n\nيرجى التجديد لضمان استمرار الخدمة.`;
+
+                // تخزين في التطبيق تلقائياً
                 let chats = JSON.parse(localStorage.getItem(`ticket_chat_${s.name}`)) || [];
                 chats.push({ sender: "مهندس علي (تنبيه انتهاء غداً)", text: alertMsg });
                 localStorage.setItem(`ticket_chat_${s.name}`, JSON.stringify(chats));
 
-                // فتح واتساب إذا وجد رقم هاتف
+                // فتح واتساب أعمال
                 if(s.phone && s.phone.trim() !== "") {
                     let cleanPhone = s.phone.replace(/\D/g, '');
                     if(cleanPhone.startsWith('0')) cleanPhone = '964' + cleanPhone.substring(1);
@@ -824,7 +874,7 @@ function sendBatchExpiringTomorrowAlerts() {
                 }
             }, index * 1200);
         });
-        alert("✅ جاري إرسال التنبيهات تدريجياً عبر الواتساب وتطبيق المشتركين!");
+        alert("✅ جاري إرسال التنبيهات تدريجياً عبر واتساب وتطبيق المشتركين!");
         closeExpiringTomorrowModal();
     }
 }
@@ -999,9 +1049,18 @@ function checkExpiringTomorrow() {
     if (expiringSoon.length > 0) {
         expiringSoon.forEach(s => {
             let priceFormatted = parseFloat(s.price || 30000).toLocaleString();
-            let alertMsg = `⚠️ تنبيه هام:\nعزيزنا المشترك، اشتراكك في مكتب مهندس علي سينتهي غداً (${s.endDate}).\n• يوزر الاشتراك: ${s.username || s.name}\n• المبلغ المطلوب: ${priceFormatted} د.ع\nيرجى التجديد لضمان استمرار الخدمة دون انقطاع.`;
+            let debtText = "";
+            if (s.payStatus === 'أجل') {
+                let months = parseInt(s.debtMonths) || 1;
+                let total = parseFloat(s.price || 0) * months;
+                let partial = parseFloat(s.partialPaid) || 0;
+                let remaining = total - partial;
+                if(remaining < 0) remaining = 0;
+                debtText = `\n⚠️ المبلغ المطلوب سداده: (${remaining.toLocaleString()} د.ع).`;
+            }
 
-            localStorage.setItem(`client_activation_notif_${s.name}`, alertMsg);
+            let alertMsg = `⚠️ تنبيه هام:\nعزيزنا المشترك، اشتراكك في مكتب مهندس علي سينتهي غداً (${s.endDate} - ${s.endTime || '12:00'}).\n• يوزر الاشتراك: ${s.username || s.name}\n• مبلغ التجديد: ${priceFormatted} د.ع${debtText}\nيرجى التجديد لضمان استمرار الخدمة دون انقطاع.`;
+
             let chats = JSON.parse(localStorage.getItem(`ticket_chat_${s.name}`)) || [];
             chats.push({ sender: "النظام (تنبيه انتهاء)", text: alertMsg });
             localStorage.setItem(`ticket_chat_${s.name}`, JSON.stringify(chats));
@@ -1068,7 +1127,7 @@ function sendGroupDebtReminder() {
                 let partialPaid = parseFloat(s.partialPaid) || 0;
                 let remaining = totalDebt - partialPaid;
                 
-                let msg = `عزيزي المشترك (${s.name}) ⏳\nنود تذكيرك بوجود مبالغ اشتراك معلقة (أجل) في مكتب مهندس علي لخدمات الإنترنت.\n\n• يوزر الاشتراك: ${s.username || s.name}\n• إجمالي الدين: ${totalDebt.toLocaleString()} د.ع\n• المسدد سابقاً: ${partialPaid.toLocaleString()} د.ع\n• المبلغ الباقي (المتبقي): ${remaining.toLocaleString()} د.ع\n\nيرجى التسديد لضمان استمرار الخدمة. شكراً لتفهمكم.`;
+                let msg = `عزيزي المشترك (${s.name}) ⏳\nنود تذكيرك بوجود مبالغ اشتراك معلقة (أجل) في مكتب مهندس علي لخدمات الإنترنت.\n\n• يوزر الاشتراك: ${s.username || s.name}\n• المبلغ الباقي (المطلوب سداده): ${remaining.toLocaleString()} د.ع\n\nيرجى التسديد لضمان استمرار الخدمة. شكراً لتفهمكم.`;
                 window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`, '_blank');
             }, index * 1200);
         });
@@ -1103,16 +1162,25 @@ window.onload = function() {
     if(localStorage.getItem('ali_admin_logged_in') === 'true') {
         document.getElementById('lockScreen').style.display = 'none';
     }
-    let today = new Date().toISOString().split('T')[0];
-    if(document.getElementById('startDate')) { document.getElementById('startDate').value = today; calcEnd(); }
+    let today = new Date();
+    let todayStr = today.toISOString().split('T')[0];
+    let timeStr = today.toTimeString().substring(0, 5);
+    
+    if(document.getElementById('startDate')) { 
+        document.getElementById('startDate').value = todayStr; 
+        document.getElementById('startTime').value = timeStr;
+        calcEnd(); 
+    }
 };
 
 function calcEnd() {
     let startVal = document.getElementById('startDate').value;
+    let timeVal = document.getElementById('startTime').value;
     if(startVal) {
         let date = new Date(startVal);
         date.setDate(date.getDate() + 30);
         document.getElementById('endDate').value = date.toISOString().split('T')[0];
+        document.getElementById('endTime').value = timeVal || "12:00";
     }
 }
 
@@ -1135,7 +1203,7 @@ function calcPartialDebtPreview() {
     let remaining = total - paid;
     if(remaining < 0) remaining = 0;
 
-    document.getElementById('partialDebtPreview').innerHTML = `إجمالي: ${total.toLocaleString()} | المسدد: ${paid.toLocaleString()} | <b>الباقي: ${remaining.toLocaleString()} د.ع</b>`;
+    document.getElementById('partialDebtPreview').innerHTML = `إجمالي: ${total.toLocaleString()} | المسدد: ${paid.toLocaleString()} | <b>المطلوب (الباقي): ${remaining.toLocaleString()} د.ع</b>`;
 }
 
 function toggleRenewMonthsField() {
@@ -1211,7 +1279,7 @@ function openDebtsListModal() {
                 <div style="background:#131d31; border:1px solid #1e293b; padding:8px; border-radius:6px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
                     <div>
                         <div style="font-weight:bold; color:#38bdf8;">${idx+1}. ${s.name} <span class="ltr-text">${s.username ? '('+s.username+')' : ''}</span></div>
-                        <div style="font-size:10px; color:#94a3b8;">هاتف: ${s.phone || 'بدون'} | الدين: ${total.toLocaleString()} | مسدد: <b style="color:#10b981;">${partial.toLocaleString()}</b> | الباقي: <span style="color:#ef4444; font-weight:bold;">${remaining.toLocaleString()} د.ع</span></div>
+                        <div style="font-size:10px; color:#94a3b8;">هاتف: ${s.phone || 'بدون'} | الدين: ${total.toLocaleString()} | مسدد: <b style="color:#10b981;">${partial.toLocaleString()}</b> | المطلوب: <span style="color:#ef4444; font-weight:bold;">${remaining.toLocaleString()} د.ع</span></div>
                     </div>
                     ${s.phone ? `<button onclick="sendWhatsapp('${s.phone}', '${s.name}', '${s.username}', '${s.endDate}', '${s.payStatus}', '${s.price}', '${s.startDate}', '${months}', '${partial}')" style="background:#25d366; color:#fff; border:none; padding:4px 8px; border-radius:4px; font-size:10px; cursor:pointer;">💬 واتساب</button>` : ''}
                 </div>
@@ -1256,7 +1324,7 @@ function printDebtsList() {
     });
 
     document.getElementById('printDebtsTableBody').innerHTML = tbodyHTML;
-    document.getElementById('printDebtsTotal').innerText = `المجموع الكلي للمبالغ المتبقية (الباقي في الذمة): ${totalRemainingSum.toLocaleString()} د.ع (${unPaidSubs.length} مشترك)`;
+    document.getElementById('printDebtsTotal').innerText = `المجموع الكلي للمبالغ المطلوبة (المتبقية): ${totalRemainingSum.toLocaleString()} د.ع (${unPaidSubs.length} مشترك)`;
 
     window.print();
 }
@@ -1274,7 +1342,10 @@ function openModal() {
     document.getElementById('debtMonths').value = "1";
     document.getElementById('partialPaidAmount').value = "0";
     document.getElementById('debtMonthsGroup').style.display = 'none';
-    document.getElementById('startDate').value = new Date().toISOString().split('T')[0];
+    
+    let now = new Date();
+    document.getElementById('startDate').value = now.toISOString().split('T')[0];
+    document.getElementById('startTime').value = now.toTimeString().substring(0, 5);
     calcEnd();
     document.getElementById('saveBtnText').innerText = "حفظ المشترك";
     document.getElementById('addSubModal').style.display = 'flex';
@@ -1317,8 +1388,8 @@ function showSubDetails(id) {
         document.getElementById('dRemainingRow').style.display = 'none';
     }
 
-    document.getElementById('dStart').innerText = s.startDate || "-";
-    document.getElementById('dEnd').innerText = s.endDate || "-";
+    document.getElementById('dStart').innerText = `${s.startDate || "-"} (${s.startTime || '12:00'})`;
+    document.getElementById('dEnd').innerText = `${s.endDate || "-"} (${s.endTime || '12:00'})`;
     document.getElementById('subDetailsModal').style.display = 'flex';
 }
 function closeDetailsModal() { document.getElementById('subDetailsModal').style.display = 'none'; }
@@ -1328,7 +1399,7 @@ function openEditModalFromDetails() {
     let s = subs.find(item => String(item.id) === String(currentSelectedSubId));
     if(!s) return;
 
-    document.getElementById('modalTitle').innerText = "✏️ تعديل معلومات المشترك";
+    document.getElementById('modalTitle').innerText = "✏️ تعديل معلومات المشترك والوقت";
     document.getElementById('editSubId').value = s.id;
     document.getElementById('subName').value = s.name || "";
     document.getElementById('subUsername').value = s.username || "";
@@ -1350,7 +1421,9 @@ function openEditModalFromDetails() {
     }
 
     document.getElementById('startDate').value = s.startDate || new Date().toISOString().split('T')[0];
+    document.getElementById('startTime').value = s.startTime || "12:00";
     document.getElementById('endDate').value = s.endDate || "";
+    document.getElementById('endTime').value = s.endTime || "12:00";
     document.getElementById('saveBtnText').innerText = "تحديث وتعديل البيانات";
     document.getElementById('addSubModal').style.display = 'flex';
 }
@@ -1367,7 +1440,9 @@ function saveSub() {
     let debtMonths = payStatus === 'أجل' ? (parseInt(document.getElementById('debtMonths').value) || 1) : 1;
     let partialPaid = payStatus === 'أجل' ? (parseFloat(document.getElementById('partialPaidAmount').value) || 0) : 0;
     let startDate = document.getElementById('startDate').value;
+    let startTime = document.getElementById('startTime').value || "12:00";
     let endDate = document.getElementById('endDate').value;
+    let endTime = document.getElementById('endTime').value || "12:00";
     
     if(!name || !startDate || !endDate) { alert("يرجى ملء اسم المشترك والتواريخ الأساسية"); return; }
     
@@ -1385,10 +1460,12 @@ function saveSub() {
             subObj.debtMonths = debtMonths;
             subObj.partialPaid = partialPaid;
             subObj.startDate = startDate;
+            subObj.startTime = startTime;
             subObj.endDate = endDate;
+            subObj.endTime = endTime;
         }
     } else {
-        subObj = { id: Date.now(), name, username, fullName, phone, price, subType, payStatus, debtMonths, partialPaid, startDate, endDate };
+        subObj = { id: Date.now(), name, username, fullName, phone, price, subType, payStatus, debtMonths, partialPaid, startDate, startTime, endDate, endTime };
         subs.push(subObj);
     }
 
@@ -1419,10 +1496,12 @@ function confirmRenewSubscription() {
     let chosenPartialPaid = chosenPayType === 'أجل' ? (parseFloat(document.getElementById('renewPartialPaid').value) || 0) : 0;
 
     if(s) {
-        let today = new Date();
-        s.startDate = today.toISOString().split('T')[0];
-        today.setDate(today.getDate() + 30);
-        s.endDate = today.toISOString().split('T')[0];
+        let now = new Date();
+        s.startDate = now.toISOString().split('T')[0];
+        s.startTime = now.toTimeString().substring(0, 5);
+        now.setDate(now.getDate() + 30);
+        s.endDate = now.toISOString().split('T')[0];
+        s.endTime = s.startTime;
         s.payStatus = chosenPayType;
         s.debtMonths = chosenDebtMonths;
         s.partialPaid = chosenPartialPaid;
@@ -1436,9 +1515,9 @@ function confirmRenewSubscription() {
         let totalDebtCalc = (parseFloat(s.price || 30000) * chosenDebtMonths);
         let remainingCalc = chosenPayType === 'أجل' ? (totalDebtCalc - chosenPartialPaid) : 0;
 
-        sendNotificationToClientAndWhatsapp(s, `🔄 تم تجديد اشتراكك بنجاح في مكتب مهندس علي!\n\n• يوزر الاشتراك: ${s.username || s.name}\n• حالة الدفع: ${s.payStatus}\n• تاريخ التفعيل: ${s.startDate}\n• تاريخ الانتهاء: ${s.endDate}\n• المبلغ المسدد: ${paidAmountForReceipt.toLocaleString()} د.ع\n${remainingCalc > 0 ? '• المبلغ الباقي بالذمة: ' + remainingCalc.toLocaleString() + ' د.ع\n' : ''}\nشكراً لتجديد اشتراكك معنا!`);
+        sendNotificationToClientAndWhatsapp(s, `🔄 تم تجديد اشتراكك بنجاح في مكتب مهندس علي!\n\n• يوزر الاشتراك: ${s.username || s.name}\n• حالة الدفع: ${s.payStatus}\n• تفعيل: ${s.startDate} (${s.startTime})\n• انتهاء: ${s.endDate} (${s.endTime})\n• المبلغ المسدد: ${paidAmountForReceipt.toLocaleString()} د.ع\n${remainingCalc > 0 ? '• المبلغ المطلوب سداده: ' + remainingCalc.toLocaleString() + ' د.ع\n' : ''}\nشكراً لتجديد اشتراكك معنا!`);
 
-        printReceipt(s.name, s.username, paidAmountForReceipt, s.startDate, s.endDate, `تجديد اشتراك (${chosenPayType})`, remainingCalc);
+        printReceipt(s.name, s.username, paidAmountForReceipt, `${s.startDate} (${s.startTime})`, `${s.endDate} (${s.endTime})`, `تجديد اشتراك (${chosenPayType})`, remainingCalc);
     }
 }
 
@@ -1477,7 +1556,7 @@ function calcRemainingPreview() {
     let newRemaining = remainingBefore - paidNow;
     if(newRemaining < 0) newRemaining = 0;
 
-    document.getElementById('remainingPreviewBox').innerHTML = `المتبقي بعد هذا التسديد: <b style="color:${newRemaining === 0 ? '#10b981' : '#f59e0b'}; font-size:13px;">${newRemaining.toLocaleString()} د.ع</b>`;
+    document.getElementById('remainingPreviewBox').innerHTML = `المبلغ المطلوب بعد هذا التسديد: <b style="color:${newRemaining === 0 ? '#10b981' : '#f59e0b'}; font-size:13px;">${newRemaining.toLocaleString()} د.ع</b>`;
 }
 
 function confirmPartialPayment() {
@@ -1503,22 +1582,22 @@ function confirmPartialPayment() {
         renderSubs();
         closePartialPayModal();
 
-        sendNotificationToClientAndWhatsapp(s, `✅ تم استلام دفعتك المالية وسداد كامل الدين بنجاح في مكتب مهندس علي!\n\n• يوزر الاشتراك: ${s.username || s.name}\n• المبلغ الواصل: ${paidNow.toLocaleString()} د.ع\n• الحالة الحالية: واصل (تمت تسوية الحساب بالكامل)\n• تاريخ الانتهاء: ${s.endDate}\n\nشكراً لالتزامكم!`);
+        sendNotificationToClientAndWhatsapp(s, `✅ تم استلام دفعتك المالية وسداد كامل الدين بنجاح في مكتب مهندس علي!\n\n• يوزر الاشتراك: ${s.username || s.name}\n• المبلغ الواصل: ${paidNow.toLocaleString()} د.ع\n• الحالة الحالية: واصل (تمت تسوية الحساب بالكامل)\n• تاريخ الانتهاء: ${s.endDate} (${s.endTime || '12:00'})\n\nشكراً لالتزامكم!`);
 
-        printReceipt(s.name, s.username, paidNow, s.startDate, s.endDate, 'واصل (تم سداد كامل الدين وتسوية الحساب)', 0);
+        printReceipt(s.name, s.username, paidNow, `${s.startDate} (${s.startTime || '12:00'})`, `${s.endDate} (${s.endTime || '12:00'})`, 'واصل (تم سداد كامل الدين وتسوية الحساب)', 0);
     } else {
         s.partialPaid = newPartial;
         syncToCloud();
         renderSubs();
         closePartialPayModal();
 
-        sendNotificationToClientAndWhatsapp(s, `💵 تم استلام دفعتك الجزئية بنجاح في مكتب مهندس علي!\n\n• يوزر الاشتراك: ${s.username || s.name}\n• المبلغ المسدد الآن: ${paidNow.toLocaleString()} د.ع\n• إجمالي الدين: ${total.toLocaleString()} د.ع\n• إجمالي المسدد: ${newPartial.toLocaleString()} د.ع\n• المبلغ الباقي بالذمة: ${remaining.toLocaleString()} د.ع\n\nشكراً لتعاونكم!`);
+        sendNotificationToClientAndWhatsapp(s, `💵 تم استلام دفعتك الجزئية بنجاح في مكتب مهندس علي!\n\n• يوزر الاشتراك: ${s.username || s.name}\n• المبلغ المسدد الآن: ${paidNow.toLocaleString()} د.ع\n• إجمالي الدين: ${total.toLocaleString()} د.ع\n• إجمالي المسدد: ${newPartial.toLocaleString()} د.ع\n• المبلغ المطلوب (المتبقي): ${remaining.toLocaleString()} د.ع\n\nشكراً لتعاونكم!`);
 
-        printReceipt(s.name, s.username, paidNow, s.startDate, s.endDate, 'تسديد جزئي', remaining);
+        printReceipt(s.name, s.username, paidNow, `${s.startDate} (${s.startTime || '12:00'})`, `${s.endDate} (${s.endTime || '12:00'})`, 'تسديد جزئي', remaining);
     }
 }
 
-// دالة مساعدة مركزية لإرسال الإشعار والتفاصيل لتطبيق المشترك وللواتساب معاً
+// دالة مساعدة مركزية لإرسال الإشعار والتفاصيل لتطبيق المشترك وللواتساب أعمال معاً
 function sendNotificationToClientAndWhatsapp(sub, messageText) {
     if(!sub || !sub.name) return;
 
@@ -1544,7 +1623,7 @@ function sendWhatsapp(phone, name, username, endDate, payStatus, price, startDat
     if(remaining < 0) remaining = 0;
 
     let msg = payStatus === 'أجل' ? 
-        `عزيزي المشترك (${name}) ⏳\nتذكير بمبلغ الاشتراك المعلق (أجل) في مكتب مهندس علي للإنترنت.\n\n• يوزر الاشتراك: ${username || name}\n• إجمالي الدين: ${totalDebt.toLocaleString()} د.ع\n• المسدد: ${paid.toLocaleString()} د.ع\n• المبلغ الباقي (المتبقي): ${remaining.toLocaleString()} د.ع\n• تاريخ الانتهاء: ${endDate || '-'}` : 
+        `عزيزي المشترك (${name}) ⏳\nتذكير بمبلغ الاشتراك المعلق (أجل) في مكتب مهندس علي للإنترنت.\n\n• يوزر الاشتراك: ${username || name}\n• إجمالي الدين: ${totalDebt.toLocaleString()} د.ع\n• المسدد: ${paid.toLocaleString()} د.ع\n• المبلغ المطلوب سداده: ${remaining.toLocaleString()} د.ع\n• تاريخ الانتهاء: ${endDate || '-'}` : 
         `عزيزي المشترك (${name}) 📡\nيوزر الاشتراك: ${username || name}\nاشتراكك سينتهي بتاريخ ${endDate}. شكراً لاختياركم خدماتنا.`;
         
     window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`, '_blank');
@@ -1608,7 +1687,7 @@ function renderSubs() {
         let remaining = totalDebt - partial;
         if(remaining < 0) remaining = 0;
 
-        let payBadge = s.payStatus === 'أجل' ? `<span style="color:#f59e0b; font-weight:bold;">[أجل | الباقي: ${remaining.toLocaleString()} د.ع]</span>` : '<span style="color:#10b981; font-weight:bold;">[واصل ✅]</span>';
+        let payBadge = s.payStatus === 'أجل' ? `<span style="color:#f59e0b; font-weight:bold;">[أجل | المطلوب: ${remaining.toLocaleString()} د.ع]</span>` : '<span style="color:#10b981; font-weight:bold;">[واصل ✅]</span>';
 
         html += `
             <div class="sub-card ${s.payStatus === 'أجل' ? 'agel' : (isExp ? 'expired' : '')}">
@@ -1616,14 +1695,14 @@ function renderSubs() {
                     <div style="font-size: 13px; font-weight: bold;">${s.name} ${payBadge} <span style="font-size:10px; color:#38bdf8;">(${s.subType || 'Standard'})</span></div>
                     ${s.username ? `<div style="font-size: 11px; color: #38bdf8;" class="ltr-text">يوزر: ${s.username}</div>` : ''}
                     <div style="font-size: 10px; color: #94a3b8;">هاتف: ${s.phone || 'بدون'} | الدين الكلي: ${totalDebt.toLocaleString()} | المسدد: <b style="color:#10b981;">${partial.toLocaleString()}</b></div>
-                    <div style="font-size: 11px; margin-top: 3px; color:#cbd5e1;">انتهاء: <span style="color:${isExp ? '#ef4444' : '#10b981'}; font-weight:bold;">${s.endDate}</span></div>
+                    <div style="font-size: 11px; margin-top: 3px; color:#cbd5e1;">انتهاء: <span style="color:${isExp ? '#ef4444' : '#10b981'}; font-weight:bold;">${s.endDate} (${s.endTime || '12:00'})</span></div>
                 </div>
                 
                 <div style="display:flex; flex-direction:column; gap:3px;" onclick="event.stopPropagation()">
                     ${s.payStatus === 'أجل' ? `<button onclick="openPartialPayModal(${s.id})" style="background:#10b981; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">💵 تسديد</button>` : ''}
                     <button onclick="openRenewModal(${s.id})" style="background:#0284c7; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">🔄 تفعيل</button>
                     <button onclick="sendWhatsapp('${s.phone}', '${s.name}', '${s.username}', '${s.endDate}', '${s.payStatus}', '${s.price}', '${s.startDate}', '${months}', '${partial}')" style="background:#25d366; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">💬 واتساب</button>
-                    <button onclick="printReceipt('${s.name}', '${s.username}', '${s.price || 0}', '${s.startDate}', '${s.endDate}', '${s.payStatus}', 0)" style="background:#475569; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">🖨️ وصل</button>
+                    <button onclick="printReceipt('${s.name}', '${s.username}', '${s.price || 0}', '${s.startDate} (${s.startTime || '12:00'})', '${s.endDate} (${s.endTime || '12:00'})', '${s.payStatus}', 0)" style="background:#475569; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">🖨️ وصل</button>
                     <button onclick="deleteSub(${s.id})" style="background:#ef4444; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">🗑️ حذف</button>
                 </div>
             </div>
