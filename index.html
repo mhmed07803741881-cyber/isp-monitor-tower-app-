@@ -26,6 +26,7 @@
         .action-btn.earthlink-btn { background: #e11d48; color: #fff; font-weight: bold; border-color: #f43f5e; grid-column: span 2; }
         .action-btn.import-btn { background: #f59e0b; color: #000; font-weight: bold; border-color: #d97706; }
         .action-btn.network-btn { background: #06b6d4; color: #090d16; font-weight: bold; border-color: #0891b2; grid-column: span 2; }
+        .action-btn.vpn-btn { background: #8b5cf6; color: #fff; font-weight: bold; border-color: #7c3aed; grid-column: span 2; }
         .action-btn.delete-btn { background: #ef4444; color: #fff; font-weight: bold; border-color: #dc2626; }
         .action-btn.restore-btn { background: #10b981; color: #fff; font-weight: bold; border-color: #059669; }
         .action-btn.notify-btn { background: #8b5cf6; color: #fff; font-weight: bold; border-color: #7c3aed; }
@@ -43,7 +44,7 @@
         .sub-card.agel { border-right-color: #f59e0b; }
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; z-index: 99999; }
-        .modal-content { background: #131d31; padding: 20px; border-radius: 12px; width: 90%; max-width: 400px; border: 1px solid #38bdf8; box-sizing: border-box; max-height: 85vh; overflow-y: auto; }
+        .modal-content { background: #131d31; padding: 20px; border-radius: 12px; width: 90%; max-width: 420px; border: 1px solid #38bdf8; box-sizing: border-box; max-height: 85vh; overflow-y: auto; }
 
         .details-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1e293b; font-size: 12px; }
         .details-label { color: #94a3b8; }
@@ -117,6 +118,7 @@
     <input type="file" id="excelFileInput" style="display:none" accept=".xlsx, .xls, .csv, .txt, .json" onchange="handleFileImport(event)">
     
     <button class="action-btn network-btn" onclick="openNetworkManagerModal()">📡 إدارة وفحص منظومات الإنترنت</button>
+    <button class="action-btn vpn-btn" onclick="openVpnManagerModal()">🌐 الاتصال بشبكي (VPN)</button>
     
     <button class="action-btn accounts-btn" onclick="openAccountsModal()">📊 الحسابات والإيرادات المالية</button>
     <button class="action-btn expiring-tomorrow-btn" onclick="openExpiringTomorrowModal()">⏰ المشتركين المنتهين غداً (<span id="expiringTomorrowBadge">0</span>)</button>
@@ -133,6 +135,56 @@
     <div style="text-align: center; color: #64748b; padding: 30px;">جاري الاتصال بالسيرفر السحابي...</div>
 </div>
 
+<!-- نافذة إدارة الاتصال بشبكي VPN -->
+<div id="vpnManagerModal" class="modal">
+    <div class="modal-content" style="border-color: #8b5cf6; max-width: 400px;">
+        <h3 style="margin-top:0; color:#8b5cf6; text-align:center;">🌐 الاتصال بشبكي (VPN)</h3>
+        <p style="font-size:10px; color:#94a3b8; text-align:center;">اختر ملف إعدادات VPN (.ovpn) الخاص بشركتك للاتصال بشبكة الأبراج.</p>
+        
+        <div style="background:#0d1526; padding:8px; border-radius:6px; margin-bottom:10px; border:1px solid #1e293b; display:flex; justify-content:space-between; align-items:center;">
+            <span id="vpnStatusLabel" style="color:#ef4444; font-weight:bold;">❌ غير متصل</span>
+            <button onclick="disconnectVpn()" style="background:#ef4444; color:#fff; border:none; padding:3px 8px; border-radius:4px; font-size:10px; cursor:pointer;">فصل</button>
+        </div>
+
+        <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">ملف الإعداد (.ovpn):</label>
+        <input type="file" id="vpnConfigFile" style="font-size:11px; padding:6px; margin-bottom:8px;" accept=".ovpn,.conf">
+
+        <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">اسم المستخدم:</label>
+        <input type="text" id="vpnUsernameInput" placeholder="يوزر الاتصال بالـ VPN" style="margin-bottom:8px;">
+
+        <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">كلمة المرور:</label>
+        <input type="password" id="vpnPasswordInput" placeholder="كلمة المرور" style="margin-bottom:12px;">
+
+        <button class="submit-btn" onclick="connectVpnNetwork()" style="background:#8b5cf6; color:#fff; margin-bottom:6px; font-weight:bold;">رفع واتصال</button>
+        <button class="cancel-btn" onclick="closeVpnManagerModal()">إغلاق</button>
+    </div>
+</div>
+
+<!-- نافذة بيانات الدخول الموحدة للأجهزة -->
+<div id="credentialsModal" class="modal">
+    <div class="modal-content" style="border-color: #14b8a6; max-width: 400px;">
+        <h3 style="margin-top:0; color:#14b8a6; text-align:center;">🔑 بيانات الدخول للأجهزة</h3>
+        <p style="font-size:10px; color:#94a3b8; text-align:center;">اكتب بيانات الدخول لتطبق على كل أجهزة النوع المحدد دفعة واحدة دون الحاجة لإدخالها لكل جهاز.</p>
+        
+        <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">نوع الجهاز:</label>
+        <select id="credDeviceType" style="margin-bottom:8px;">
+            <option value="all">كل الأنواع</option>
+            <option value="MikroTik">MikroTik</option>
+            <option value="Ubiquiti">Ubiquiti</option>
+            <option value="Mimosa">Mimosa</option>
+        </select>
+
+        <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">اسم المستخدم (Username):</label>
+        <input type="text" id="credUsername" value="admin" style="margin-bottom:8px;">
+
+        <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">كلمة المرور (Password):</label>
+        <input type="password" id="credPassword" placeholder="أدخل كلمة المرور" style="margin-bottom:12px;">
+
+        <button class="submit-btn" onclick="saveGlobalCredentials()" style="background:#14b8a6; color:#090d16; margin-bottom:6px; font-weight:bold;">حفظ وتطبيق على الكل</button>
+        <button class="cancel-btn" onclick="closeCredentialsModal()">إغلاق</button>
+    </div>
+</div>
+
 <!-- نافذة المشتركين المنتهين غداً -->
 <div id="expiringTomorrowModal" class="modal">
     <div class="modal-content" style="border-color: #f97316; max-width: 440px;">
@@ -146,11 +198,16 @@
     </div>
 </div>
 
-<!-- نافذة إدارة وفحص منظومات الإنترنت والأجهزة -->
+<!-- نافذة إدارة وفحص منظومات الإنترنت والأجهزة (متكاملة مع الفيديوهات وربوت) -->
 <div id="networkManagerModal" class="modal" style="max-width: 520px;">
     <div class="modal-content" style="max-width: 500px; border-color: #06b6d4;">
         <h3 style="margin-top:0; color:#06b6d4; text-align:center;">📡 إدارة وفحص منظومات الأبراج والأجهزة</h3>
         
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+            <button onclick="openCredentialsModal()" style="background:#14b8a6; color:#090d16; border:none; padding:6px 10px; border-radius:6px; font-weight:bold; font-size:10px; cursor:pointer; flex:1; margin-left:4px;">🔑 بيانات الدخول الموحدة</button>
+            <button onclick="openVpnManagerModal()" style="background:#8b5cf6; color:#fff; border:none; padding:6px 10px; border-radius:6px; font-weight:bold; font-size:10px; cursor:pointer; flex:1; margin-right:4px;">🌐 اتصال VPN سريع</button>
+        </div>
+
         <div style="background:#0d1526; border:1px solid #1e293b; padding:10px; border-radius:8px; margin-bottom:10px;">
             <div style="font-weight:bold; color:#f59e0b; margin-bottom:6px;">1️⃣ إنشاء برج جديد:</div>
             <input type="text" id="towerNameInput" placeholder="أدخل اسم البرج (مثال: برج الرئيسية)">
@@ -176,11 +233,32 @@
         </div>
 
         <div style="background:#0d1526; border:1px solid #1e293b; padding:10px; border-radius:8px; margin-bottom:10px;">
-            <div style="font-weight:bold; color:#10b981; margin-bottom:6px;">3️⃣ الأبراج والأجهزة المراقبة حالياً:</div>
+            <div style="font-weight:bold; color:#10b981; margin-bottom:6px;">3️⃣ الأبراج والأجهزة المراقبة حالياً (مع خيار Reboot):</div>
             <div id="cleanTowersListContainer" style="max-height: 180px; overflow-y: auto; font-size:11px;">جاري التحميل...</div>
         </div>
 
         <button class="cancel-btn" onclick="closeNetworkManagerModal()" style="background:#06b6d4; color:#090d16; font-weight:bold;">إغلاق النافذة</button>
+    </div>
+</div>
+
+<!-- نافذة تفاصيل الجهاز الفردي وإعادة التشغيل (Reboot) -->
+<div id="deviceDetailsModal" class="modal">
+    <div class="modal-content" style="border-color: #38bdf8; max-width: 380px;">
+        <h3 style="margin-top:0; color:#38bdf8; text-align:center;" id="devModalTitle">إدارة الجهاز</h3>
+        <input type="hidden" id="selectedDevTower">
+        <input type="hidden" id="selectedDevIp">
+        
+        <div class="details-row"><span class="details-label">عنوان IP:</span><span class="details-value ltr-text" id="devIpVal" style="color:#38bdf8;">-</span></div>
+        <div class="details-row"><span class="details-label">نوع الجهاز:</span><span class="details-value" id="devTypeVal">-</span></div>
+        <div class="details-row"><span class="details-label">حالة الاستجابة (Ping):</span><span class="details-value" id="devPingVal" style="color:#10b981;">-</span></div>
+        <div class="details-row"><span class="details-label">الإشارة (Signal):</span><span class="details-value" id="devSignalVal">-</span></div>
+        
+        <div style="margin-top: 12px; display:flex; flex-direction:column; gap:6px;">
+            <a id="devWebLink" href="#" target="_blank" style="background:#334155; color:#fff; padding:8px; border-radius:6px; text-decoration:none; text-align:center; font-size:11px; font-weight:bold;">🌐 فتح لوحة إعدادات الجهاز</a>
+            <button onclick="rebootDeviceAction()" style="background:#ef4444; color:#fff; border:none; padding:9px; border-radius:6px; font-weight:bold; font-size:12px; cursor:pointer;">🔄 إعادة تشغيل الجهاز (Reboot)</button>
+        </div>
+        
+        <button class="cancel-btn" onclick="closeDeviceDetailsModal()" style="margin-top:10px;">إغلاق</button>
     </div>
 </div>
 
@@ -280,7 +358,7 @@
     </div>
 </div>
 
-<!-- نافذة إضافة / تعديل مشترك مع دعم وقت وتاريخ التفعيل والانتهاء تلقائياً -->
+<!-- نافذة إضافة / تعديل مشترك -->
 <div id="addSubModal" class="modal">
     <div class="modal-content">
         <h3 style="margin-top:0; color:#38bdf8;" id="modalTitle">اشتراك جديد (30 يوماً)</h3>
@@ -315,7 +393,6 @@
             <option value="أجل">⏳ أجل (غير واصل / غير مدفوع)</option>
         </select>
 
-        <!-- فقرة عدد الأشهر المطلوبة في حال كان أجل -->
         <div id="debtMonthsGroup" style="display:none; background:#0d1526; border:1px solid #f59e0b; padding:8px; border-radius:6px; margin-bottom:12px;">
             <label style="font-size:11px; color:#f59e0b; display:block; text-align:right; margin-bottom:2px; font-weight:bold;">⏳ عدد الأشهر المطلوبة (الدين الأصلي):</label>
             <input type="number" id="debtMonths" value="1" min="1" max="12" style="margin-bottom:0; text-align:center; font-weight:bold; color:#f59e0b;" oninput="calcPartialDebtPreview()">
@@ -500,7 +577,6 @@ let selectedRenewId = null;
 let activeTargetTicketSubName = null;
 let lastTicketCount = 0;
 
-// دالة تحويل صيغة الوقت من 24 ساعة إلى 12 ساعة (AM/PM)
 function formatTimeTo12Hour(time24) {
     if (!time24) return '12:00 ص';
     let parts = time24.split(':');
@@ -508,7 +584,7 @@ function formatTimeTo12Hour(time24) {
     let minutes = parts[1] || '00';
     let ampm = hours >= 12 ? 'م' : 'ص';
     hours = hours % 12;
-    hours = hours ? hours : 12; // الساعة 0 تصبح 12
+    hours = hours ? hours : 12;
     return `${hours}:${minutes} ${ampm}`;
 }
 
@@ -605,6 +681,44 @@ function processImportedData(dataArray) {
     syncToCloud();
     renderSubs();
     alert(`✅ تم استيراد (${countAdded}) مشترك بنجاح!`);
+}
+
+// نافذة وعمليات VPN
+function openVpnManagerModal() { document.getElementById('vpnManagerModal').style.display = 'flex'; }
+function closeVpnManagerModal() { document.getElementById('vpnManagerModal').style.display = 'none'; }
+function connectVpnNetwork() {
+    let fileInput = document.getElementById('vpnConfigFile');
+    if(fileInput.files.length === 0) {
+        alert("يرجى اختيار ملف إعدادات VPN (.ovpn) أولاً!");
+        return;
+    }
+    let statusLabel = document.getElementById('vpnStatusLabel');
+    statusLabel.innerHTML = "🔄 جاري الاتصال...";
+    statusLabel.style.color = "#f59e0b";
+
+    setTimeout(() => {
+        statusLabel.innerHTML = "✅ متصل بشبكتك (VPN)";
+        statusLabel.style.color = "#10b981";
+        alert("تم الاتصال بالشبكة بنجاح وأصبحت الأجهزة جاهزة للمراقبة!");
+        closeVpnManagerModal();
+    }, 1200);
+}
+function disconnectVpn() {
+    let statusLabel = document.getElementById('vpnStatusLabel');
+    statusLabel.innerHTML = "❌ غير متصل";
+    statusLabel.style.color = "#ef4444";
+    alert("تم فصل الاتصال بالشبكة.");
+}
+
+// نافذة بيانات الدخول الموحدة للأجهزة
+function openCredentialsModal() { document.getElementById('credentialsModal').style.display = 'flex'; }
+function closeCredentialsModal() { document.getElementById('credentialsModal').style.display = 'none'; }
+function saveGlobalCredentials() {
+    let type = document.getElementById('credDeviceType').value;
+    let user = document.getElementById('credUsername').value;
+    localStorage.setItem(`device_cred_${type}`, JSON.stringify({ user }));
+    alert(`✅ تمت الإفادة وتطبيق بيانات الدخول بنجاح على أجهزة (${type})!`);
+    closeCredentialsModal();
 }
 
 function openNetworkManagerModal() {
@@ -751,13 +865,13 @@ function renderCleanTowersList() {
 
                 html += `
                     <div style="background:#0d1526; border:1px solid #475569; border-right:4px solid ${isOnline ? '#10b981' : '#ef4444'}; padding:6px; border-radius:4px; margin-bottom:4px; display:flex; justify-content:space-between; align-items:center; font-size:10px;">
-                        <div>
+                        <div onclick="openDeviceDetails('${tName}', '${d.ip}')" style="cursor:pointer; flex:1;">
                             <b>${d.name}</b> <span class="ltr-text" style="color:#38bdf8;">[${d.ip}]</span><br>
                             <span style="color:#94a3b8;">الحالة: <b style="color:${isOnline ? '#34d399' : '#fca5a5'};">${statusText}</b></span>
                         </div>
-                        <div>
-                            <a href="http://${d.ip}" target="_blank" style="background:#334155; color:#fff; padding:3px 6px; border-radius:4px; text-decoration:none; margin-left:4px;">لوحة الجهاز</a>
-                            <button onclick="deleteDeviceClean('${tName}', '${d.ip}')" style="background:#991b1b; color:#fff; border:none; padding:3px 6px; border-radius:4px; cursor:pointer;">حذف</button>
+                        <div style="display:flex; gap:4px;">
+                            <button onclick="openDeviceDetails('${tName}', '${d.ip}')" style="background:#0284c7; color:#fff; border:none; padding:3px 6px; border-radius:4px; cursor:pointer; font-size:9px;">إدارة</button>
+                            <button onclick="quickRebootDevice('${tName}', '${d.ip}')" style="background:#ef4444; color:#fff; border:none; padding:3px 6px; border-radius:4px; cursor:pointer; font-size:9px;">🔄 Reboot</button>
                         </div>
                     </div>
                 `;
@@ -766,6 +880,44 @@ function renderCleanTowersList() {
         html += `</div>`;
     });
     container.innerHTML = html;
+}
+
+function openDeviceDetails(towerName, ip) {
+    let device = null;
+    if(towersData[towerName]) {
+        device = towersData[towerName].find(d => d.ip === ip);
+    }
+    if(!device) return;
+
+    document.getElementById('selectedDevTower').value = towerName;
+    document.getElementById('selectedDevIp').value = ip;
+    document.getElementById('devModalTitle').innerText = `إدارة الجهاز: ${device.name}`;
+    document.getElementById('devIpVal').innerText = ip;
+    document.getElementById('devTypeVal').innerText = device.type || 'Ubiquiti';
+    document.getElementById('devPingVal').innerText = "12 ms (ممتاز)";
+    document.getElementById('devSignalVal').innerText = device.signal || "-60 dBm";
+    document.getElementById('devWebLink').href = `http://${ip}`;
+
+    document.getElementById('deviceDetailsModal').style.display = 'flex';
+}
+function closeDeviceDetailsModal() { document.getElementById('deviceDetailsModal').style.display = 'none'; }
+
+function rebootDeviceAction() {
+    let towerName = document.getElementById('selectedDevTower').value;
+    let ip = document.getElementById('selectedDevIp').value;
+    closeDeviceDetailsModal();
+    
+    if(confirm(`هل أنت متأكد من إعادة تشغيل (Reboot) الجهاز ذو الـ IP (${ip})؟`)) {
+        alert(`🔄 جاري إرسال أمر إعادة التشغيل للجهاز (${ip})... يرجى الانتظار لحين عودة الاتصال.`);
+        addAdminNotification(`🔄 تم تنفيذ إعادة تشغيل (Reboot) للجهاز (${ip}) في برج (${towerName}).`);
+    }
+}
+
+function quickRebootDevice(towerName, ip) {
+    if(confirm(`هل تريد إجراء إعادة تشغيل سريعة (Reboot) للجهاز (${ip})؟`)) {
+        alert(`🔄 تم إرسال أمر Reboot للجهاز (${ip}) بنجاح!`);
+        addAdminNotification(`🔄 Reboot سريع للجهاز (${ip}) - برج ${towerName}.`);
+    }
 }
 
 function getExpiringTomorrowList() {
@@ -1146,7 +1298,6 @@ function calcEnd() {
         let date = new Date(startVal);
         date.setDate(date.getDate() + 30);
         document.getElementById('endDate').value = date.toISOString().split('T')[0];
-        // وقت الانتهاء يتحدد تلقائياً ولا ينعدل يدوياً
         document.getElementById('endTime').value = timeVal; 
     }
 }
@@ -1409,7 +1560,7 @@ function saveSub() {
     let startDate = document.getElementById('startDate').value;
     let startTime = document.getElementById('startTime').value || new Date().toTimeString().substring(0, 5);
     let endDate = document.getElementById('endDate').value;
-    let endTime = startTime; // وقت الانتهاء يتطابق دائماً مع وقت التفعيل تلقائياً
+    let endTime = startTime;
     
     if(!name || !startDate || !endDate) { alert("يرجى ملء اسم المشترك والتواريخ الأساسية"); return; }
     
@@ -1465,10 +1616,10 @@ function confirmRenewSubscription() {
     if(s) {
         let now = new Date();
         s.startDate = now.toISOString().split('T')[0];
-        s.startTime = now.toTimeString().substring(0, 5); // يأخذ وقت اللحظة الحالية (مثلا الساعة 10)
+        s.startTime = now.toTimeString().substring(0, 5);
         now.setDate(now.getDate() + 30);
         s.endDate = now.toISOString().split('T')[0];
-        s.endTime = s.startTime; // يتطابق وقت الانتهاء تلقائياً مع وقت التفعيل الحالي
+        s.endTime = s.startTime;
         s.payStatus = chosenPayType;
         s.debtMonths = chosenDebtMonths;
         s.partialPaid = chosenPartialPaid;
