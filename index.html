@@ -50,6 +50,7 @@
         .details-value { font-weight: bold; color: #fff; }
 
         input, select, textarea { width: 100%; padding: 10px; margin: 6px 0 12px 0; background: #0d1526; border: 1px solid #1e293b; color: white; border-radius: 6px; box-sizing: border-box; font-size: 13px; }
+        input[disabled] { background: #1e293b; color: #94a3b8; cursor: not-allowed; }
         .submit-btn { width: 100%; padding: 11px; background: #38bdf8; color: #090d16; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; }
         .cancel-btn { width: 100%; padding: 10px; background: #1e293b; color: #94a3b8; border: none; border-radius: 6px; cursor: pointer; margin-top: 6px; font-size: 13px; }
 
@@ -342,8 +343,8 @@
                 <input type="date" id="endDate">
             </div>
             <div style="width: 110px;">
-                <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">وقت الانتهاء:</label>
-                <input type="time" id="endTime">
+                <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">وقت الانتهاء (تلقائي):</label>
+                <input type="time" id="endTime" disabled>
             </div>
         </div>
         
@@ -498,6 +499,18 @@ let currentSelectedSubId = null;
 let selectedRenewId = null;
 let activeTargetTicketSubName = null;
 let lastTicketCount = 0;
+
+// دالة تحويل صيغة الوقت من 24 ساعة إلى 12 ساعة (AM/PM)
+function formatTimeTo12Hour(time24) {
+    if (!time24) return '12:00 ص';
+    let parts = time24.split(':');
+    let hours = parseInt(parts[0], 10);
+    let minutes = parts[1] || '00';
+    let ampm = hours >= 12 ? 'م' : 'ص';
+    hours = hours % 12;
+    hours = hours ? hours : 12; // الساعة 0 تصبح 12
+    return `${hours}:${minutes} ${ampm}`;
+}
 
 db.ref('ali_isp_subscribers').on('value', (snapshot) => {
     const data = snapshot.val();
@@ -834,7 +847,6 @@ function sendSingleExpiringAlert(name, username, phone, endDate, price, payStatu
     if(phone && phone.trim() !== "") {
         let cleanPhone = phone.replace(/\D/g, '');
         if(cleanPhone.startsWith('0')) cleanPhone = '964' + cleanPhone.substring(1);
-        // فتح تطبيق واتساب مباشرة بدون صفحة ويب وسيطة
         window.open(`whatsapp://send?phone=${cleanPhone}&text=${encodeURIComponent(alertMsg)}`, '_blank');
     }
 }
@@ -1134,7 +1146,8 @@ function calcEnd() {
         let date = new Date(startVal);
         date.setDate(date.getDate() + 30);
         document.getElementById('endDate').value = date.toISOString().split('T')[0];
-        document.getElementById('endTime').value = timeVal; // تطابق وقت التفعيل والانتهاء تماماً تلقائياً
+        // وقت الانتهاء يتحدد تلقائياً ولا ينعدل يدوياً
+        document.getElementById('endTime').value = timeVal; 
     }
 }
 
@@ -1342,8 +1355,8 @@ function showSubDetails(id) {
         document.getElementById('dRemainingRow').style.display = 'none';
     }
 
-    document.getElementById('dStart').innerText = `${s.startDate || "-"} (${s.startTime || '12:00'})`;
-    document.getElementById('dEnd').innerText = `${s.endDate || "-"} (${s.endTime || '12:00'})`;
+    document.getElementById('dStart').innerText = `${s.startDate || "-"} (${formatTimeTo12Hour(s.startTime)})`;
+    document.getElementById('dEnd').innerText = `${s.endDate || "-"} (${formatTimeTo12Hour(s.endTime || s.startTime)})`;
     document.getElementById('subDetailsModal').style.display = 'flex';
 }
 function closeDetailsModal() { document.getElementById('subDetailsModal').style.display = 'none'; }
@@ -1377,7 +1390,7 @@ function openEditModalFromDetails() {
     document.getElementById('startDate').value = s.startDate || new Date().toISOString().split('T')[0];
     document.getElementById('startTime').value = s.startTime || new Date().toTimeString().substring(0, 5);
     document.getElementById('endDate').value = s.endDate || "";
-    document.getElementById('endTime').value = s.endTime || s.startTime || "12:00";
+    document.getElementById('endTime').value = s.startTime || "12:00";
     document.getElementById('saveBtnText').innerText = "تحديث وتعديل البيانات";
     document.getElementById('addSubModal').style.display = 'flex';
 }
@@ -1396,7 +1409,7 @@ function saveSub() {
     let startDate = document.getElementById('startDate').value;
     let startTime = document.getElementById('startTime').value || new Date().toTimeString().substring(0, 5);
     let endDate = document.getElementById('endDate').value;
-    let endTime = document.getElementById('endTime').value || startTime;
+    let endTime = startTime; // وقت الانتهاء يتطابق دائماً مع وقت التفعيل تلقائياً
     
     if(!name || !startDate || !endDate) { alert("يرجى ملء اسم المشترك والتواريخ الأساسية"); return; }
     
@@ -1452,10 +1465,10 @@ function confirmRenewSubscription() {
     if(s) {
         let now = new Date();
         s.startDate = now.toISOString().split('T')[0];
-        s.startTime = now.toTimeString().substring(0, 5);
+        s.startTime = now.toTimeString().substring(0, 5); // يأخذ وقت اللحظة الحالية (مثلا الساعة 10)
         now.setDate(now.getDate() + 30);
         s.endDate = now.toISOString().split('T')[0];
-        s.endTime = s.startTime;
+        s.endTime = s.startTime; // يتطابق وقت الانتهاء تلقائياً مع وقت التفعيل الحالي
         s.payStatus = chosenPayType;
         s.debtMonths = chosenDebtMonths;
         s.partialPaid = chosenPartialPaid;
@@ -1472,7 +1485,7 @@ function confirmRenewSubscription() {
         let receiptMsg = generateReceiptMessageText(s, paidAmountForReceipt, totalDebtCalc, remainingCalc, `تجديد اشتراك (${chosenPayType})`);
         sendNotificationToClientAndWhatsapp(s, receiptMsg);
 
-        printReceipt(s.name, s.username, paidAmountForReceipt, totalDebtCalc, remainingCalc, `${s.startDate} (${s.startTime})`, `${s.endDate} (${s.endTime})`, `تجديد اشتراك (${chosenPayType})`);
+        printReceipt(s.name, s.username, paidAmountForReceipt, totalDebtCalc, remainingCalc, `${s.startDate} (${formatTimeTo12Hour(s.startTime)})`, `${s.endDate} (${formatTimeTo12Hour(s.endTime)})`, `تجديد اشتراك (${chosenPayType})`);
     }
 }
 
@@ -1539,7 +1552,7 @@ function confirmPartialPayment() {
         let receiptMsg = generateReceiptMessageText(s, paidNow, total, 0, 'واصل (تم سداد كامل الدين)');
         sendNotificationToClientAndWhatsapp(s, receiptMsg);
 
-        printReceipt(s.name, s.username, paidNow, total, 0, `${s.startDate} (${s.startTime || '12:00'})`, `${s.endDate} (${s.endTime || '12:00'})`, 'واصل (تم سداد كامل الدين)');
+        printReceipt(s.name, s.username, paidNow, total, 0, `${s.startDate} (${formatTimeTo12Hour(s.startTime)})`, `${s.endDate} (${formatTimeTo12Hour(s.endTime || s.startTime)})`, 'واصل (تم سداد كامل الدين)');
     } else {
         s.partialPaid = newPartial;
         syncToCloud();
@@ -1549,7 +1562,7 @@ function confirmPartialPayment() {
         let receiptMsg = generateReceiptMessageText(s, paidNow, total, remaining, 'تسديد جزئي');
         sendNotificationToClientAndWhatsapp(s, receiptMsg);
 
-        printReceipt(s.name, s.username, paidNow, total, remaining, `${s.startDate} (${s.startTime || '12:00'})`, `${s.endDate} (${s.endTime || '12:00'})`, 'تسديد جزئي');
+        printReceipt(s.name, s.username, paidNow, total, remaining, `${s.startDate} (${formatTimeTo12Hour(s.startTime)})`, `${s.endDate} (${formatTimeTo12Hour(s.endTime || s.startTime)})`, 'تسديد جزئي');
     }
 }
 
@@ -1588,7 +1601,6 @@ function sendNotificationToClientAndWhatsapp(sub, messageText) {
     if(sub.phone && sub.phone.trim() !== "") {
         let cleanPhone = sub.phone.replace(/\D/g, '');
         if(cleanPhone.startsWith('0')) cleanPhone = '964' + cleanPhone.substring(1);
-        // فتح تطبيق واتساب مباشرة بدون صفحة ويب وسيطة
         window.open(`whatsapp://send?phone=${cleanPhone}&text=${encodeURIComponent(messageText)}`, '_blank');
     }
 }
@@ -1680,14 +1692,14 @@ function renderSubs() {
                     <div style="font-size: 13px; font-weight: bold;">${s.name} ${payBadge} <span style="font-size:10px; color:#38bdf8;">(${s.subType || 'Standard'})</span></div>
                     ${s.username ? `<div style="font-size: 11px; color: #38bdf8;" class="ltr-text">يوزر: ${s.username}</div>` : ''}
                     <div style="font-size: 10px; color: #94a3b8;">هاتف: ${s.phone || 'بدون'} | الدين الكلي: ${totalDebt.toLocaleString()} | المسدد: <b style="color:#10b981;">${partial.toLocaleString()}</b></div>
-                    <div style="font-size: 11px; margin-top: 3px; color:#cbd5e1;">انتهاء: <span style="color:${isExp ? '#ef4444' : '#10b981'}; font-weight:bold;">${s.endDate} (${s.endTime || '12:00'})</span></div>
+                    <div style="font-size: 11px; margin-top: 3px; color:#cbd5e1;">انتهاء: <span style="color:${isExp ? '#ef4444' : '#10b981'}; font-weight:bold;">${s.endDate} (${formatTimeTo12Hour(s.endTime || s.startTime)})</span></div>
                 </div>
                 
                 <div style="display:flex; flex-direction:column; gap:3px;" onclick="event.stopPropagation()">
                     ${s.payStatus === 'أجل' ? `<button onclick="openPartialPayModal(${s.id})" style="background:#10b981; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">💵 تسديد</button>` : ''}
                     <button onclick="openRenewModal(${s.id})" style="background:#0284c7; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">🔄 تفعيل</button>
                     <button onclick="sendWhatsappReceipt('${s.id}', '${s.price}')" style="background:#25d366; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">💬 واتساب</button>
-                    <button onclick="printReceipt('${s.name}', '${s.username}', ${s.payStatus === 'واصل' ? s.price : partial}, ${totalDebt}, ${remaining}, '${s.startDate} (${s.startTime || '12:00'})', '${s.endDate} (${s.endTime || '12:00'})', '${s.payStatus}')" style="background:#475569; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">🖨️ وصل</button>
+                    <button onclick="printReceipt('${s.name}', '${s.username}', ${s.payStatus === 'واصل' ? s.price : partial}, ${totalDebt}, ${remaining}, '${s.startDate} (${formatTimeTo12Hour(s.startTime)})', '${s.endDate} (${formatTimeTo12Hour(s.endTime || s.startTime)})', '${s.payStatus}')" style="background:#475569; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">🖨️ وصل</button>
                     <button onclick="deleteSub(${s.id})" style="background:#ef4444; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">🗑️ حذف</button>
                 </div>
             </div>
