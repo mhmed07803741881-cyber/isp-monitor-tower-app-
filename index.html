@@ -253,7 +253,7 @@
 <div id="credentialsModal" class="modal">
     <div class="modal-content" style="border-color: #14b8a6; max-width: 380px;">
         <h3 style="margin-top:0; color:#14b8a6; text-align:center;">🔑 بيانات الدخول الموحدة للأجهزة</h3>
-        <p style="font-size:10px; color:#94a3b8; text-align:center;">أدخل يوزر وباسورد الأجهزة لتطبق على كل الأبراج دفعة واحدة[span_0](start_span)[span_0](end_span).</p>
+        <p style="font-size:10px; color:#94a3b8; text-align:center;">أدخل يوزر وباسورد الأجهزة لتطبق على كل الأبراج دفعة واحدة.</p>
         
         <label style="font-size:11px; color:#cbd5e1;">نوع الجهاز:</label>
         <select id="globalCredType">
@@ -437,7 +437,7 @@
                 <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">تاريخ التفعيل:</label>
                 <input type="date" id="startDate" onchange="calcEnd()">
             </div>
-            <div style="width: 110px;">
+            <div style="width: 110px; display:none;">
                 <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">وقت التفعيل:</label>
                 <input type="time" id="startTime" onchange="calcEnd()" oninput="calcEnd()">
             </div>
@@ -448,7 +448,7 @@
                 <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">تاريخ الانتهاء:</label>
                 <input type="date" id="endDate">
             </div>
-            <div style="width: 110px;">
+            <div style="width: 110px; display:none;">
                 <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">وقت الانتهاء (تلقائي):</label>
                 <input type="time" id="endTime" disabled>
             </div>
@@ -494,8 +494,8 @@
         <div class="details-row" id="dTotalDebtRow" style="display:none;"><span class="details-label" style="color:#f59e0b;">إجمالي الدين المطلوب:</span><span class="details-value" id="dTotalDebtVal" style="color:#f59e0b;">-</span></div>
         <div class="details-row" id="dPaidPartialRow" style="display:none;"><span class="details-label" style="color:#10b981;">المبلغ المسدد مسبقاً:</span><span class="details-value" id="dPaidPartialVal" style="color:#10b981;">-</span></div>
         <div class="details-row" id="dRemainingRow" style="display:none;"><span class="details-label" style="color:#ef4444;">المبلغ الباقي (المتبقي):</span><span class="details-value" id="dRemainingVal" style="color:#ef4444;">-</span></div>
-        <div class="details-row"><span class="details-label">وقت وتاريخ التفعيل:</span><span class="details-value" id="dStart" style="color:#38bdf8;">-</span></div>
-        <div class="details-row"><span class="details-label">وقت وتاريخ الانتهاء:</span><span class="details-value" id="dEnd" style="color:#ef4444;">-</span></div>
+        <div class="details-row"><span class="details-label">تاريخ التفعيل:</span><span class="details-value" id="dStart" style="color:#38bdf8;">-</span></div>
+        <div class="details-row"><span class="details-label">تاريخ الانتهاء:</span><span class="details-value" id="dEnd" style="color:#ef4444;">-</span></div>
         
         <button class="submit-btn" onclick="openEditModalFromDetails()" style="background:#f59e0b; color:#090d16; margin-top:10px;">✏️ تعديل معلومات المشترك والوقت</button>
         <button class="cancel-btn" onclick="closeDetailsModal()">إغلاق</button>
@@ -905,7 +905,7 @@ function saveGlobalCredentials() {
     let pass = document.getElementById('globalCredPass').value.trim();
     if(!pass) { alert("يرجى إدخال كلمة المرور"); return; }
     globalCredentials[type] = pass;
-    alert(`✅ تم حفظ بيانات الدخول الموحدة لأجهزة (${type}) بنجاح[span_1](start_span)[span_1](end_span)!`);
+    alert(`✅ تم حفظ بيانات الدخول الموحدة لأجهزة (${type}) بنجاح!`);
     closeCredentialsModal();
 }
 
@@ -1624,8 +1624,8 @@ function showSubDetails(id) {
         document.getElementById('dRemainingRow').style.display = 'none';
     }
 
-    document.getElementById('dStart').innerText = `${s.startDate || "-"} (${formatTimeTo12Hour(s.startTime)})`;
-    document.getElementById('dEnd').innerText = `${s.endDate || "-"} (${formatTimeTo12Hour(s.endTime || s.startTime)})`;
+    document.getElementById('dStart').innerText = s.startDate || "-";
+    document.getElementById('dEnd').innerText = s.endDate || "-";
     document.getElementById('subDetailsModal').style.display = 'flex';
 }
 function closeDetailsModal() { document.getElementById('subDetailsModal').style.display = 'none'; }
@@ -1754,7 +1754,7 @@ function confirmRenewSubscription() {
         let receiptMsg = generateReceiptMessageText(s, paidAmountForReceipt, totalDebtCalc, remainingCalc, `تجديد اشتراك (${chosenPayType})`);
         sendNotificationToClientAndWhatsapp(s, receiptMsg);
 
-        printReceipt(s.name, s.username, paidAmountForReceipt, totalDebtCalc, remainingCalc, `${s.startDate} (${formatTimeTo12Hour(s.startTime)})`, `${s.endDate} (${formatTimeTo12Hour(s.endTime)})`, `تجديد اشتراك (${chosenPayType})`);
+        printReceipt(s.name, s.username, paidAmountForReceipt, totalDebtCalc, remainingCalc, s.startDate, s.endDate, `تجديد اشتراك (${chosenPayType})`);
     }
 }
 
@@ -1819,7 +1819,7 @@ function confirmPartialPayment() {
 
         let receiptMsg = generateReceiptMessageText(s, paidNow, total, 0, 'واصل (تم سداد كامل الدين)');
         sendNotificationToClientAndWhatsapp(s, receiptMsg);
-        printReceipt(s.name, s.username, paidNow, total, 0, `${s.startDate} (${formatTimeTo12Hour(s.startTime)})`, `${s.endDate} (${formatTimeTo12Hour(s.endTime || s.startTime)})`, 'واصل (تم سداد كامل الدين)');
+        printReceipt(s.name, s.username, paidNow, total, 0, s.startDate, s.endDate, 'واصل (تم سداد كامل الدين)');
     } else {
         s.partialPaid = newPartial;
         syncToCloud();
@@ -1828,13 +1828,14 @@ function confirmPartialPayment() {
 
         let receiptMsg = generateReceiptMessageText(s, paidNow, total, remaining, 'تسديد جزئي');
         sendNotificationToClientAndWhatsapp(s, receiptMsg);
-        printReceipt(s.name, s.username, paidNow, total, remaining, `${s.startDate} (${formatTimeTo12Hour(s.startTime)})`, `${s.endDate} (${formatTimeTo12Hour(s.endTime || s.startTime)})`, 'تسديد جزئي');
+        printReceipt(s.name, s.username, paidNow, total, remaining, s.startDate, s.endDate, 'تسديد جزئي');
     }
 }
 
+// دالة توليد نص رسالة الوصل والتجديد للواتساب (تتضمن التسديد، وتفعيل الاشتراك، وتواريخ التفعيل والانتهاء فقط بدون وقت)
 function generateReceiptMessageText(sub, paidAmount, originalAmount, remainingAmount, payStatusTitle) {
     let receiptNo = 'RCP-' + Math.floor(100000 + Math.random() * 900000);
-    return `*تحية طيبة عزيزي المشترك*\nيوزر الاشتراك : ${sub.username || sub.name}\nاسم المشترك : ${sub.name}\n*تم استلام مبلغ قدره* : ** ${paidAmount.toLocaleString()} د.ع \nمن اصل : ** ${originalAmount.toLocaleString()} د.ع \nالمبلغ المتبقي : ** ${remainingAmount.toLocaleString()} د.ع \nرقم الوصل : ${receiptNo}\nتم الاستلام بواسطة : المكتب\n*(هذه الرسالة يتم ارسالها تلقائيا من النظام)*\n\n*ملاحظة*\n*(يمكنك تفعيل الاشتراك قبل الانتهاء ويتم إضافة الايام المتبقية الى الاشتراك)*\n\n*يمكنك تسديد الاشتراك عن طريق* \n*(بطاقة كي كارد)*\n*رقم سوبر كي (07724850876 )*\n*رقم تحويل بطاقة كي كارد (3627952355 )*\n\nرقم المكتب : 07724850876 📱\nالمكتب : محاويل - قرية السورة`;
+    return `*تحية طيبة عزيزي المشترك*\nيوزر الاشتراك : ${sub.username || sub.name}\nاسم المشترك : ${sub.name}\n\n✅ *تم تسديد المبلغ وتفعيل اشتراكك بنجاح*\n• المبلغ المستلم : ${paidAmount.toLocaleString()} د.ع\n• تاريخ التفعيل : ${sub.startDate}\n• تاريخ الانتهاء : ${sub.endDate}\n\nرقم الوصل : ${receiptNo}\n*(هذه الرسالة يتم ارسالها تلقائيا من النظام)*\n\n*ملاحظة*\n*(يمكنك تفعيل الاشتراك قبل الانتهاء ويتم إضافة الايام المتبقية الى الاشتراك)*\n\n*يمكنك تسديد الاشتراك عن طريق* \n*(بطاقة كي كارد)*\n*رقم سوبر كي (07724850876 )*\n*رقم تحويل بطاقة كي كارد (3627952355 )*\n\nرقم المكتب : 07724850876 📱\nالمكتب : محاويل - قرية السورة`;
 }
 
 function sendNotificationToClientAndWhatsapp(sub, messageText) {
@@ -1936,14 +1937,14 @@ function renderSubs() {
                     <div style="font-size: 13px; font-weight: bold;">${s.name} ${payBadge} <span style="font-size:10px; color:#38bdf8;">(${s.subType || 'Standard'})</span></div>
                     ${s.username ? `<div style="font-size: 11px; color: #38bdf8;" class="ltr-text">يوزر: ${s.username}</div>` : ''}
                     <div style="font-size: 10px; color: #94a3b8;">هاتف: ${s.phone || 'بدون'} | الدين الكلي: ${totalDebt.toLocaleString()} | المسدد: <b style="color:#10b981;">${partial.toLocaleString()}</b></div>
-                    <div style="font-size: 11px; margin-top: 3px; color:#cbd5e1;">انتهاء: <span style="color:${isExp ? '#ef4444' : '#10b981'}; font-weight:bold;">${s.endDate} (${formatTimeTo12Hour(s.endTime || s.startTime)})</span></div>
+                    <div style="font-size: 11px; margin-top: 3px; color:#cbd5e1;">انتهاء: <span style="color:${isExp ? '#ef4444' : '#10b981'}; font-weight:bold;">${s.endDate}</span></div>
                 </div>
                 
                 <div style="display:flex; flex-direction:column; gap:3px;" onclick="event.stopPropagation()">
                     ${s.payStatus === 'أجل' ? `<button onclick="openPartialPayModal(${s.id})" style="background:#10b981; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">💵 تسديد</button>` : ''}
                     <button onclick="openRenewModal(${s.id})" style="background:#0284c7; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">🔄 تفعيل</button>
                     <button onclick="sendWhatsappReceipt('${s.id}', '${s.price}')" style="background:#25d366; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">💬 واتساب</button>
-                    <button onclick="printReceipt('${s.name}', '${s.username}', ${s.payStatus === 'واصل' ? s.price : partial}, ${totalDebt}, ${remaining}, '${s.startDate} (${formatTimeTo12Hour(s.startTime)})', '${s.endDate} (${formatTimeTo12Hour(s.endTime || s.startTime)})', '${s.payStatus}')" style="background:#475569; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">🖨️ وصل</button>
+                    <button onclick="printReceipt('${s.name}', '${s.username}', ${s.payStatus === 'واصل' ? s.price : partial}, ${totalDebt}, ${remaining}, '${s.startDate}', '${s.endDate}', '${s.payStatus}')" style="background:#475569; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">🖨️ وصل</button>
                     <button onclick="deleteSub(${s.id})" style="background:#ef4444; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">🗑️ حذف</button>
                 </div>
             </div>
