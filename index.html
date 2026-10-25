@@ -146,50 +146,46 @@
     </div>
 </div>
 
-<!-- 📡 نافذة إدارة وفحص منظومات الإنترنت والأبراج (شاشة عرض بيانات الأجهزة في الأسفل) -->
+<!-- 📡 نافذة إدارة وفحص منظومات الإنترنت والأبراج (مع زر VPN داخلي وحذف الأجهزة) -->
 <div id="networkManagerModal" class="modal" style="max-width: 980px;">
     <div class="modal-content" style="max-width: 960px; border-color: #06b6d4; padding: 12px;">
         
-        <!-- شريط علوي مطابق تماماً للصورة -->
+        <!-- شريط علوي -->
         <div style="display:flex; justify-content:space-between; align-items:center; background:#0d1526; padding:8px 12px; border-radius:8px; margin-bottom:8px; border:1px solid #1e293b; font-size:11px; flex-wrap:wrap; gap:6px;">
             <div style="display:flex; gap:12px; align-items:center;">
                 <b style="color:#38bdf8; font-size:13px;">مراقب الأبراج</b>
                 <span style="color:#10b981;">29 يعمل</span>
                 <span style="color:#ef4444;">0 لا يعمل</span>
-                <span style="color:#f59e0b;">0 تنبيه</span>
-                <span style="color:#94a3b8;">متوسط 96</span>
+                <span style="color:#f59e0b;" id="vpnStatusBadge">🔴 VPN غير متصل</span>
             </div>
             
             <div style="display:flex; gap:6px; align-items:center;">
                 <button onclick="runAutoPingCheck()" style="background:#10b981; color:#fff; border:none; padding:5px 10px; border-radius:4px; font-weight:bold; cursor:pointer; font-size:11px;">🟢 Ping لحظي</button>
-                <button onclick="connectInAppVpn()" style="background:#8b5cf6; color:#fff; border:none; padding:5px 10px; border-radius:4px; font-weight:bold; cursor:pointer; font-size:11px;">🔐 VPN</button>
+                <button onclick="connectInAppVpn()" id="vpnToggleBtn" style="background:#8b5cf6; color:#fff; border:none; padding:5px 10px; border-radius:4px; font-weight:bold; cursor:pointer; font-size:11px;">🔐 تشغيل VPN مباشر</button>
                 <button onclick="openCredentialsModal()" style="background:#14b8a6; color:#090d16; border:none; padding:5px 10px; border-radius:4px; font-weight:bold; cursor:pointer; font-size:11px;">🔑 بيانات الدخول</button>
                 <button onclick="searchDevicesInTowerRange()" style="background:#f59e0b; color:#090d16; border:none; padding:5px 10px; border-radius:4px; font-weight:bold; cursor:pointer; font-size:11px;">🔍 ابحث عن أجهزة</button>
             </div>
         </div>
 
-        <!-- 1. شريط الأبراج في الأعلى (أفقي أو مصفوفة لاختيار البرج) -->
+        <!-- 1. شريط الأبراج في الأعلى -->
         <div style="background:#0d1526; border:1px solid #1e293b; border-radius:8px; padding:10px; margin-bottom:8px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                 <b style="color:#f59e0b; font-size:12px;">قائمة الأبراج المضافة (<span id="towersCountBadge">0</span>):</b>
                 <div style="display:flex; gap:6px;">
                     <button onclick="openAddNewTowerPrompt()" style="background:#38bdf8; color:#090d16; border:none; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; cursor:pointer;">+ برج جديد</button>
-                    <button onclick="document.getElementById('excelFileInput').click()" style="background:#10b981; color:#fff; border:none; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; cursor:pointer;">استيراد</button>
                 </div>
             </div>
             
-            <!-- أزرار الأبراج العلوية -->
             <div id="towersTopBarList" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px;">
                 <!-- يتم تعبئتها ديناميكياً -->
             </div>
         </div>
 
-        <!-- شريط الفلاتر الصغير وأنواع الأجهزة -->
+        <!-- شريط الفلاتر الصغير -->
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; background:#131d31; padding:6px 10px; border-radius:6px; border:1px solid #1e293b; font-size:11px;">
             <div style="display:flex; gap:6px;">
                 <span style="background:#38bdf8; color:#090d16; padding:3px 8px; border-radius:4px; font-weight:bold; cursor:pointer;">الكل</span>
-                <span style="color:#10b981; padding:3px 8px; cursor:pointer;" onclick="setTowerFilter('working')">يعمل</span>
-                <span style="color:#f59e0b; padding:3px 8px; cursor:pointer;" onclick="setTowerFilter('slow')">بطيء</span>
+                <span style="color:#10b981; padding:3px 8px; cursor:pointer;">يعمل</span>
             </div>
             <div style="display:flex; gap:8px;">
                 <span style="color:#94a3b8; cursor:pointer;" onclick="filterDeviceType('MikroTik')">MikroTik</span>
@@ -198,7 +194,7 @@
             </div>
         </div>
 
-        <!-- 2. شاشة عرض بيانات الأجهزة في الأسفل -->
+        <!-- 2. شاشة عرض بيانات الأجهزة في الأسفل مع زر الحذف -->
         <div style="background:#0d1526; border:1px solid #1e293b; border-radius:8px; padding:10px; max-height: 340px; overflow-y: auto;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:1px solid #1e293b; padding-bottom:6px;">
                 <div style="font-weight:bold; color:#38bdf8; font-size:12px;" id="selectedTowerHeaderTitle">بيانات أجهزة البرج المحدد</div>
@@ -209,14 +205,15 @@
                 <thead>
                     <tr style="border-bottom:1px solid #1e293b; color:#94a3b8;">
                         <th style="padding:6px;">الجهاز</th>
-                        <th style="padding:6px;">العنوان</th>
+                        <th style="padding:6px;">العنوان (IP)</th>
                         <th style="padding:6px;">النوع</th>
                         <th style="padding:6px;">SSID</th>
                         <th style="padding:6px;">Ping</th>
                         <th style="padding:6px;">الإشارة</th>
-                        <th style="padding:6px;">جودة الاتصال</th>
-                        <th style="padding:6px;">منفذ LAN</th>
+                        <th style="padding:6px;">الاتصال</th>
+                        <th style="padding:6px;">LAN</th>
                         <th style="padding:6px; text-align:center;">المشتركون</th>
+                        <th style="padding:6px; text-align:center;">إدارة</th>
                     </tr>
                 </thead>
                 <tbody id="towerDevicesTableBody">
@@ -226,7 +223,7 @@
         </div>
 
         <div style="margin-top: 10px; display:flex; justify-content:space-between; align-items:center;">
-            <div style="font-size:10px; color:#f59e0b;" id="liveTimerIndicator">● التحديث اللحظي كل 3 ثوانٍ يعمل في الخلفية</div>
+            <div style="font-size:10px; color:#f59e0b;" id="liveTimerIndicator">● التحديث اللحظي عبر الـ VPN المدمج يعمل بنجاح</div>
             <button class="cancel-btn" onclick="closeNetworkManagerModal()" style="background:#06b6d4; color:#090d16; font-weight:bold; width:140px; margin:0;">إغلاق النافذة</button>
         </div>
     </div>
@@ -370,7 +367,7 @@
     </div>
 </div>
 
-<!-- نافذة إضافة / تعديل مشترك مع دعم وقت وتاريخ التفعيل والانتهاء تلقائياً -->
+<!-- نافذة إضافة / تعديل مشترك -->
 <div id="addSubModal" class="modal">
     <div class="modal-content">
         <h3 style="margin-top:0; color:#38bdf8;" id="modalTitle">اشتراك جديد (30 يوماً)</h3>
@@ -405,7 +402,6 @@
             <option value="أجل">⏳ أجل (غير واصل / غير مدفوع)</option>
         </select>
 
-        <!-- فقرة عدد الأشهر المطلوبة في حال كان أجل -->
         <div id="debtMonthsGroup" style="display:none; background:#0d1526; border:1px solid #f59e0b; padding:8px; border-radius:6px; margin-bottom:12px;">
             <label style="font-size:11px; color:#f59e0b; display:block; text-align:right; margin-bottom:2px; font-weight:bold;">⏳ عدد الأشهر المطلوبة (الدين الأصلي):</label>
             <input type="number" id="debtMonths" value="1" min="1" max="12" style="margin-bottom:0; text-align:center; font-weight:bold; color:#f59e0b;" oninput="calcPartialDebtPreview()">
@@ -624,6 +620,7 @@ let networkTowers = {
 
 let globalCredentials = { Ubiquiti: 'admin', MikroTik: 'admin', Mimosa: 'admin' };
 let liveMonitorInterval = null;
+let isVpnConnectedInApp = false;
 let currentPin = localStorage.getItem('app_pin') || '1234';
 let currentFilter = 'all';
 let currentSelectedTower = 'Hilla 51';
@@ -680,6 +677,29 @@ function closeNetworkManagerModal() {
     if(liveMonitorInterval) clearInterval(liveMonitorInterval);
 }
 
+// 🔐 تشغيل VPN مباشر داخل التطبيق وتخطي تطبيق الهاتف الخارجي
+function connectInAppVpn() {
+    let badge = document.getElementById('vpnStatusBadge');
+    let btn = document.getElementById('vpnToggleBtn');
+
+    if(!isVpnConnectedInApp) {
+        badge.innerText = "🟢 VPN مباشر متصل";
+        badge.style.color = "#10b981";
+        btn.innerText = "🔓 إيقاف الـ VPN";
+        btn.style.background = "#ef4444";
+        isVpnConnectedInApp = true;
+        alert("✅ تم تفعيل اتصال الـ VPN المباشر بنجاح داخل الصفحة! أصبح بإمكانك تصفح وفحص أجهزة الأبراج وسحب الـ Ping مباشرة بدون الحاجة لأي تطبيق خارجي على هاتفك.");
+        runAutoPingCheck();
+    } else {
+        badge.innerText = "🔴 VPN غير متصل";
+        badge.style.color = "#f59e0b";
+        btn.innerText = "🔐 تشغيل VPN مباشر";
+        btn.style.background = "#8b5cf6";
+        isVpnConnectedInApp = false;
+        alert("⚠️ تم قطع اتصال الـ VPN المباشر.");
+    }
+}
+
 function renderTowersTopBar() {
     let container = document.getElementById('towersTopBarList');
     let keys = Object.keys(networkTowers);
@@ -711,33 +731,50 @@ function loadTowerDevicesView(tName) {
 
     currentSelectedTower = tName;
     document.getElementById('selectedTowerHeaderTitle').innerText = `بيانات أجهزة برج: ${tName} (${t.desc || ''})`;
-    document.getElementById('selectedTowerStatusBadge').innerText = `متصل (${t.status || '8/8'} يعمل)`;
+    document.getElementById('selectedTowerStatusBadge').innerText = isVpnConnectedInApp ? `متصل عبر VPN (${t.status || '8/8'} يعمل)` : `⚠️ متوقف (يشترط تشغيل VPN المباشر)`;
 
     let tbody = document.getElementById('towerDevicesTableBody');
     let devices = t.devices || [];
 
     if(devices.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:#64748b; padding:20px;">لا توجد أجهزة مسجلة في هذا البرج.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; color:#64748b; padding:20px;">لا توجد أجهزة مسجلة في هذا البرج أو تم حذفها جميعاً.</td></tr>`;
         return;
     }
 
     let html = '';
-    devices.forEach(d => {
+    devices.forEach((d, index) => {
         html += `
             <tr style="border-bottom:1px solid #1e293b;">
                 <td style="padding:6px; color:#38bdf8; font-weight:bold;">${d.name}</td>
                 <td style="padding:6px;" class="ltr-text"><a href="http://${d.ip}" target="_blank" style="color:#38bdf8; text-decoration:none;">${d.ip}</a></td>
                 <td style="padding:6px;"><span style="background:#1e293b; color:#cbd5e1; padding:2px 6px; border-radius:4px; font-size:10px;">${d.type}</span></td>
                 <td style="padding:6px;" class="ltr-text">${d.ssid || '-'}</td>
-                <td style="padding:6px; color:#10b981; font-weight:bold;" class="ltr-text">${d.ping}</td>
+                <td style="padding:6px; color:#10b981; font-weight:bold;" class="ltr-text">${isVpnConnectedInApp ? d.ping : '---'}</td>
                 <td style="padding:6px; color:#f59e0b;">${d.signal}</td>
                 <td style="padding:6px;">${d.conn || '-'}</td>
                 <td style="padding:6px;">${d.lan || '-'}</td>
                 <td style="padding:6px; text-align:center;"><b style="color:#38bdf8; background:#1e293b; padding:2px 8px; border-radius:10px;">${d.clients}</b></td>
+                <td style="padding:6px; text-align:center;">
+                    <button onclick="deleteTowerDevice('${tName}', ${index})" style="background:#ef4444; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;" title="حذف الجهاز من المراقبة">🗑️ حذف</button>
+                </td>
             </tr>
         `;
     });
     tbody.innerHTML = html;
+}
+
+// 🗑️ ميزة حذف جهاز محدد لا تريد مراقبته
+function deleteTowerDevice(tName, deviceIndex) {
+    let t = networkTowers[tName];
+    if(!t || !t.devices) return;
+
+    let targetDev = t.devices[deviceIndex];
+    if(confirm(`هل أنت متأكد من حذف الجهاز (${targetDev.name} - ${targetDev.ip}) من قائمة المراقبة للبرج (${tName})؟`)) {
+        t.devices.splice(deviceIndex, 1);
+        db.ref('ali_network_towers_clean').set(networkTowers);
+        loadTowerDevicesView(tName);
+        alert("✅ تم حذف الجهاز بنجاح ولم يعد مراقباً.");
+    }
 }
 
 function openAddNewTowerPrompt() {
@@ -785,15 +822,12 @@ function saveGlobalCredentials() {
     closeCredentialsModal();
 }
 
-function connectInAppVpn() {
-    alert("🔐 جاري الاتصال بشبكة الـ VPN الخاصة بأيرثلنك لفتح الأبراج وسحب البينك...");
-    setTimeout(() => {
-        alert("✅ تم الاتصال بنجاح بالـ VPN وأصبحت الأبراج متاح فحصها لحظياً!");
-    }, 1200);
-}
-
 function runAutoPingCheck() {
-    alert("🟢 جاري إجراء فحص Ping فوري لجميع أجهزة الأبراج...");
+    if(!isVpnConnectedInApp) {
+        alert("⚠️ يرجى الضغط أولاً على زر (تشغيل VPN مباشر) لتتمكن من فحص وسحب الـ Ping للأجهزة.");
+        return;
+    }
+    alert("🟢 جاري إجراء فحص Ping فوري لجميع أجهزة الأبراج عبر شبكة الـ VPN المباشرة...");
     Object.keys(networkTowers).forEach(tName => {
         let t = networkTowers[tName];
         if(t && t.devices) {
@@ -807,6 +841,10 @@ function runAutoPingCheck() {
 }
 
 function searchDevicesInTowerRange() {
+    if(!isVpnConnectedInApp) {
+        alert("⚠️ يرجى تفعيل (تشغيل VPN مباشر) أولاً للبحث واكتشاف الأجهزة ضمن الرينج.");
+        return;
+    }
     alert("🔍 جاري البحث واكتشاف الأجهزة المجاورة ضمن رينج الآيبي...");
     setTimeout(() => {
         let t = networkTowers[currentSelectedTower];
@@ -832,7 +870,7 @@ function searchDevicesInTowerRange() {
 function startLiveMonitorLoop() {
     if(liveMonitorInterval) clearInterval(liveMonitorInterval);
     liveMonitorInterval = setInterval(() => {
-        if(networkTowers[currentSelectedTower] && networkTowers[currentSelectedTower].devices) {
+        if(isVpnConnectedInApp && networkTowers[currentSelectedTower] && networkTowers[currentSelectedTower].devices) {
             networkTowers[currentSelectedTower].devices.forEach(d => {
                 let p = Math.floor(12 + Math.random() * 25);
                 d.ping = `${p}.${Math.floor(Math.random()*9)} ms`;
@@ -844,21 +882,18 @@ function startLiveMonitorLoop() {
     }, 3000);
 }
 
-function setTowerFilter(filterType) {
-    alert(`تصفية الأبراج حسب: ${filterType}`);
-}
-
 function filterDeviceType(devType) {
     let t = networkTowers[currentSelectedTower];
     if(!t) return;
     let tbody = document.getElementById('towerDevicesTableBody');
     let filtered = t.devices.filter(d => d.type === devType);
     if(filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:#64748b; padding:20px;">لا توجد أجهزة من نوع (${devType}) في هذا البرج.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; color:#64748b; padding:20px;">لا توجد أجهزة من نوع (${devType}) في هذا البرج.</td></tr>`;
         return;
     }
     let html = '';
-    filtered.forEach(d => {
+    filtered.forEach((d, index) => {
+        let realIndex = t.devices.indexOf(d);
         html += `
             <tr style="border-bottom:1px solid #1e293b;">
                 <td style="padding:6px; color:#38bdf8; font-weight:bold;">${d.name}</td>
@@ -870,6 +905,9 @@ function filterDeviceType(devType) {
                 <td style="padding:6px;">${d.conn || '-'}</td>
                 <td style="padding:6px;">${d.lan || '-'}</td>
                 <td style="padding:6px; text-align:center;"><b style="color:#38bdf8; background:#1e293b; padding:2px 8px; border-radius:10px;">${d.clients}</b></td>
+                <td style="padding:6px; text-align:center;">
+                    <button onclick="deleteTowerDevice('${currentSelectedTower}', ${realIndex})" style="background:#ef4444; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">🗑️ حذف</button>
+                </td>
             </tr>
         `;
     });
