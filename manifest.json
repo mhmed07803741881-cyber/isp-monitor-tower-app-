@@ -12,21 +12,4 @@
       "type": "image/png",
       "sizes": "512x512"
     }
-  ],
-  "start_url": "./portal.html",
-  "background_color": "#0d1526",
-  "theme_color": "#0d1526",
-  "display": "standalone",
-  "orientation": "portrait"
-}
-{
-  "background_color": "#ffffff",
-  "dir": "ltr",
-  "display": "standalone",
-  "name": "mhmed07803741881-cyber.github",
-  "orientation": "any",
-  "scope": "/",
-  "short_name": "mhmed07803741881-cyber.github",
-  "start_url": "/",
-  "theme_color": "#ffffff"
-}
+
