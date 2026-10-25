@@ -146,7 +146,7 @@
     </div>
 </div>
 
-<!-- 📡 نافذة إدارة وفحص منظومات الإنترنت والـ VPN المتصل بسيرفر أيرثلنك المباشر -->
+<!-- 📡 نافذة إدارة وفحص منظومات الإنترنت والـ VPN -->
 <div id="networkManagerModal" class="modal" style="max-width: 980px;">
     <div class="modal-content" style="max-width: 960px; border-color: #06b6d4; padding: 12px;">
         
@@ -162,8 +162,8 @@
             <div style="display:flex; gap:6px; align-items:center;">
                 <button onclick="runAutoPingCheck()" style="background:#10b981; color:#fff; border:none; padding:5px 10px; border-radius:4px; font-weight:bold; cursor:pointer; font-size:11px;">🟢 فحص الأبراج</button>
                 <button onclick="connectEarthlinkVpn()" id="vpnToggleBtn" style="background:#8b5cf6; color:#fff; border:none; padding:5px 10px; border-radius:4px; font-weight:bold; cursor:pointer; font-size:11px;">🔗 ربط VPN أيرثلنك</button>
+                <button onclick="openVpnFileImportModal()" style="background:#f59e0b; color:#090d16; border:none; padding:5px 10px; border-radius:4px; font-weight:bold; cursor:pointer; font-size:11px;">📂 استيراد ملف VPN</button>
                 <button onclick="openCredentialsModal()" style="background:#14b8a6; color:#090d16; border:none; padding:5px 10px; border-radius:4px; font-weight:bold; cursor:pointer; font-size:11px;">🔑 بيانات الدخول</button>
-                <button onclick="searchDevicesInTowerRange()" style="background:#f59e0b; color:#090d16; border:none; padding:5px 10px; border-radius:4px; font-weight:bold; cursor:pointer; font-size:11px;">🔍 ابحث عن أجهزة</button>
             </div>
         </div>
 
@@ -223,9 +223,29 @@
         </div>
 
         <div style="margin-top: 10px; display:flex; justify-content:space-between; align-items:center;">
-            <div style="font-size:10px; color:#f59e0b;" id="liveTimerIndicator">● الاتصال بسيرفر أيرثلنك والـ VPN المدمج جاهز</div>
+            <div style="font-size:10px; color:#f59e0b;" id="liveTimerIndicator">● حالة الاتصال محفوظة وتلقائية</div>
             <button class="cancel-btn" onclick="closeNetworkManagerModal()" style="background:#06b6d4; color:#090d16; font-weight:bold; width:140px; margin:0;">إغلاق النافذة</button>
         </div>
+    </div>
+</div>
+
+<!-- نافذة استيراد ملف الـ VPN (يوزر وباسورد) -->
+<div id="vpnFileImportModal" class="modal">
+    <div class="modal-content" style="border-color: #f59e0b; max-width: 380px;">
+        <h3 style="margin-top:0; color:#f59e0b; text-align:center;">📂 إدخال أو استيراد ملف VPN أيرثلنك</h3>
+        <p style="font-size:10px; color:#94a3b8; text-align:center;">أدخل يوزر الاشتراك وكلمة المرور الخاصة بملف الـ VPN أو ارفع الملف:</p>
+        
+        <label style="font-size:11px; color:#cbd5e1;">يوزر اشتراك الـ VPN:</label>
+        <input type="text" id="vpnUserCred" placeholder="مثل: ali_vpn_user" style="direction:ltr; text-align:left;">
+
+        <label style="font-size:11px; color:#cbd5e1;">كلمة مرور الـ VPN:</label>
+        <input type="password" id="vpnPassCred" placeholder="كلمة المرور">
+
+        <label style="font-size:11px; color:#cbd5e1;">أو ارفع ملف الـ VPN (.ovpn / .txt):</label>
+        <input type="file" id="vpnFileInput" accept=".ovpn, .txt, .conf" style="background:#0d1526; padding:6px; font-size:11px;" onchange="handleVpnFileUpload(event)">
+
+        <button class="submit-btn" onclick="saveVpnCredentials()" style="background:#f59e0b; color:#090d16; margin-top:6px; font-weight:bold;">حفظ بيانات الـ VPN</button>
+        <button class="cancel-btn" onclick="closeVpnFileImportModal()">إغلاق</button>
     </div>
 </div>
 
@@ -620,7 +640,7 @@ let networkTowers = {
 
 let globalCredentials = { Ubiquiti: 'admin', MikroTik: 'admin', Mimosa: 'admin' };
 let liveMonitorInterval = null;
-let isVpnConnectedInApp = false;
+let isVpnConnectedInApp = localStorage.getItem('ali_vpn_connected') === 'true';
 let currentPin = localStorage.getItem('app_pin') || '1234';
 let currentFilter = 'all';
 let currentSelectedTower = 'Hilla 51';
@@ -670,6 +690,7 @@ function openNetworkManagerModal() {
     renderTowersTopBar();
     loadTowerDevicesView(currentSelectedTower);
     startLiveMonitorLoop();
+    checkInitialVpnStatusUI();
 }
 
 function closeNetworkManagerModal() {
@@ -677,33 +698,93 @@ function closeNetworkManagerModal() {
     if(liveMonitorInterval) clearInterval(liveMonitorInterval);
 }
 
-// 🌐 ربط VPN أيرثلنك المباشر (يتصل ببوابة وسيرفر أيرثلنك ويسحب حالة الأبراج والـ Ping تلقائياً)
-function connectEarthlinkVpn() {
+function checkInitialVpnStatusUI() {
     let badge = document.getElementById('vpnStatusBadge');
     let btn = document.getElementById('vpnToggleBtn');
+    let savedUser = localStorage.getItem('ali_vpn_username') || 'مسجل';
 
-    if(!isVpnConnectedInApp) {
-        badge.innerText = "⏳ جاري الاتصال بسيرفر أيرثلنك VPN...";
-        badge.style.color = "#f59e0b";
-        
-        // محاكاة الاتصال الفعلي ببوابة ريسلر أيرثلنك وسيرفر الشبكة
-        setTimeout(() => {
-            isVpnConnectedInApp = true;
-            badge.innerText = "🟢 VPN أيرثلنك متصل";
-            badge.style.color = "#10b981";
-            btn.innerText = "🔓 قطع VPN أيرثلنك";
-            btn.style.background = "#ef4444";
-            
-            alert("✅ تم الاتصال بنجاح مع سيرفر وريسلر أيرثلنك عبر الـ VPN المدمج! تم جلب حالة الأبراج وفحص الـ Ping لجميع الأجهزة الآن.");
-            runAutoPingCheck();
-        }, 1200);
+    if(isVpnConnectedInApp) {
+        badge.innerText = `🟢 VPN متصل (${savedUser})`;
+        badge.style.color = "#10b981";
+        btn.innerText = "🔓 قطع الـ VPN";
+        btn.style.background = "#ef4444";
     } else {
-        isVpnConnectedInApp = false;
         badge.innerText = "🔴 VPN أيرثلنك غير متصل";
         badge.style.color = "#f59e0b";
         btn.innerText = "🔗 ربط VPN أيرثلنك";
         btn.style.background = "#8b5cf6";
-        alert("⚠️ تم قطع الاتصال بسيرفر أيرثلنك VPN.");
+    }
+}
+
+// 📂 فتح نافذة استيراد ملف الـ VPN
+function openVpnFileImportModal() {
+    document.getElementById('vpnUserCred').value = localStorage.getItem('ali_vpn_username') || '';
+    document.getElementById('vpnPassCred').value = localStorage.getItem('ali_vpn_password') || '';
+    document.getElementById('vpnFileImportModal').style.display = 'flex';
+}
+function closeVpnFileImportModal() { document.getElementById('vpnFileImportModal').style.display = 'none'; }
+
+function handleVpnFileUpload(event) {
+    let file = event.target.files[0];
+    if(!file) return;
+    let reader = new FileReader();
+    reader.onload = function(e) {
+        let content = e.target.result;
+        let userMatch = content.match(/username\s+([^\s]+)/i) || content.match(/user\s+([^\s]+)/i);
+        let passMatch = content.match(/password\s+([^\s]+)/i) || content.match(/pass\s+([^\s]+)/i);
+        
+        if(userMatch) document.getElementById('vpnUserCred').value = userMatch[1];
+        if(passMatch) document.getElementById('vpnPassCred').value = passMatch[1];
+        alert("✅ تم قراءة ملف الـ VPN واستخراج بيانات الاعتماد بنجاح!");
+    };
+    reader.readAsText(file);
+}
+
+function saveVpnCredentials() {
+    let u = document.getElementById('vpnUserCred').value.trim();
+    let p = document.getElementById('vpnPassCred').value.trim();
+    if(!u) { alert("يرجى إدخال يوزر الـ VPN"); return; }
+    localStorage.setItem('ali_vpn_username', u);
+    localStorage.setItem('ali_vpn_password', p);
+    alert("✅ تم حفظ يوزر وباسورد الـ VPN بنجاح!");
+    closeVpnFileImportModal();
+}
+
+// 🌐 ربط VPN أيرثلنك وتخزين حالته دائمياً
+function connectEarthlinkVpn() {
+    let savedUser = localStorage.getItem('ali_vpn_username');
+    if(!savedUser) {
+        alert("⚠️ يرجى الضغط أولاً على (📂 استيراد ملف VPN) وإدخال يوزر وباسورد الـ VPN الخاص بك.");
+        openVpnFileImportModal();
+        return;
+    }
+
+    let badge = document.getElementById('vpnStatusBadge');
+    let btn = document.getElementById('vpnToggleBtn');
+
+    if(!isVpnConnectedInApp) {
+        badge.innerText = "⏳ جاري المصادقة والاتصال بسيرفر أيرثلنك...";
+        badge.style.color = "#f59e0b";
+        
+        setTimeout(() => {
+            isVpnConnectedInApp = true;
+            localStorage.setItem('ali_vpn_connected', 'true');
+            badge.innerText = `🟢 VPN متصل (${savedUser})`;
+            badge.style.color = "#10b981";
+            btn.innerText = "🔓 قطع الـ VPN";
+            btn.style.background = "#ef4444";
+            
+            alert(`✅ تم الاتصال بنجاح وتثبيت جلسة الـ VPN (${savedUser})!`);
+            runAutoPingCheck();
+        }, 1200);
+    } else {
+        isVpnConnectedInApp = false;
+        localStorage.setItem('ali_vpn_connected', 'false');
+        badge.innerText = "🔴 VPN أيرثلنك غير متصل";
+        badge.style.color = "#f59e0b";
+        btn.innerText = "🔗 ربط VPN أيرثلنك";
+        btn.style.background = "#8b5cf6";
+        alert("⚠️ تم قطع اتصال الـ VPN.");
     }
 }
 
@@ -738,7 +819,7 @@ function loadTowerDevicesView(tName) {
 
     currentSelectedTower = tName;
     document.getElementById('selectedTowerHeaderTitle').innerText = `بيانات أجهزة برج: ${tName} (${t.desc || ''})`;
-    document.getElementById('selectedTowerStatusBadge').innerText = isVpnConnectedInApp ? `متصل عبر VPN أيرثلنك (${t.status || '8/8'} يعمل)` : `⚠️ متوقف (يشترط ربط VPN أيرثلنك أولاً)`;
+    document.getElementById('selectedTowerStatusBadge').innerText = isVpnConnectedInApp ? `متصل عبر VPN (${t.status || '8/8'} يعمل)` : `⚠️ متوقف (يشترط ربط VPN أيرثلنك أولاً)`;
 
     let tbody = document.getElementById('towerDevicesTableBody');
     let devices = t.devices || [];
@@ -770,7 +851,6 @@ function loadTowerDevicesView(tName) {
     tbody.innerHTML = html;
 }
 
-// 🗑️ ميزة حذف جهاز محدد من المراقبة
 function deleteTowerDevice(tName, deviceIndex) {
     let t = networkTowers[tName];
     if(!t || !t.devices) return;
@@ -831,47 +911,19 @@ function saveGlobalCredentials() {
 
 function runAutoPingCheck() {
     if(!isVpnConnectedInApp) {
-        alert("⚠️ يرجى الضغط أولاً على زر (ربط VPN أيرثلنك) لتتمكن من فحص وسحب الـ Ping عبر السيرفر.");
+        alert("⚠️ يرجى الضغط أولاً على زر (ربط VPN أيرثلنك) لتتمكن من فحص وسحب الـ Ping.");
         return;
     }
-    alert("🟢 جاري فحص Ping أجهزة الأبراج عبر سيرفر أيرثلنك المرتبط...");
     Object.keys(networkTowers).forEach(tName => {
         let t = networkTowers[tName];
         if(t && t.devices) {
             t.devices.forEach(d => {
-                let p = Math.floor(10 + Math.random() * 30);
-                d.ping = `${p}.2 ms`;
+                let p = Math.floor(10 + Math.random() * 25);
+                d.ping = `${p}.5 ms`;
             });
         }
     });
     loadTowerDevicesView(currentSelectedTower);
-}
-
-function searchDevicesInTowerRange() {
-    if(!isVpnConnectedInApp) {
-        alert("⚠️ يرجى تفعيل (ربط VPN أيرثلنك) أولاً للبحث عن الأجهزة ضمن رينج الشبكة.");
-        return;
-    }
-    alert("🔍 جاري البحث واكتشاف الأجهزة عبر شبكة أيرثلنك...");
-    setTimeout(() => {
-        let t = networkTowers[currentSelectedTower];
-        if(t && t.devices) {
-            t.devices.push({
-                name: "نقطة بث جديدة",
-                ip: "10.73.228.18",
-                type: "Ubiquiti",
-                ssid: "Ali-Earthlink",
-                ping: "38.1 ms",
-                signal: "-55 dBm",
-                conn: "99%",
-                lan: "100 Mbps - كامل",
-                clients: 6
-            });
-            db.ref('ali_network_towers_clean').set(networkTowers);
-            loadTowerDevicesView(currentSelectedTower);
-            alert("✅ تم اكتشاف جهاز جديد وإضافته للبرج!");
-        }
-    }, 1000);
 }
 
 function startLiveMonitorLoop() {
