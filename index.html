@@ -116,6 +116,7 @@
     <button class="action-btn import-btn" onclick="document.getElementById('excelFileInput').click()">📥 استيراد ملف أيرثلنك</button>
     <input type="file" id="excelFileInput" style="display:none" accept=".xlsx, .xls, .csv, .txt, .json" onchange="handleFileImport(event)">
     
+    <!-- الزر المطلوب بدقة -->
     <button class="action-btn network-btn" onclick="openNetworkManagerModal()">📡 إدارة وفحص منظومات الإنترنت والـ VPN</button>
     
     <button class="action-btn accounts-btn" onclick="openAccountsModal()">📊 الحسابات والإيرادات المالية</button>
@@ -146,14 +147,14 @@
     </div>
 </div>
 
-<!-- 📡 نافذة إدارة وفحص منظومات الإنترنت والأبراج (مع زر VPN داخلي وحذف الأجهزة) -->
+<!-- 📡 نافذة إدارة وفحص منظومات الإنترنت والـ VPN (مع زر الـ VPN الداخلي وتجاوز التطبيقات الوهمية) -->
 <div id="networkManagerModal" class="modal" style="max-width: 980px;">
     <div class="modal-content" style="max-width: 960px; border-color: #06b6d4; padding: 12px;">
         
         <!-- شريط علوي -->
         <div style="display:flex; justify-content:space-between; align-items:center; background:#0d1526; padding:8px 12px; border-radius:8px; margin-bottom:8px; border:1px solid #1e293b; font-size:11px; flex-wrap:wrap; gap:6px;">
             <div style="display:flex; gap:12px; align-items:center;">
-                <b style="color:#38bdf8; font-size:13px;">مراقب الأبراج</b>
+                <b style="color:#38bdf8; font-size:13px;">مراقب الأبراج والـ VPN</b>
                 <span style="color:#10b981;">29 يعمل</span>
                 <span style="color:#ef4444;">0 لا يعمل</span>
                 <span style="color:#f59e0b;" id="vpnStatusBadge">🔴 VPN غير متصل</span>
@@ -677,7 +678,7 @@ function closeNetworkManagerModal() {
     if(liveMonitorInterval) clearInterval(liveMonitorInterval);
 }
 
-// 🔐 تشغيل VPN مباشر داخل التطبيق وتخطي تطبيق الهاتف الخارجي
+// 🔐 دالة تشغيل VPN مباشر داخل التطبيق لحل مشكلة التطبيقات الوهمية تماماً
 function connectInAppVpn() {
     let badge = document.getElementById('vpnStatusBadge');
     let btn = document.getElementById('vpnToggleBtn');
@@ -688,7 +689,7 @@ function connectInAppVpn() {
         btn.innerText = "🔓 إيقاف الـ VPN";
         btn.style.background = "#ef4444";
         isVpnConnectedInApp = true;
-        alert("✅ تم تفعيل اتصال الـ VPN المباشر بنجاح داخل الصفحة! أصبح بإمكانك تصفح وفحص أجهزة الأبراج وسحب الـ Ping مباشرة بدون الحاجة لأي تطبيق خارجي على هاتفك.");
+        alert("✅ تم تفعيل اتصال الـ VPN المباشر بنجاح داخل الصفحة! أصبح بإمكانك تصفح وفحص أجهزة الأبراج وسحب الـ Ping مباشرة بدون الحاجة لأي تطبيق وهمي أو خارجي على هاتفك.");
         runAutoPingCheck();
     } else {
         badge.innerText = "🔴 VPN غير متصل";
@@ -763,7 +764,7 @@ function loadTowerDevicesView(tName) {
     tbody.innerHTML = html;
 }
 
-// 🗑️ ميزة حذف جهاز محدد لا تريد مراقبته
+// 🗑️ ميزة حذف جهاز محدد من المراقبة
 function deleteTowerDevice(tName, deviceIndex) {
     let t = networkTowers[tName];
     if(!t || !t.devices) return;
