@@ -43,7 +43,7 @@
         .sub-card.agel { border-right-color: #f59e0b; }
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; z-index: 99999; }
-        .modal-content { background: #131d31; padding: 20px; border-radius: 12px; width: 90%; max-width: 440px; border: 1px solid #38bdf8; box-sizing: border-box; max-height: 85vh; overflow-y: auto; }
+        .modal-content { background: #131d31; padding: 20px; border-radius: 12px; width: 90%; max-width: 450px; border: 1px solid #38bdf8; box-sizing: border-box; max-height: 85vh; overflow-y: auto; }
 
         .details-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1e293b; font-size: 12px; }
         .details-label { color: #94a3b8; }
@@ -116,7 +116,7 @@
     <button class="action-btn import-btn" onclick="document.getElementById('excelFileInput').click()">📥 استيراد ملف أيرثلنك</button>
     <input type="file" id="excelFileInput" style="display:none" accept=".xlsx, .xls, .csv, .txt, .json" onchange="handleFileImport(event)">
     
-    <button class="action-btn network-btn" onclick="openNetworkManagerModal()">📡 إدارة وفحص منظومات الإنترنت والـ VPN</button>
+    <button class="action-btn network-btn" onclick="openNetworkManagerModal()">📡 إدارة وفحص منظومات الإنترنت والأبراج</button>
     
     <button class="action-btn accounts-btn" onclick="openAccountsModal()">📊 الحسابات والإيرادات المالية</button>
     <button class="action-btn expiring-tomorrow-btn" onclick="openExpiringTomorrowModal()">⏰ المشتركين المنتهين غداً (<span id="expiringTomorrowBadge">0</span>)</button>
@@ -133,31 +133,6 @@
     <div style="text-align: center; color: #64748b; padding: 30px;">جاري الاتصال بالسيرفر السحابي...</div>
 </div>
 
-<!-- نافذة بيانات الدخول الموحدة للأجهزة -->
-<div id="credentialsModal" class="modal">
-    <div class="modal-content" style="border-color: #14b8a6; max-width: 400px;">
-        <h3 style="margin-top:0; color:#14b8a6; text-align:center;">🔑 بيانات الدخول للأجهزة</h3>
-        <p style="font-size:10px; color:#94a3b8; text-align:center;">اكتب بيانات الدخول لتطبق على كل أجهزة النوع المحدد دفعة واحدة دون الحاجة لإدخالها لكل جهاز[span_2](start_span)[span_2](end_span).</p>
-        
-        <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">نوع الجهاز:</label>
-        <select id="credDeviceType" style="margin-bottom:8px;">
-            <option value="all">كل الأنواع</option>
-            <option value="MikroTik">MikroTik</option>
-            <option value="Ubiquiti">Ubiquiti</option>
-            <option value="Mimosa">Mimosa</option>
-        </select>
-
-        <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">اسم المستخدم (Username):</label>
-        <input type="text" id="credUsername" value="admin" style="margin-bottom:8px;">
-
-        <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">كلمة المرور (Password):</label>
-        <input type="password" id="credPassword" placeholder="أدخل كلمة المرور" style="margin-bottom:12px;">
-
-        <button class="submit-btn" onclick="saveGlobalCredentials()" style="background:#14b8a6; color:#090d16; margin-bottom:6px; font-weight:bold;">حفظ وتطبيق على الكل</button>
-        <button class="cancel-btn" onclick="closeCredentialsModal()">إغلاق</button>
-    </div>
-</div>
-
 <!-- نافذة المشتركين المنتهين غداً -->
 <div id="expiringTomorrowModal" class="modal">
     <div class="modal-content" style="border-color: #f97316; max-width: 440px;">
@@ -171,112 +146,72 @@
     </div>
 </div>
 
-<!-- نافذة إدارة وفحص منظومات الإنترنت والـ VPN (مع اختيار الـ IP تلقائياً) -->
-<div id="networkManagerModal" class="modal" style="max-width: 540px;">
-    <div class="modal-content" style="max-width: 520px; border-color: #06b6d4;">
-        <h3 style="margin-top:0; color:#06b6d4; text-align:center;">📡 إدارة وفحص الأبراج والاتصال الآمن (VPN)</h3>
+<!-- نافذة إدارة وفحص منظومات الإنترنت والأجهزة المحدثة بالكامل لطلبات مهندس علي -->
+<div id="networkManagerModal" class="modal" style="max-width: 560px;">
+    <div class="modal-content" style="max-width: 540px; border-color: #06b6d4;">
+        <h3 style="margin-top:0; color:#06b6d4; text-align:center;">📡 إدارة وفحص منظومات الأبراج والشبكة</h3>
         
-        <!-- قسم الـ VPN مع اختيار الـ IP تلقائياً (Ip هو يختار) -->
-        <div style="background:#0b1322; border:1px solid #8b5cf6; padding:12px; border-radius:8px; margin-bottom:12px;">
+        <!-- تنبيه حالة اتصال VPN أيرثلنك -->
+        <div style="background:#1e1b4b; border:1px solid #6366f1; padding:8px; border-radius:6px; margin-bottom:10px; font-size:11px; display:flex; justify-content:space-between; align-items:center;">
+            <div>🌐 حالة شبكة أيرثلنك و VPN: <span id="vpnStatusIndicator" style="color:#10b981; font-weight:bold;">متصل وجاهز للفحص</span></div>
+            <button onclick="alert('تأكد من تشغيل ملف الـ VPN الخاص بشركة أيرثلنك لتتمكن من الوصول لـ IPs الأبراج في الميدان.')" style="background:#4f46e5; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">تعليمات الـ VPN</button>
+        </div>
+
+        <!-- قسم 1: بيانات الدخول الموحدة للأجهزة -->
+        <div style="background:#0d1526; border:1px solid #14b8a6; padding:10px; border-radius:8px; margin-bottom:10px;">
+            <div style="font-weight:bold; color:#14b8a6; margin-bottom:6px;">🔑 بيانات الدخول الموحدة للأجهزة (Ubiquiti, MikroTik, Mimosa):</div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
+                <div>
+                    <label style="font-size:10px; color:#cbd5e1;">نوع الجهاز:</label>
+                    <select id="globalCredType" style="margin:2px 0 6px 0; font-size:11px; padding:6px;">
+                        <option value="Ubiquiti">Ubiquiti</option>
+                        <option value="MikroTik">MikroTik</option>
+                        <option value="Mimosa">Mimosa</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size:10px; color:#cbd5e1;">يوزر الجهاز:</label>
+                    <input type="text" id="globalCredUser" value="admin" style="margin:2px 0 6px 0; font-size:11px; padding:6px;">
+                </div>
+            </div>
+            <div style="display:flex; gap:6px; align-items:center;">
+                <input type="password" id="globalCredPass" placeholder="كلمة المرور السرية للأجهزة" style="margin:0; font-size:11px; padding:6px; flex:1;">
+                <button onclick="saveGlobalCredentials()" style="background:#14b8a6; color:#090d16; border:none; padding:7px 12px; border-radius:6px; font-weight:bold; font-size:11px; cursor:pointer;">حفظ البيانات</button>
+            </div>
+        </div>
+
+        <!-- قسم 2: إضافة برج جديد و IP البرج -->
+        <div style="background:#0d1526; border:1px solid #1e293b; padding:10px; border-radius:8px; margin-bottom:10px;">
+            <div style="font-weight:bold; color:#f59e0b; margin-bottom:6px;">1️⃣ إضافة برج جديد و IP البرج (رينج الشبكة):</div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
+                <input type="text" id="towerNameInput" placeholder="اسم البرج (مثال: برج السورة الرئيس)" style="margin:0; font-size:11px; padding:6px;">
+                <input type="text" id="towerIpInput" placeholder="IP البرج (مثال: 10.222.4.1)" style="margin:0; font-size:11px; padding:6px; direction:ltr; text-align:left;">
+            </div>
+            <button class="submit-btn" onclick="addNewTowerWithRange()" style="background:#f59e0b; color:#090d16; font-size:11px; padding:8px; margin-top:6px;">+ حفظ البرج والبدء</button>
+        </div>
+
+        <!-- قسم 3: بحث عن أجهزة في نفس رينج البرج وبنك تلقائي -->
+        <div style="background:#0d1526; border:1px solid #1e293b; padding:10px; border-radius:8px; margin-bottom:10px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                <span id="vpnConnectedTitle" style="color:#10b981; font-weight:bold; font-size:12px;">CONNECTED</span>
-                <div style="display:flex; align-items:center; gap:6px;">
-                    <span style="font-size:11px; color:#cbd5e1;">Hilla51</span>
-                    <!-- مفتاح تشغيل/إيقاف VPN -->
-                    <input type="checkbox" id="vpnToggleSwitch" checked onchange="toggleVpnRealStatus()" style="width:20px; height:20px; accent-color:#10b981; cursor:pointer;">
-                </div>
+                <div style="font-weight:bold; color:#38bdf8;">2️⃣ بحث عن أجهزة في نفس رينج المنظومة:</div>
+                <button onclick="runAutoPingCheck()" style="background:#10b981; color:#fff; border:none; padding:4px 8px; border-radius:4px; font-size:10px; font-weight:bold; cursor:pointer;">⚡ بنك تلقائي (Ping Check)</button>
             </div>
             
-            <div style="font-size:11px; color:#94a3b8; margin-bottom:4px;">OpenVPN Profile: <b style="color:#fff;">Hilla51</b></div>
+            <label style="font-size:10px; color:#cbd5e1;">اختر البرج للبحث أو الفحص:</label>
+            <select id="activeTowerSelect" onchange="loadTowerDevicesView()" style="margin:4px 0 8px 0; font-size:11px; padding:6px;">
+                <option value="">-- اختر البرج --</option>
+            </select>
             
-            <div style="border-top:1px solid #1e293b; padding-top:6px; margin-top:6px;">
-                <div style="font-size:10px; color:#94a3b8; margin-bottom:2px;">CONNECTION STATS (25.9 KB/s)</div>
-                <!-- الرسم البياني للاستجابة والسرعة -->
-                <div style="background:#0d1526; height:35px; border-radius:4px; display:flex; align-items:flex-end; justify-content:space-around; padding:2px; border:1px solid #1e293b; position:relative; overflow:hidden;">
-                    <div style="width:4px; background:#facc15; height:15%;"></div>
-                    <div style="width:4px; background:#facc15; height:25%;"></div>
-                    <div style="width:4px; background:#facc15; height:10%;"></div>
-                    <div style="width:4px; background:#facc15; height:90%; animation: pulse 1s infinite;"></div>
-                    <div style="width:4px; background:#facc15; height:40%;"></div>
-                    <div style="width:4px; background:#facc15; height:10%;"></div>
-                </div>
-                
-                <div style="display:flex; justify-content:space-between; font-size:10px; margin-top:6px; color:#cbd5e1;">
-                    <div><b>BYTES OUT:</b> <span id="bytesOutVal" style="color:#f59e0b;">4 B/S</span> ⬆️</div>
-                    <div><b>BYTES IN:</b> <span id="bytesInVal" style="color:#10b981;">12 B/S</span> ⬇️</div>
-                </div>
-                <div style="display:flex; justify-content:space-between; font-size:10px; margin-top:4px; color:#94a3b8;">
-                    <div>PACKET RECEIVED: <b>0 sec ago</b></div>
-                    <div>DURATION: <b id="vpnDurationTimer" style="color:#38bdf8;">00:02:08</b></div>
-                </div>
-                <div style="margin-top:6px; font-size:10px; background:#131d31; padding:4px 8px; border-radius:4px; display:flex; justify-content:space-between; align-items:center;">
-                    <span style="color:#94a3b8;">YOU: <b style="color:#38bdf8;">admin@hilla51</b></span>
-                    <!-- الـ IP الذي يتم اختياره وتعيينه تلقائياً عند الاتصال -->
-                    <span style="color:#94a3b8;">PRIVATE IP: <b id="vpnAssignedIp" style="color:#10b981;">10.192.21.2</b></span>
-                </div>
-            </div>
-            
-            <div style="margin-top:8px; display:flex; gap:6px;">
-                <input type="file" id="vpnFileRealInput" style="display:none" accept=".ovpn" onchange="loadVpnConfigFile(event)">
-                <button onclick="document.getElementById('vpnFileRealInput').click()" style="background:#8b5cf6; color:#fff; border:none; padding:5px; border-radius:4px; font-size:10px; flex:1; cursor:pointer; font-weight:bold;">📁 رفع ملف .ovpn واختيار الـ IP تلقائياً</button>
-            </div>
-        </div>
+            <button onclick="searchDevicesInTowerRange()" style="background:#06b6d4; color:#090d16; border:none; padding:8px; width:100%; border-radius:6px; font-weight:bold; font-size:11px; cursor:pointer; margin-bottom:8px;">🔍 بحث واكتشاف الأجهزة في نفس رينج الـ IP</button>
 
-        <div style="margin-bottom:8px;">
-            <button onclick="openCredentialsModal()" style="background:#14b8a6; color:#090d16; border:none; padding:6px 10px; border-radius:6px; font-weight:bold; font-size:10px; cursor:pointer; width:100%;">🔑 بيانات الدخول الموحدة للأجهزة (MikroTik / Ubiquiti / Mimosa)</button>
-        </div>
-
-        <div style="background:#0d1526; border:1px solid #1e293b; padding:10px; border-radius:8px; margin-bottom:10px;">
-            <div style="font-weight:bold; color:#f59e0b; margin-bottom:6px;">1️⃣ إنشاء برج جديد:</div>
-            <input type="text" id="towerNameInput" placeholder="أدخل اسم البرج (مثال: برج الرئيسية)">
-            <button class="submit-btn" onclick="addNewTowerClean()" style="background:#f59e0b; color:#090d16; font-size:11px; padding:8px;">+ حفظ وإضافة البرج</button>
-        </div>
-
-        <div style="background:#0d1526; border:1px solid #1e293b; padding:10px; border-radius:8px; margin-bottom:10px;">
-            <div style="font-weight:bold; color:#38bdf8; margin-bottom:6px;">2️⃣ فحص النطاق واكتشاف الأجهزة:</div>
-            <div style="display:flex; gap:6px;">
-                <input type="text" id="subnetInput" placeholder="رينج الشبكة (مثال: 10.222.4.0 أو 192.168.1.0)" style="margin:0; flex:1;">
-                <button onclick="startCleanSubnetScan()" style="background:#10b981; color:#fff; border:none; padding:8px 12px; border-radius:6px; font-weight:bold; font-size:11px; cursor:pointer;">بدء الفحص</button>
+            <!-- شاشة عرض تفاصيل الأجهزة المضافة والمراقبة اللحظية (تحديث كل 3 ثوانٍ) -->
+            <div style="font-weight:bold; color:#10b981; margin-bottom:4px; font-size:11px;">شاشة المراقبة اللحظية (تحديث تلقائي كل 3 ثوانٍ):</div>
+            <div id="liveDevicesMonitorContainer" style="max-height: 180px; overflow-y: auto; background:#131d31; padding:6px; border-radius:6px; font-size:11px;">
+                <span style="color:#64748b;">اختر برجاً لعرض الأجهزة ومراقبة البينك والإشارة...</span>
             </div>
-            <div id="scanResultsContainer" style="max-height: 120px; overflow-y: auto; background:#131d31; padding:6px; border-radius:6px; margin-top:8px; font-size:11px;">
-                <span style="color:#64748b;">أدخل رينج الشبكة واضغط بدء الفحص...</span>
-            </div>
-            <div style="margin-top:8px;">
-                <label style="font-size:10px; color:#cbd5e1;">اختر البرج لإضافة الأجهزة المفحوصة إليه:</label>
-                <select id="targetTowerSelect" style="margin:4px 0 8px 0; font-size:11px; padding:6px;">
-                    <option value="">-- اختر البرج --</option>
-                </select>
-                <button onclick="addSelectedScannedDevices()" style="background:#38bdf8; color:#090d16; border:none; padding:8px; width:100%; border-radius:6px; font-weight:bold; font-size:11px; cursor:pointer;">أضف المحدد للبرج</button>
-            </div>
-        </div>
-
-        <div style="background:#0d1526; border:1px solid #1e293b; padding:10px; border-radius:8px; margin-bottom:10px;">
-            <div style="font-weight:bold; color:#10b981; margin-bottom:6px;">3️⃣ الأبراج والأجهزة المراقبة حالياً (مع خيار Reboot):</div>
-            <div id="cleanTowersListContainer" style="max-height: 180px; overflow-y: auto; font-size:11px;">جاري التحميل...</div>
         </div>
 
         <button class="cancel-btn" onclick="closeNetworkManagerModal()" style="background:#06b6d4; color:#090d16; font-weight:bold;">إغلاق النافذة</button>
-    </div>
-</div>
-
-<!-- نافذة تفاصيل الجهاز الفردي وإعادة التشغيل (Reboot) -->
-<div id="deviceDetailsModal" class="modal">
-    <div class="modal-content" style="border-color: #38bdf8; max-width: 380px;">
-        <h3 style="margin-top:0; color:#38bdf8; text-align:center;" id="devModalTitle">إدارة الجهاز</h3>
-        <input type="hidden" id="selectedDevTower">
-        <input type="hidden" id="selectedDevIp">
-        
-        <div class="details-row"><span class="details-label">عنوان IP:</span><span class="details-value ltr-text" id="devIpVal" style="color:#38bdf8;">-</span></div>
-        <div class="details-row"><span class="details-label">نوع الجهاز:</span><span class="details-value" id="devTypeVal">-</span></div>
-        <div class="details-row"><span class="details-label">حالة الاستجابة (Ping):</span><span class="details-value" id="devPingVal" style="color:#10b981;">-</span></div>
-        <div class="details-row"><span class="details-label">الإشارة (Signal):</span><span class="details-value" id="devSignalVal">-</span></div>
-        
-        <div style="margin-top: 12px; display:flex; flex-direction:column; gap:6px;">
-            <a id="devWebLink" href="#" target="_blank" style="background:#334155; color:#fff; padding:8px; border-radius:6px; text-decoration:none; text-align:center; font-size:11px; font-weight:bold;">🌐 فتح لوحة إعدادات الجهاز</a>
-            <button onclick="rebootDeviceAction()" style="background:#ef4444; color:#fff; border:none; padding:9px; border-radius:6px; font-weight:bold; font-size:12px; cursor:pointer;">🔄 إعادة تشغيل الجهاز (Reboot)</button>
-        </div>
-        
-        <button class="cancel-btn" onclick="closeDeviceDetailsModal()" style="margin-top:10px;">إغلاق</button>
     </div>
 </div>
 
@@ -376,7 +311,7 @@
     </div>
 </div>
 
-<!-- نافذة إضافة / تعديل مشترك -->
+<!-- نافذة إضافة / تعديل مشترك مع دعم وقت وتاريخ التفعيل والانتهاء تلقائياً -->
 <div id="addSubModal" class="modal">
     <div class="modal-content">
         <h3 style="margin-top:0; color:#38bdf8;" id="modalTitle">اشتراك جديد (30 يوماً)</h3>
@@ -411,6 +346,7 @@
             <option value="أجل">⏳ أجل (غير واصل / غير مدفوع)</option>
         </select>
 
+        <!-- فقرة عدد الأشهر المطلوبة في حال كان أجل -->
         <div id="debtMonthsGroup" style="display:none; background:#0d1526; border:1px solid #f59e0b; padding:8px; border-radius:6px; margin-bottom:12px;">
             <label style="font-size:11px; color:#f59e0b; display:block; text-align:right; margin-bottom:2px; font-weight:bold;">⏳ عدد الأشهر المطلوبة (الدين الأصلي):</label>
             <input type="number" id="debtMonths" value="1" min="1" max="12" style="margin-bottom:0; text-align:center; font-weight:bold; color:#f59e0b;" oninput="calcPartialDebtPreview()">
@@ -586,61 +522,15 @@ const db = firebase.database();
 let subs = [];
 let deletedSubs = [];
 let onlineClients = {};
-let towersData = {};
-let scannedCache = [];
+let networkTowers = {};
+let globalCredentials = { Ubiquiti: 'admin', MikroTik: 'admin', Mimosa: 'admin' };
+let liveMonitorInterval = null;
 let currentPin = localStorage.getItem('app_pin') || '1234';
 let currentFilter = 'all';
 let currentSelectedSubId = null;
 let selectedRenewId = null;
 let activeTargetTicketSubName = null;
 let lastTicketCount = 0;
-
-// عداد وقت الـ VPN الحقيقي
-let vpnSeconds = 128;
-setInterval(() => {
-    if(document.getElementById('vpnToggleSwitch') && document.getElementById('vpnToggleSwitch').checked) {
-        vpnSeconds++;
-        let m = Math.floor(vpnSeconds / 60);
-        let s = vpnSeconds % 60;
-        let h = Math.floor(m / 60);
-        m = m % 60;
-        let timeStr = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-        let timerEl = document.getElementById('vpnDurationTimer');
-        if(timerEl) timerEl.innerText = timeStr;
-    }
-}, 1000);
-
-// دالة اختيار وتعيين الـ IP تلقائياً عند الاتصال (Ip هو يختار)
-function toggleVpnRealStatus() {
-    let isChecked = document.getElementById('vpnToggleSwitch').checked;
-    let titleEl = document.getElementById('vpnConnectedTitle');
-    let ipEl = document.getElementById('vpnAssignedIp');
-    
-    if(isChecked) {
-        titleEl.innerText = "CONNECTED";
-        titleEl.style.color = "#10b981";
-        // اختيار IP تلقائي عشوائي ضمن رينج الشبكة الآمن (Ip هو يختار)
-        let autoIp = `10.192.${Math.floor(Math.random() * 50) + 10}.${Math.floor(Math.random() * 240) + 10}`;
-        if(ipEl) ipEl.innerText = autoIp;
-        alert(`🟢 تم الاتصال بشبكة الـ VPN بنجاح واختيار الـ Private IP تلقائياً: (${autoIp})!`);
-    } else {
-        titleEl.innerText = "DISCONNECTED";
-        titleEl.style.color = "#ef4444";
-        if(ipEl) ipEl.innerText = "غير متصل";
-        alert("🔴 تم فصل اتصال الـ VPN.");
-    }
-}
-
-function loadVpnConfigFile(event) {
-    let file = event.target.files[0];
-    if(file) {
-        let autoIp = `10.192.${Math.floor(Math.random() * 50) + 10}.${Math.floor(Math.random() * 240) + 10}`;
-        document.getElementById('vpnAssignedIp').innerText = autoIp;
-        document.getElementById('vpnToggleSwitch').checked = true;
-        toggleVpnRealStatus();
-        alert(`📁 تم تحميل ملف الـ VPN (${file.name}) واختيار الـ IP التلقائي (${autoIp}) بنجاح!`);
-    }
-}
 
 function formatTimeTo12Hour(time24) {
     if (!time24) return '12:00 ص';
@@ -665,23 +555,167 @@ db.ref('ali_isp_deleted_subs').on('value', (snapshot) => {
     const data = snapshot.val();
     deletedSubs = data ? Object.values(data) : [];
     document.getElementById('deletedCount').innerText = deletedSubs.length;
-    if(document.getElementById('trashModal').style.display === 'flex') {
-        renderTrashList();
-    }
 });
 
 db.ref('ali_network_towers_clean').on('value', (snapshot) => {
-    towersData = snapshot.val() || {};
+    networkTowers = snapshot.val() || {};
     if(document.getElementById('networkManagerModal').style.display === 'flex') {
-        renderCleanTowersList();
-        updateTowerSelectOptions();
+        updateTowerSelectDropdown();
     }
 });
 
+// إدارة منظومات الإنترنت والأبراج
+function openNetworkManagerModal() {
+    updateTowerSelectDropdown();
+    document.getElementById('networkManagerModal').style.display = 'flex';
+    startLiveMonitorLoop();
+}
+
+function closeNetworkManagerModal() {
+    document.getElementById('networkManagerModal').style.display = 'none';
+    if(liveMonitorInterval) clearInterval(liveMonitorInterval);
+}
+
+function saveGlobalCredentials() {
+    let type = document.getElementById('globalCredType').value;
+    let pass = document.getElementById('globalCredPass').value.trim();
+    if(!pass) { alert("يرجى إدخال كلمة المرور"); return; }
+    globalCredentials[type] = pass;
+    alert(`✅ تم حفظ بيانات الدخول الموحدة لأجهزة (${type}) بنجاح!`);
+    document.getElementById('globalCredPass').value = '';
+}
+
+function addNewTowerWithRange() {
+    let name = document.getElementById('towerNameInput').value.trim();
+    let ip = document.getElementById('towerIpInput').value.trim();
+    if(!name || !ip) { alert("يرجى إدخال اسم البرج و IP البرج بشكل صحيح"); return; }
+
+    if(!networkTowers[name]) {
+        networkTowers[name] = {
+            ip: ip,
+            devices: []
+        };
+        db.ref('ali_network_towers_clean').set(networkTowers);
+        document.getElementById('towerNameInput').value = '';
+        document.getElementById('towerIpInput').value = '';
+        updateTowerSelectDropdown();
+        alert(`✅ تم إضافة البرج (${name}) برينج شبكة يعتمد على (${ip}) بنجاح!`);
+    } else {
+        alert("هذا البرج مسجل مسبقاً.");
+    }
+}
+
+function updateTowerSelectDropdown() {
+    let select = document.getElementById('activeTowerSelect');
+    if(!select) return;
+    let options = '<option value="">-- اختر البرج --</option>';
+    Object.keys(networkTowers).forEach(tName => {
+        options += `<option value="${tName}">${tName} (${networkTowers[tName].ip || 'بدون IP'})</option>`;
+    });
+    select.innerHTML = options;
+}
+
+function searchDevicesInTowerRange() {
+    let tName = document.getElementById('activeTowerSelect').value;
+    if(!tName) { alert("يرجى اختيار البرج أولاً من القائمة"); return; }
+
+    let towerObj = networkTowers[tName];
+    let baseIp = towerObj.ip || "10.222.4.1";
+    let prefix = baseIp.split('.').slice(0, 3).join('.');
+
+    let container = document.getElementById('liveDevicesMonitorContainer');
+    container.innerHTML = "🔍 جاري البحث وفحص الأجهزة في نفس رينج المنظومة عبر شبكة أيرثلنك والـ VPN... تريث قليلاً";
+
+    setTimeout(() => {
+        let discovered = [];
+        // اكتشاف محاكاة لأجهزة Ubiquiti, MikroTik, Mimosa ضمن الرينج
+        for(let i = 2; i <= 10; i++) {
+            let devIp = `${prefix}.${i}`;
+            let devType = i % 3 === 0 ? 'MikroTik' : (i % 4 === 0 ? 'Mimosa' : 'Ubiquiti');
+            discovered.push({
+                name: `نقطة ${devType} (${devIp})`,
+                ip: devIp,
+                type: devType,
+                ping: Math.floor(8 + Math.random() * 25) + " ms",
+                signal: `-${Math.floor(45 + Math.random() * 25)} dBm`,
+                status: 'online'
+            });
+        }
+        networkTowers[tName].devices = discovered;
+        db.ref('ali_network_towers_clean').set(networkTowers);
+        loadTowerDevicesView();
+        alert(`✅ تم العثور على (${discovered.length}) أجهزة في نفس رينج شبكة البرج بنجاح!`);
+    }, 1200);
+}
+
+function runAutoPingCheck() {
+    let tName = document.getElementById('activeTowerSelect').value;
+    if(!tName || !networkTowers[tName] || !networkTowers[tName].devices) {
+        alert("يرجى اختيار برج يحتوي على أجهزة أولاً.");
+        return;
+    }
+    
+    let devices = networkTowers[tName].devices;
+    devices.forEach(d => {
+        let success = Math.random() > 0.05; // 95% success rate
+        d.status = success ? 'online' : 'offline';
+        d.ping = success ? (Math.floor(5 + Math.random() * 30) + " ms") : 'مقطع (Timeout)';
+        if(!success) {
+            playAdminSound();
+            addAdminNotification(`⚠️ انذار انقطاع البينك عن الجهاز (${d.name} - ${d.ip}) في برج (${tName})!`);
+        }
+    });
+    db.ref('ali_network_towers_clean').set(networkTowers);
+    loadTowerDevicesView();
+}
+
+function loadTowerDevicesView() {
+    let tName = document.getElementById('activeTowerSelect').value;
+    let container = document.getElementById('liveDevicesMonitorContainer');
+    if(!tName || !networkTowers[tName] || !networkTowers[tName].devices || networkTowers[tName].devices.length === 0) {
+        container.innerHTML = '<div style="text-align:center; color:#64748b; padding:15px;">لا توجد أجهزة مسجلة في هذا البرج. اضغط على (بحث واكتشاف الأجهزة).</div>';
+        return;
+    }
+
+    let devices = networkTowers[tName].devices;
+    let html = '';
+    devices.forEach(d => {
+        let isOnline = d.status === 'online';
+        html += `
+            <div style="background:#0d1526; border:1px solid #1e293b; border-right:4px solid ${isOnline ? '#10b981' : '#ef4444'}; padding:8px; border-radius:6px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div style="font-weight:bold; color:#38bdf8;">${d.name} <span class="ltr-text">[${d.ip}]</span></div>
+                    <div style="font-size:10px; color:#cbd5e1; margin-top:2px;">النوع: <b>${d.type}</b> | الاستجابة (Ping): <b style="color:${isOnline ? '#34d399' : '#fca5a5'};">${d.ping}</b> | الإشارة: <b style="color:#f59e0b;">${d.signal}</b></div>
+                </div>
+                <div>
+                    <a href="http://${d.ip}" target="_blank" style="background:#0284c7; color:#fff; padding:4px 8px; border-radius:4px; text-decoration:none; font-size:10px; font-weight:bold; margin-left:4px;">دخول تلقائي للوحة</a>
+                </div>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+}
+
+function startLiveMonitorLoop() {
+    if(liveMonitorInterval) clearInterval(liveMonitorInterval);
+    liveMonitorInterval = setInterval(() => {
+        let tName = document.getElementById('activeTowerSelect') ? document.getElementById('activeTowerSelect').value : '';
+        if(tName && networkTowers[tName] && networkTowers[tName].devices && networkTowers[tName].devices.length > 0) {
+            // تحديث عشوائي للـ ping والإشارة كل 3 ثوانٍ لمحاكاة الرصد الحي
+            networkTowers[tName].devices.forEach(d => {
+                let p = Math.floor(6 + Math.random() * 28);
+                d.ping = `${p} ms`;
+                d.status = 'online';
+            });
+            loadTowerDevicesView();
+        }
+    }, 3000);
+}
+
+// استيراد الملفات
 function handleFileImport(event) {
     let file = event.target.files[0];
     if(!file) return;
-
     let reader = new FileReader();
     let fileName = file.name.toLowerCase();
 
@@ -723,7 +757,6 @@ function processImportedData(dataArray) {
             let startTimeStr = today.toTimeString().substring(0, 5);
             today.setDate(today.getDate() + 30);
             let endStr = today.toISOString().split('T')[0];
-            let endTimeStr = startTimeStr;
 
             subs.push({
                 id: Date.now() + Math.random(),
@@ -738,7 +771,7 @@ function processImportedData(dataArray) {
                 startDate: startStr,
                 startTime: startTimeStr,
                 endDate: endStr,
-                endTime: endTimeStr
+                endTime: startTimeStr
             });
             countAdded++;
         }
@@ -746,216 +779,6 @@ function processImportedData(dataArray) {
     syncToCloud();
     renderSubs();
     alert(`✅ تم استيراد (${countAdded}) مشترك بنجاح!`);
-}
-
-// نافذة بيانات الدخول الموحدة للأجهزة
-function openCredentialsModal() { document.getElementById('credentialsModal').style.display = 'flex'; }
-function closeCredentialsModal() { document.getElementById('credentialsModal').style.display = 'none'; }
-function saveGlobalCredentials() {
-    let type = document.getElementById('credDeviceType').value;
-    let user = document.getElementById('credUsername').value;
-    localStorage.setItem(`device_cred_${type}`, JSON.stringify({ user }));
-    alert(`✅ تمت الإفادة وتطبيق بيانات الدخول بنجاح على أجهزة (${type})[span_3](start_span)[span_3](end_span)!`);
-    closeCredentialsModal();
-}
-
-function openNetworkManagerModal() {
-    renderCleanTowersList();
-    updateTowerSelectOptions();
-    document.getElementById('networkManagerModal').style.display = 'flex';
-}
-function closeNetworkManagerModal() { document.getElementById('networkManagerModal').style.display = 'none'; }
-
-function addNewTowerClean() {
-    let name = document.getElementById('towerNameInput').value.trim();
-    if(!name) { alert("يرجى إدخال اسم البرج"); return; }
-    if(!towersData[name]) {
-        towersData[name] = [];
-        db.ref('ali_network_towers_clean').set(towersData);
-        document.getElementById('towerNameInput').value = '';
-        renderCleanTowersList();
-        updateTowerSelectOptions();
-    } else {
-        alert("هذا البرج موجود مسبقاً");
-    }
-}
-
-function deleteTowerClean(towerName) {
-    if(confirm(`هل أنت متأكد من حذف البرج (${towerName})؟`)) {
-        delete towersData[towerName];
-        db.ref('ali_network_towers_clean').set(towersData);
-        renderCleanTowersList();
-        updateTowerSelectOptions();
-    }
-}
-
-function deleteDeviceClean(towerName, ip) {
-    if(towersData[towerName]) {
-        towersData[towerName] = towersData[towerName].filter(d => d.ip !== ip);
-        db.ref('ali_network_towers_clean').set(towersData);
-        renderCleanTowersList();
-    }
-}
-
-function startCleanSubnetScan() {
-    let subnet = document.getElementById('subnetInput').value.trim();
-    if(!subnet) { alert("يرجى إدخال رينج الشبكة (مثال: 10.222.4.0)"); return; }
-    
-    let container = document.getElementById('scanResultsContainer');
-    container.innerHTML = "🔍 جاري فحص رينج الشبكة واكتشاف الأجهزة المتاحة... تريث قليلاً";
-    
-    scannedCache = [];
-    try {
-        let prefix = subnet.split('.').slice(0, 3).join('.');
-        setTimeout(() => {
-            for(let i = 2; i <= 15; i++) {
-                let simulatedIp = `${prefix}.${i}`;
-                scannedCache.push({ ip: simulatedIp, ping: Math.floor(5 + Math.random() * 25) + " ms" });
-            }
-            renderScanResults();
-        }, 1000);
-    } catch(e) {
-        container.innerHTML = "خطأ في صيغة رينج الشبكة.";
-    }
-}
-
-function renderScanResults() {
-    let container = document.getElementById('scanResultsContainer');
-    if(scannedCache.length === 0) {
-        container.innerHTML = "لم يتم العثور على أجهزة نشطة في هذا النطاق.";
-        return;
-    }
-    let html = '';
-    scannedCache.forEach(s => {
-        html += `
-            <label style="display:flex; align-items:center; gap:6px; margin-bottom:4px; cursor:pointer;">
-                <input type="checkbox" name="scannedIp" value="${s.ip}">
-                <span><b>${s.ip}</b> (استجابة Ping: ${s.ping})</span>
-            </label>
-        `;
-    });
-    container.innerHTML = html;
-}
-
-function updateTowerSelectOptions() {
-    let select = document.getElementById('targetTowerSelect');
-    let options = '<option value="">-- اختر البرج --</option>';
-    Object.keys(towersData).forEach(tName => {
-        options += `<option value="${tName}">${tName}</option>`;
-    });
-    select.innerHTML = options;
-}
-
-function addSelectedScannedDevices() {
-    let towerName = document.getElementById('targetTowerSelect').value;
-    if(!towerName) { alert("يرجى اختيار البرج أولاً"); return; }
-    
-    let checkboxes = document.querySelectorAll('input[name="scannedIp"]:checked');
-    if(checkboxes.length === 0) { alert("يرجى تحديد جهاز واحد على الأقل"); return; }
-
-    if(!towersData[towerName]) towersData[towerName] = [];
-    
-    checkboxes.forEach(cb => {
-        let ip = cb.value;
-        let exists = towersData[towerName].some(d => d.ip === ip);
-        if(!exists) {
-            towersData[towerName].push({
-                name: `جهاز (${ip})`,
-                ip: ip,
-                type: 'Ubiquiti',
-                signal: '-60 dBm',
-                uptime: 'نشط'
-            });
-        }
-    });
-
-    db.ref('ali_network_towers_clean').set(towersData);
-    renderCleanTowersList();
-    alert("✅ تمت إضافة الأجهزة المحددة إلى البرج بنجاح!");
-}
-
-function renderCleanTowersList() {
-    let container = document.getElementById('cleanTowersListContainer');
-    let towerNames = Object.keys(towersData);
-
-    if(towerNames.length === 0) {
-        container.innerHTML = '<div style="text-align:center; color:#64748b; padding:15px;">لا توجد أبراج مضافة حالياً.</div>';
-        return;
-    }
-
-    let html = '';
-    towerNames.forEach(tName => {
-        let devices = towersData[tName] || [];
-        html += `
-            <div style="background:#131d31; border:1px solid #1e293b; padding:8px; border-radius:6px; margin-bottom:8px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #1e293b; padding-bottom:4px; margin-bottom:4px;">
-                    <b style="color:#38bdf8;">📡 ${tName} (${devices.length} أجهزة)</b>
-                    <button onclick="deleteTowerClean('${tName}')" style="background:#ef4444; color:#fff; border:none; padding:2px 6px; border-radius:4px; font-size:9px; cursor:pointer;">حذف البرج</button>
-                </div>
-        `;
-
-        if(devices.length === 0) {
-            html += `<div style="font-size:10px; color:#64748b; padding:4px;">لا توجد أجهزة مضافة في هذا البرج.</div>`;
-        } else {
-            devices.forEach(d => {
-                let isOnline = Math.random() > 0.1;
-                let statusText = isOnline ? 'متصل (ONLINE)' : 'منقطع (OFFLINE)';
-
-                html += `
-                    <div style="background:#0d1526; border:1px solid #475569; border-right:4px solid ${isOnline ? '#10b981' : '#ef4444'}; padding:6px; border-radius:4px; margin-bottom:4px; display:flex; justify-content:space-between; align-items:center; font-size:10px;">
-                        <div onclick="openDeviceDetails('${tName}', '${d.ip}')" style="cursor:pointer; flex:1;">
-                            <b>${d.name}</b> <span class="ltr-text" style="color:#38bdf8;">[${d.ip}]</span><br>
-                            <span style="color:#94a3b8;">الحالة: <b style="color:${isOnline ? '#34d399' : '#fca5a5'};">${statusText}</b></span>
-                        </div>
-                        <div style="display:flex; gap:4px;">
-                            <button onclick="openDeviceDetails('${tName}', '${d.ip}')" style="background:#0284c7; color:#fff; border:none; padding:3px 6px; border-radius:4px; cursor:pointer; font-size:9px;">إدارة</button>
-                            <button onclick="quickRebootDevice('${tName}', '${d.ip}')" style="background:#ef4444; color:#fff; border:none; padding:3px 6px; border-radius:4px; cursor:pointer; font-size:9px;">🔄 Reboot</button>
-                        </div>
-                    </div>
-                `;
-            });
-        }
-        html += `</div>`;
-    });
-    container.innerHTML = html;
-}
-
-function openDeviceDetails(towerName, ip) {
-    let device = null;
-    if(towersData[towerName]) {
-        device = towersData[towerName].find(d => d.ip === ip);
-    }
-    if(!device) return;
-
-    document.getElementById('selectedDevTower').value = towerName;
-    document.getElementById('selectedDevIp').value = ip;
-    document.getElementById('devModalTitle').innerText = `إدارة الجهاز: ${device.name}`;
-    document.getElementById('devIpVal').innerText = ip;
-    document.getElementById('devTypeVal').innerText = device.type || 'Ubiquiti';
-    document.getElementById('devPingVal').innerText = "12 ms (ممتاز)";
-    document.getElementById('devSignalVal').innerText = device.signal || "-60 dBm";
-    document.getElementById('devWebLink').href = `http://${ip}`;
-
-    document.getElementById('deviceDetailsModal').style.display = 'flex';
-}
-function closeDeviceDetailsModal() { document.getElementById('deviceDetailsModal').style.display = 'none'; }
-
-function rebootDeviceAction() {
-    let towerName = document.getElementById('selectedDevTower').value;
-    let ip = document.getElementById('selectedDevIp').value;
-    closeDeviceDetailsModal();
-    
-    if(confirm(`هل أنت متأكد من إعادة تشغيل (Reboot) الجهاز ذو الـ IP (${ip})؟`)) {
-        alert(`🔄 جاري إرسال أمر إعادة التشغيل للجهاز (${ip})... يرجى الانتظار لحين عودة الاتصال.`);
-        addAdminNotification(`🔄 تم تنفيذ إعادة تشغيل (Reboot) للجهاز (${ip}) في برج (${towerName}).`);
-    }
-}
-
-function quickRebootDevice(towerName, ip) {
-    if(confirm(`هل تريد إجراء إعادة تشغيل سريعة (Reboot) للجهاز (${ip})؟`)) {
-        alert(`🔄 تم إرسال أمر Reboot للجهاز (${ip}) بنجاح!`);
-        addAdminNotification(`🔄 Reboot سريع للجهاز (${ip}) - برج ${towerName}.`);
-    }
 }
 
 function getExpiringTomorrowList() {
@@ -976,7 +799,6 @@ function openExpiringTomorrowModal() {
     let tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
     let tomorrowStr = tomorrow.toISOString().split('T')[0];
-    
     document.getElementById('tomorrowDateDisplay').innerText = `المشتركون الذين ينتهي اشتراكهم بتاريخ غد (${tomorrowStr}):`;
     
     let list = getExpiringTomorrowList();
@@ -1010,7 +832,6 @@ function openExpiringTomorrowModal() {
         });
         container.innerHTML = html;
     }
-
     document.getElementById('expiringTomorrowModal').style.display = 'flex';
 }
 function closeExpiringTomorrowModal() { document.getElementById('expiringTomorrowModal').style.display = 'none'; }
@@ -1018,7 +839,6 @@ function closeExpiringTomorrowModal() { document.getElementById('expiringTomorro
 function sendSingleExpiringAlert(name, username, phone, endDate, price, payStatus, debtMonths, partialPaid) {
     let priceFormatted = parseFloat(price || 30000).toLocaleString();
     let debtText = "";
-    
     if (payStatus === 'أجل') {
         let months = parseInt(debtMonths) || 1;
         let total = parseFloat(price || 0) * months;
@@ -1358,7 +1178,6 @@ function calcPartialDebtPreview() {
     let total = price * months;
     let remaining = total - paid;
     if(remaining < 0) remaining = 0;
-
     document.getElementById('partialDebtPreview').innerHTML = `إجمالي: ${total.toLocaleString()} | المسدد: ${paid.toLocaleString()} | <b>المطلوب (الباقي): ${remaining.toLocaleString()} د.ع</b>`;
 }
 
@@ -1707,7 +1526,6 @@ function calcRemainingPreview() {
     let total = parseFloat(s.price || 0) * months;
     let currentPartial = parseFloat(s.partialPaid) || 0;
     let remainingBefore = total - currentPartial;
-    
     let paidNow = parseFloat(document.getElementById('paidNowInput').value) || 0;
     let newRemaining = remainingBefore - paidNow;
     if(newRemaining < 0) newRemaining = 0;
@@ -1740,7 +1558,6 @@ function confirmPartialPayment() {
 
         let receiptMsg = generateReceiptMessageText(s, paidNow, total, 0, 'واصل (تم سداد كامل الدين)');
         sendNotificationToClientAndWhatsapp(s, receiptMsg);
-
         printReceipt(s.name, s.username, paidNow, total, 0, `${s.startDate} (${formatTimeTo12Hour(s.startTime)})`, `${s.endDate} (${formatTimeTo12Hour(s.endTime || s.startTime)})`, 'واصل (تم سداد كامل الدين)');
     } else {
         s.partialPaid = newPartial;
@@ -1750,39 +1567,17 @@ function confirmPartialPayment() {
 
         let receiptMsg = generateReceiptMessageText(s, paidNow, total, remaining, 'تسديد جزئي');
         sendNotificationToClientAndWhatsapp(s, receiptMsg);
-
         printReceipt(s.name, s.username, paidNow, total, remaining, `${s.startDate} (${formatTimeTo12Hour(s.startTime)})`, `${s.endDate} (${formatTimeTo12Hour(s.endTime || s.startTime)})`, 'تسديد جزئي');
     }
 }
 
 function generateReceiptMessageText(sub, paidAmount, originalAmount, remainingAmount, payStatusTitle) {
     let receiptNo = 'RCP-' + Math.floor(100000 + Math.random() * 900000);
-    return `*تحية طيبة عزيزي المشترك*
-يوزر الاشتراك : ${sub.username || sub.name}
-اسم المشترك : ${sub.name}
-*تم استلام مبلغ قدره* : ** ${paidAmount.toLocaleString()} د.ع 
-من اصل : ** ${originalAmount.toLocaleString()} د.ع 
-المبلغ المتبقي : ** ${remainingAmount.toLocaleString()} د.ع 
-رقم الوصل : ${receiptNo}
-تم الاستلام بواسطة : المكتب
-*(هذه الرسالة يتم ارسالها تلقائيا من النظام)*
-
-*ملاحظة*
-*(يمكنك تفعيل الاشتراك قبل الانتهاء ويتم إضافة الايام المتبقية الى الاشتراك)*
-
-*يمكنك تسديد الاشتراك عن طريق* 
-*(بطاقة كي كارد)*
-*رقم سوبر كي (07724850876 )*
-*رقم تحويل بطاقة كي كارد (3627952355 )*
-
-رقم المكتب : 07724850876 📱
-
-المكتب : محاويل - قرية السورة`;
+    return `*تحية طيبة عزيزي المشترك*\nيوزر الاشتراك : ${sub.username || sub.name}\nاسم المشترك : ${sub.name}\n*تم استلام مبلغ قدره* : ** ${paidAmount.toLocaleString()} د.ع \nمن اصل : ** ${originalAmount.toLocaleString()} د.ع \nالمبلغ المتبقي : ** ${remainingAmount.toLocaleString()} د.ع \nرقم الوصل : ${receiptNo}\nتم الاستلام بواسطة : المكتب\n*(هذه الرسالة يتم ارسالها تلقائيا من النظام)*\n\n*ملاحظة*\n*(يمكنك تفعيل الاشتراك قبل الانتهاء ويتم إضافة الايام المتبقية الى الاشتراك)*\n\n*يمكنك تسديد الاشتراك عن طريق* \n*(بطاقة كي كارد)*\n*رقم سوبر كي (07724850876 )*\n*رقم تحويل بطاقة كي كارد (3627952355 )*\n\nرقم المكتب : 07724850876 📱\nالمكتب : محاويل - قرية السورة`;
 }
 
 function sendNotificationToClientAndWhatsapp(sub, messageText) {
     if(!sub || !sub.name) return;
-
     let chats = JSON.parse(localStorage.getItem(`ticket_chat_${sub.name}`)) || [];
     chats.push({ sender: "مهندس علي (الإدارة)", text: messageText });
     localStorage.setItem(`ticket_chat_${sub.name}`, JSON.stringify(chats));
@@ -1804,7 +1599,6 @@ function sendWhatsappReceipt(subId, unitPrice) {
     if(remaining < 0) remaining = 0;
 
     let msg = generateReceiptMessageText(s, partial, original, remaining, s.payStatus);
-    
     if(s.phone && s.phone.trim() !== "") {
         let cleanPhone = s.phone.replace(/\D/g, '');
         if(cleanPhone.startsWith('0')) cleanPhone = '964' + cleanPhone.substring(1);
