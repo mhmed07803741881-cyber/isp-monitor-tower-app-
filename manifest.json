@@ -1,15 +1,15 @@
 {
+  "name": "بوابة المشترك - مكتب مهندس علي",
   "short_name": "بوابة المشترك",
-  "name": "تطبيق زبائن مهندس علي",
+  "start_url": "/portal.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0284c7",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/535/535239.png",
-      "type": "image/png",
-      "sizes": "192x192"
-    },
-    {
-      "src": "https://cdn-icons-png.flaticon.com/512/535/535239.png",
-      "type": "image/png",
-      "sizes": "512x512"
+      "src": "icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
     }
-
+  ]
+}
