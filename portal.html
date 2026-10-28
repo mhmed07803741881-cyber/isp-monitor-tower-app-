@@ -34,7 +34,6 @@
         p { color: #94a3b8; font-size: 11px; text-align: center; margin-bottom: 15px; }
         input, textarea, select { width: 100%; padding: 10px; margin: 6px 0 12px 0; background: #0d1526; border: 1px solid #1e293b; color: white; border-radius: 8px; box-sizing: border-box; font-size: 13px; text-align: center; }
         
-        /* إصلاح حقل الكتابة للتكتات لضمان التفاعل والكتابة بدون مشاكل */
         textarea { text-align: right; user-select: text; -webkit-user-select: text; pointer-events: auto !important; }
         
         .checkbox-container { display: flex; align-items: center; justify-content: right; font-size: 11px; color: #cbd5e1; margin-bottom: 12px; gap: 6px; cursor: pointer; }
@@ -191,14 +190,14 @@
     </div>
 </div>
 
-<!-- النافذة المنسدلة للتكتات -->
+<!-- النافذة المنسدلة للتكتات السحابية الحية -->
 <div id="ticketModal" class="modal">
     <div class="modal-content">
-        <h3 style="margin-top:0; color:#ec4899; text-align:center; font-size:15px;">🎫 تكتات الدعم الفني والمحادثة</h3>
+        <h3 style="margin-top:0; color:#ec4899; text-align:center; font-size:15px;">🎫 تكتات الدعم الفني والمحادثة السحابية</h3>
         <textarea id="ticketMessageText" rows="3" placeholder="اكتب مشكلتك أو استفسارك هنا..."></textarea>
-        <button class="btn btn-ticket" onclick="submitTicket()" style="margin-bottom:10px;">إرسال التكت للإدارة</button>
-        <div style="font-size:11px; color:#94a3b8; margin-bottom:4px; text-align:right;">سجل المحادثة:</div>
-        <div id="ticketChatHistory" style="max-height: 160px; overflow-y: auto; background:#0d1526; padding:8px; border-radius:6px; font-size:11px; color:#cbd5e1; text-align:right; margin-bottom:10px;">لا توجد رسائل.</div>
+        <button class="btn btn-ticket" onclick="submitCloudTicket()" style="margin-bottom:10px;">إرسال التكت للإدارة (سحابي)</button>
+        <div style="font-size:11px; color:#94a3b8; margin-bottom:4px; text-align:right;">سجل المحادثة السحابية:</div>
+        <div id="ticketChatHistory" style="max-height: 160px; overflow-y: auto; background:#0d1526; padding:8px; border-radius:6px; font-size:11px; color:#cbd5e1; text-align:right; margin-bottom:10px;">جاري تحميل المحادثة...</div>
         <button class="btn" onclick="closeTicketModal()" style="background:#1e293b; color:#38bdf8;">إغلاق</button>
     </div>
 </div>
@@ -220,11 +219,9 @@ const db = firebase.database();
 
 let subs = [];
 let foundSubscriber = null;
-const whatsappTargetPhone = "9647818627764"; // رقم الواتساب المطلوب
-let lastChatLength = 0;
+const whatsappTargetPhone = "9647818627764"; 
 const SESSION_KEY = "ali_client_portal_username_session";
 
-// جدول الأسعار المحددة للباقات (بالألف د.ع)
 const packagePrices = {
     'economy': 35000,
     'plus': 40000,
@@ -245,7 +242,6 @@ function playNotificationSound() {
     }
 }
 
-// تحديث السعر تلقائياً عند تغيير الباقة في مودل الأجل
 function updateAgelPrice() {
     let selectedPkg = document.getElementById('agelPkgSelect').value.toLowerCase().trim();
     if(packagePrices[selectedPkg]) {
@@ -253,7 +249,6 @@ function updateAgelPrice() {
     }
 }
 
-// إرسال شارة التواجد أونلاين
 function sendClientOnlinePresence() {
     let currentUsername = localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY);
     if (currentUsername) {
@@ -269,7 +264,6 @@ function sendClientOnlinePresence() {
     }
 }
 
-// المزامنة المباشرة مع قاعدة البيانات والتحقق من بقاء المشترك
 db.ref('ali_isp_subscribers').on('value', (snapshot) => {
     const data = snapshot.val();
     subs = data ? (Array.isArray(data) ? data.filter(item => item !== null) : Object.values(data)) : [];
@@ -300,31 +294,36 @@ window.onload = function() {
     }
 };
 
+// الاستماع السحابي المباشر لردود الإدارة وتحديث الشات الفوري للمشترك
+let lastCloudChatLength = 0;
+function listenToCloudChat(subName) {
+    let safeKey = subName.replace(/[.#$\[\]]/g, "_");
+    db.ref('ali_cloud_chats/' + safeKey).on('value', (snapshot) => {
+        let chats = snapshot.val() || [];
+        if(chats.length > lastCloudChatLength && lastCloudChatLength > 0) {
+            let lastMsg = chats[chats.length - 1];
+            if(lastMsg.sender !== subName) {
+                playNotificationSound();
+                let messengerBanner = document.getElementById('messengerPopBanner');
+                document.getElementById('messengerPopText').innerText = `💬 رد جديد من الدعم الفني: "${lastMsg.text}"`;
+                messengerBanner.style.display = 'block';
+
+                document.getElementById('ticketBadgeArea').innerHTML = '<span class="msg-badge">جديد</span>';
+                document.getElementById('bellBadgeArea').innerHTML = '<span class="msg-badge">!</span>';
+            }
+        }
+        lastCloudChatLength = chats.length;
+        if(document.getElementById('ticketModal').style.display === 'flex') {
+            renderCloudChatHistory(chats);
+        }
+    });
+}
+
 setInterval(() => {
     if(!foundSubscriber) return;
     sendClientOnlinePresence();
     checkExpiryAlerts();
-
-    let chats = JSON.parse(localStorage.getItem(`ticket_chat_${foundSubscriber.name}`)) || [];
-    if(chats.length > lastChatLength) {
-        let lastMsg = chats[chats.length - 1];
-        lastChatLength = chats.length;
-
-        if(lastMsg.sender !== foundSubscriber.name) {
-            playNotificationSound();
-            let messengerBanner = document.getElementById('messengerPopBanner');
-            document.getElementById('messengerPopText').innerText = `💬 رد جديد من الدعم: "${lastMsg.text}"`;
-            messengerBanner.style.display = 'block';
-
-            document.getElementById('ticketBadgeArea').innerHTML = '<span class="msg-badge">جديد</span>';
-            document.getElementById('bellBadgeArea').innerHTML = '<span class="msg-badge">!</span>';
-        }
-        
-        if(document.getElementById('ticketModal').style.display === 'flex') {
-            refreshChatHistory();
-        }
-    }
-}, 2000);
+}, 4000);
 
 function loginClient() {
     let inputUser = cleanStr(document.getElementById('clientUsernameInput').value);
@@ -353,6 +352,7 @@ function loginClient() {
         playNotificationSound();
         checkExpiryAlerts();
         sendClientOnlinePresence();
+        listenToCloudChat(foundSubscriber.name);
         alert("✅ أهلاً بك، تم تسجيل الدخول بنجاح!");
     } else {
         alert("❌ يوزر الاشتراك أو رقم الهاتف غير صحيح. يرجى التأكد من البيانات أو مراجعة المكتب.");
@@ -363,7 +363,7 @@ function showSubscriberDashboard() {
     document.getElementById('cName').innerText = foundSubscriber.name || '-';
     document.getElementById('cUsernameVal').innerText = foundSubscriber.username || '-';
     
-    let rawPkg = foundSubscriber.pkg || foundSubscriber.package || 'Standard';
+    let rawPkg = foundSubscriber.pkg || foundSubscriber.package || foundSubscriber.subType || 'Standard';
     let pkgMap = {
         'economy': 'Economy (اقتصادي)',
         'plus': 'Plus (بلس)',
@@ -406,8 +406,7 @@ function showSubscriberDashboard() {
     document.getElementById('loginFormArea').style.display = 'none';
     document.getElementById('clientInfoBox').style.display = 'block';
 
-    let chats = JSON.parse(localStorage.getItem(`ticket_chat_${foundSubscriber.name}`)) || [];
-    lastChatLength = chats.length;
+    listenToCloudChat(foundSubscriber.name);
 }
 
 function showLoginForm() {
@@ -436,7 +435,6 @@ function logoutClient(isAuto = false) {
     }
 }
 
-// نوافذ طلب الأجل
 function openAgelModal() {
     if(!foundSubscriber) return;
     document.getElementById('agelModal').style.display = 'flex';
@@ -466,7 +464,6 @@ function submitAgelRequest() {
     window.open(`https://api.whatsapp.com/send?phone=${whatsappTargetPhone}&text=${encodeURIComponent(agelMsg)}`, '_blank');
 }
 
-// الفحص والتشخيص
 function openDiagnoseModal() {
     document.getElementById('diagnoseLoadingArea').style.display = 'block';
     document.getElementById('diagnoseResultArea').style.display = 'none';
@@ -536,20 +533,23 @@ function renderUnifiedNotifications() {
         }
     }
 
-    let chats = JSON.parse(localStorage.getItem(`ticket_chat_${foundSubscriber.name}`)) || [];
-    if(chats.length > 0) {
-        htmlContent += `<div style="margin-top:6px; margin-bottom:4px;"><b style="color:#ec4899;">🎫 سجل تكتات الدعم الفني:</b></div>`;
-        chats.forEach(c => {
-            htmlContent += `<div style="margin-bottom:5px; padding-right:6px; border-right:2px solid #ec4899;"><b>${c.sender}:</b> ${c.text}</div>`;
-        });
-    }
-
-    document.getElementById('unifiedNotificationsContainer').innerHTML = htmlContent || "لا توجد إشعارات أو تكتات جديدة حالياً.";
+    let safeKey = foundSubscriber.name.replace(/[.#$\[\]]/g, "_");
+    db.ref('ali_cloud_chats/' + safeKey).once('value', (snapshot) => {
+        let chats = snapshot.val() || [];
+        if(chats.length > 0) {
+            htmlContent += `<div style="margin-top:6px; margin-bottom:4px;"><b style="color:#ec4899;">🎫 سجل تكتات الدعم الفني:</b></div>`;
+            chats.forEach(c => {
+                htmlContent += `<div style="margin-bottom:5px; padding-right:6px; border-right:2px solid #ec4899;"><b>${c.sender}:</b> ${c.text}</div>`;
+            });
+        }
+        document.getElementById('unifiedNotificationsContainer').innerHTML = htmlContent || "لا توجد إشعارات أو تكتات جديدة حالياً.";
+    });
 }
 
 function clearUnifiedNotifications() {
     if(!foundSubscriber) return;
-    localStorage.removeItem(`ticket_chat_${foundSubscriber.name}`);
+    let safeKey = foundSubscriber.name.replace(/[.#$\[\]]/g, "_");
+    db.ref('ali_cloud_chats/' + safeKey).remove();
     document.getElementById('bellBadgeArea').innerHTML = '';
     renderUnifiedNotifications();
     alert("تم مسح السجل بنجاح!");
@@ -589,15 +589,17 @@ function closeRouterPassModal() { document.getElementById('routerPassModal').sty
 
 function openTicketModal() {
     if(!foundSubscriber) return;
-    refreshChatHistory();
+    let safeKey = foundSubscriber.name.replace(/[.#$\[\]]/g, "_");
+    db.ref('ali_cloud_chats/' + safeKey).once('value', (snapshot) => {
+        renderCloudChatHistory(snapshot.val() || []);
+    });
     document.getElementById('messengerPopBanner').style.display = 'none';
     document.getElementById('ticketBadgeArea').innerHTML = '';
     document.getElementById('ticketModal').style.display = 'flex';
 }
 function closeTicketModal() { document.getElementById('ticketModal').style.display = 'none'; }
 
-function refreshChatHistory() {
-    let chats = JSON.parse(localStorage.getItem(`ticket_chat_${foundSubscriber.name}`)) || [];
+function renderCloudChatHistory(chats) {
     let chatHtml = chats.length === 0 ? "لا توجد ردود سابقة." : chats.map(c => `
         <div style="margin-bottom:6px; border-bottom:1px solid #1e293b; padding-bottom:4px;">
             <b style="color:${c.sender === foundSubscriber.name ? '#38bdf8' : '#ec4899'}">${c.sender}:</b> ${c.text}
@@ -608,22 +610,32 @@ function refreshChatHistory() {
     container.scrollTop = container.scrollHeight;
 }
 
-function submitTicket() {
+function submitCloudTicket() {
     let msg = document.getElementById('ticketMessageText').value.trim();
     if(!msg) { alert("يرجى كتابة رسالة التكت"); return; }
     let ticketNum = `#${Math.floor(1000 + Math.random() * 9000)}`;
-    let chats = JSON.parse(localStorage.getItem(`ticket_chat_${foundSubscriber.name}`)) || [];
-    chats.push({ sender: foundSubscriber.name, text: `[${ticketNum}] ${msg}` });
-    localStorage.setItem(`ticket_chat_${foundSubscriber.name}`, JSON.stringify(chats));
+    
+    let safeKey = foundSubscriber.name.replace(/[.#$\[\]]/g, "_");
+    
+    // 1. حفظ الرسالة في شات المشترك السحابي
+    db.ref('ali_cloud_chats/' + safeKey).once('value', (snapshot) => {
+        let chats = snapshot.val() || [];
+        chats.push({ sender: foundSubscriber.name, text: `[${ticketNum}] ${msg}` });
+        db.ref('ali_cloud_chats/' + safeKey).set(chats);
+    });
 
-    let allTickets = JSON.parse(localStorage.getItem('all_client_tickets')) || [];
-    allTickets.push({ subName: foundSubscriber.name, ticketNum: ticketNum, message: msg });
-    localStorage.setItem('all_client_tickets', JSON.stringify(allTickets));
+    // 2. إرسال التكت إلى جدول التكتات العام ليتנبه لوحة التحكم الرئيسية فوراً
+    let newTicketRef = db.ref('ali_isp_tickets').push();
+    newTicketRef.set({
+        subName: foundSubscriber.name,
+        ticketNum: ticketNum,
+        message: msg,
+        timestamp: Date.now()
+    });
 
     playNotificationSound();
-    alert("✅ تم إرسال التكت بنجاح إلى الإدارة!");
+    alert("✅ تم إرسال التكت سحابياً إلى الإدارة بنجاح!");
     document.getElementById('ticketMessageText').value = '';
-    refreshChatHistory();
 }
 
 function copyMasterNumber() {
