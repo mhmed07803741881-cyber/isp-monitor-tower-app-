@@ -611,30 +611,6 @@ let networkTowers = {
             { name: "نقطة بث (AP)", ip: "10.73.228.9", type: "MikroTik", ssid: "Ali", ping: "85.4 ms", signal: "-", conn: "-", lan: "1000 Mbps - كامل", clients: 8 },
             { name: "نقطة بث (AP)", ip: "10.73.228.11", type: "MikroTik", ssid: "AliEarthlink", ping: "88.3 ms", signal: "-", conn: "-", lan: "1000 Mbps - كامل", clients: 7 }
         ]
-    },
-    "hilla53": {
-        desc: "محطة فرعية",
-        status: "5/5",
-        ip: "10.73.229.1",
-        devices: [
-            { name: "نقطة بث (AP)", ip: "10.73.229.2", type: "MikroTik", ssid: "Ali-53", ping: "22.1 ms", signal: "-55 dBm", conn: "100%", lan: "1000 Mbps - كامل", clients: 12 }
-        ]
-    },
-    "muhh2": {
-        desc: "قرية الحسين",
-        status: "6/6",
-        ip: "10.73.230.1",
-        devices: [
-            { name: "نقطة بث (AP)", ip: "10.73.230.2", type: "Ubiquiti", ssid: "Ali-Muhh", ping: "35.4 ms", signal: "-62 dBm", conn: "98%", lan: "100 Mbps - كامل", clients: 5 }
-        ]
-    },
-    "Hilla 51a": {
-        desc: "توسعة السورة",
-        status: "10/10",
-        ip: "10.73.231.1",
-        devices: [
-            { name: "نقطة بث (AP)", ip: "10.73.231.2", type: "Mimosa", ssid: "Ali-Turbo", ping: "14.2 ms", signal: "-48 dBm", conn: "100%", lan: "1000 Mbps - كامل", clients: 15 }
-        ]
     }
 };
 
@@ -648,17 +624,6 @@ let currentSubId = null;
 let selectedRenewId = null;
 let activeTargetTicketSubName = null;
 let lastTicketCount = 0;
-
-function formatTimeTo12Hour(time24) {
-    if (!time24) return '12:00 ص';
-    let parts = time24.split(':');
-    let hours = parseInt(parts[0], 10);
-    let minutes = parts[1] || '00';
-    let ampm = hours >= 12 ? 'م' : 'ص';
-    hours = hours % 12;
-    hours = hours ? hours : 12;
-    return `${hours}:${minutes} ${ampm}`;
-}
 
 db.ref('ali_isp_subscribers').on('value', (snapshot) => {
     const data = snapshot.val();
@@ -716,7 +681,6 @@ function checkInitialVpnStatusUI() {
     }
 }
 
-// 📂 فتح نافذة استيراد ملف الـ VPN
 function openVpnFileImportModal() {
     document.getElementById('vpnUserCred').value = localStorage.getItem('ali_vpn_username') || '';
     document.getElementById('vpnPassCred').value = localStorage.getItem('ali_vpn_password') || '';
@@ -750,7 +714,6 @@ function saveVpnCredentials() {
     closeVpnFileImportModal();
 }
 
-// 🌐 ربط VPN أيرثلنك وتخزين حالته دائمياً
 function connectEarthlinkVpn() {
     let savedUser = localStorage.getItem('ali_vpn_username');
     if(!savedUser) {
@@ -973,7 +936,6 @@ function filterDeviceType(devType) {
     tbody.innerHTML = html;
 }
 
-// استيراد الملفات
 function handleFileImport(event) {
     let file = event.target.files[0];
     if(!file) return;
@@ -1137,13 +1099,14 @@ function sendBatchExpiringTomorrowAlerts() {
     }
 }
 
+// 🔔 مراقبة التكتات والرسائل الواردة من تطبيق المشترك بشكل فوري وتفعيل التنبيه الصوتي
 setInterval(() => {
     let allTickets = JSON.parse(localStorage.getItem('all_client_tickets')) || [];
     if(allTickets.length > lastTicketCount) {
         lastTicketCount = allTickets.length;
         playAdminSound();
         document.getElementById('ticketBadgeCount').innerHTML = `<span class="badge-alert">${allTickets.length}</span>`;
-        addAdminNotification("🎫 وصل تكت أو رسالة جديدة من أحد المشتركين!");
+        addAdminNotification("🎫 وصل تكت أو رسالة جديدة من أحد المشتركين عبر التطبيق!");
     }
     if(document.getElementById('ticketsManagerModal').style.display === 'flex') {
         renderTicketsManagerList();
@@ -1832,7 +1795,6 @@ function confirmPartialPayment() {
     }
 }
 
-// دالة توليد نص رسالة الوصل والتجديد للواتساب (تتضمن التسديد، وتفعيل الاشتراك، وتواريخ التفعيل والانتهاء فقط بدون وقت)
 function generateReceiptMessageText(sub, paidAmount, originalAmount, remainingAmount, payStatusTitle) {
     let receiptNo = 'RCP-' + Math.floor(100000 + Math.random() * 900000);
     return `*تحية طيبة عزيزي المشترك*\nيوزر الاشتراك : ${sub.username || sub.name}\nاسم المشترك : ${sub.name}\n\n✅ *تم تسديد المبلغ وتفعيل اشتراكك بنجاح*\n• المبلغ المستلم : ${paidAmount.toLocaleString()} د.ع\n• تاريخ التفعيل : ${sub.startDate}\n• تاريخ الانتهاء : ${sub.endDate}\n\nرقم الوصل : ${receiptNo}\n*(هذه الرسالة يتم ارسالها تلقائيا من النظام)*\n\n*ملاحظة*\n*(يمكنك تفعيل الاشتراك قبل الانتهاء ويتم إضافة الايام المتبقية الى الاشتراك)*\n\n*يمكنك تسديد الاشتراك عن طريق* \n*(بطاقة كي كارد)*\n*رقم سوبر كي (07724850876 )*\n*رقم تحويل بطاقة كي كارد (3627952355 )*\n\nرقم المكتب : 07724850876 📱\nالمكتب : محاويل - قرية السورة`;
