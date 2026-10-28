@@ -294,7 +294,6 @@ window.onload = function() {
     }
 };
 
-// الاستماع السحابي المباشر لردود الإدارة وتحديث الشات الفوري للمشترك
 let lastCloudChatLength = 0;
 function listenToCloudChat(subName) {
     let safeKey = subName.replace(/[.#$\[\]]/g, "_");
@@ -617,14 +616,12 @@ function submitCloudTicket() {
     
     let safeKey = foundSubscriber.name.replace(/[.#$\[\]]/g, "_");
     
-    // 1. حفظ الرسالة في شات المشترك السحابي
     db.ref('ali_cloud_chats/' + safeKey).once('value', (snapshot) => {
         let chats = snapshot.val() || [];
         chats.push({ sender: foundSubscriber.name, text: `[${ticketNum}] ${msg}` });
         db.ref('ali_cloud_chats/' + safeKey).set(chats);
     });
 
-    // 2. إرسال التكت إلى جدول التكتات العام ليتנبه لوحة التحكم الرئيسية فوراً
     let newTicketRef = db.ref('ali_isp_tickets').push();
     newTicketRef.set({
         subName: foundSubscriber.name,
