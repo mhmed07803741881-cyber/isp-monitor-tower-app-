@@ -33,7 +33,9 @@
         h2 { color: #38bdf8; text-align: center; margin-top: 0; font-size: 17px; }
         p { color: #94a3b8; font-size: 11px; text-align: center; margin-bottom: 15px; }
         input, textarea, select { width: 100%; padding: 10px; margin: 6px 0 12px 0; background: #0d1526; border: 1px solid #1e293b; color: white; border-radius: 8px; box-sizing: border-box; font-size: 13px; text-align: center; }
-        textarea { text-align: right; }
+        
+        /* إصلاح حقل الكتابة للتكتات لضمان التفاعل والكتابة بدون مشاكل */
+        textarea { text-align: right; user-select: text; -webkit-user-select: text; pointer-events: auto !important; }
         
         .checkbox-container { display: flex; align-items: center; justify-content: right; font-size: 11px; color: #cbd5e1; margin-bottom: 12px; gap: 6px; cursor: pointer; }
         .checkbox-container input { width: auto; margin: 0; cursor: pointer; accent-color: #38bdf8; }
@@ -54,8 +56,8 @@
         .info-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; border-bottom: 1px solid #1e293b55; padding-bottom: 4px; }
         .info-label { color: #94a3b8; }
         .info-val { font-weight: bold; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; z-index: 99999; }
-        .modal-content { background: #131d31; padding: 20px; border-radius: 12px; width: 90%; max-width: 340px; border: 1px solid #f59e0b; box-sizing: border-box; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; z-index: 99999; pointer-events: auto; }
+        .modal-content { background: #131d31; padding: 20px; border-radius: 12px; width: 90%; max-width: 340px; border: 1px solid #f59e0b; box-sizing: border-box; position: relative; z-index: 100000; }
         .support-phones { background: #0d1526; border: 1px solid #1e293b; padding: 8px; border-radius: 8px; text-align: center; font-size: 11px; margin-top: 15px; color: #38bdf8; }
         
         .router-box-item { background: #0d1526; border: 1px solid #38bdf8; padding: 10px; border-radius: 8px; margin-bottom: 8px; text-align: center; }
@@ -443,26 +445,22 @@ function closeAgelModal() {
     document.getElementById('agelModal').style.display = 'none';
 }
 
-// تعديل دالة طلب الأجل لترسل إشعاراً داخل البرنامج + رسالة واتساب
 function submitAgelRequest() {
     if(!foundSubscriber) return;
 
     let selectedPkg = document.getElementById('agelPkgSelect').value;
     let selectedPrice = document.getElementById('agelPriceInput').value;
 
-    // 1. إنشاء نص التنبيه وإضافته لمركز إشعارات البرنامج لتظهر داخل التطبيق وتصدر صوت تنبيه
     let notifText = `${new Date().toLocaleTimeString()} - ⏳ طلب تفعيل مؤجل (أجل) جديد من المشترك: ${foundSubscriber.name} | يوزر: ${foundSubscriber.username} | الباقة: ${selectedPkg} | المبلغ: ${selectedPrice} د.ع`;
     
     let notifs = JSON.parse(localStorage.getItem('ali_admin_notifications')) || [];
     notifs.push(notifText);
     localStorage.setItem('ali_admin_notifications', JSON.stringify(notifs));
 
-    // تشغيل صوت التنبيه وتأكيد الطلب
     playNotificationSound();
     closeAgelModal();
     alert("✅ تم إرسال طلب التفعيل المؤجل (الأجل) وإشعار الإدارة داخل البرنامج بنجاح!");
 
-    // 2. إرسال الرسالة التفصيلية عبر الواتساب إلى رقم المكتب
     let agelMsg = `⏳ طلب تفعيل مؤجل (أجل) جديد 📡\n\n- اسم المشترك: ${foundSubscriber.name}\n- يوزر الاشتراك: ${foundSubscriber.username}\n- رقم الهاتف: ${foundSubscriber.phone}\n- نوع الاشتراك المطلوب: ${selectedPkg}\n- مبلغ الاشتراك: ${selectedPrice} د.ع\n- تاريخ الانتهاء الحالي: ${foundSubscriber.endDate || 'غير محدد'}\n\nيرجى التفضل بالموافقة وتفعيل الحساب. شكراً لكم.`;
     
     window.open(`https://api.whatsapp.com/send?phone=${whatsappTargetPhone}&text=${encodeURIComponent(agelMsg)}`, '_blank');
