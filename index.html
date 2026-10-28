@@ -1174,7 +1174,7 @@ function sendBroadcastToAll() {
     let msg = document.getElementById('broadcastMsgText').value.trim();
     if(!msg) { alert("يرجى كتابة نص الإشعار العام"); return; }
 
-    // 1. إرسال وتخزين الإشعار سحابياً في قاعدة بيانات Firebase ليصله الفوري عبر الـ Realtime Listener
+    // 1. حفظ وتخزين الإشعار سحابياً في Firebase لكي يصل فوراً لجميع المشتركين
     db.ref('ali_app_broadcast_msg').set(msg);
 
     // 2. تخزينها محلياً للأدمن
@@ -1185,7 +1185,7 @@ function sendBroadcastToAll() {
     closeBroadcastModal();
     document.getElementById('broadcastMsgText').value = '';
 
-    // إرسال الإشعار عبر الواتساب لمن لديهم أرقام هاتف مسجلة (اختياري كما في كودك)
+    // إرسال الإشعار عبر الواتساب لمن لديهم أرقام هواتف مسجلة
     if(confirm("هل تريد أيضاً إرسال هذا الإشعار عبر الواتساب لكل المشتركين المسجلة أرقامهم؟")) {
         let phonesList = subs.filter(s => s.phone && s.phone.trim() !== "");
         phonesList.forEach((s, index) => {
@@ -1197,6 +1197,8 @@ function sendBroadcastToAll() {
             }, index * 1200);
         });
     }
+}
+
 function openTicketsManagerModal() {
     db.ref('ali_isp_tickets').once('value', (snapshot) => {
         renderTicketsManagerListFromCloud(snapshot.val() || {});
