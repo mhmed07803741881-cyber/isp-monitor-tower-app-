@@ -651,6 +651,9 @@ db.ref('ali_isp_tickets').on('value', (snapshot) => {
         }
         lastTicketCount = ticketsArray.length;
         document.getElementById('ticketBadgeCount').innerHTML = `<span class="badge-alert">${ticketsArray.length}</span>`;
+    } else if(ticketsArray.length > 0 && lastTicketCount === 0) {
+        lastTicketCount = ticketsArray.length;
+        document.getElementById('ticketBadgeCount').innerHTML = `<span class="badge-alert">${ticketsArray.length}</span>`;
     }
     
     if(document.getElementById('ticketsManagerModal').style.display === 'flex') {
