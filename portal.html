@@ -16,6 +16,14 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <style>
+        /* إخفاء إعلانات التذييل في أسفل الشاشة نهائياً (مثل AppsGeyser) */
+        a[href*="AppGeyser"], a[href*="appgeyser"], div[style*="position: fixed; bottom: 0;"], img[src*="AppGeyser"], iframe[src*="AppGeyser"] {
+            display: none !important;
+            visibility: hidden !important;
+            height: 0 !important;
+            max-height: 0 !important;
+        }
+
         body { background-color: #0d1526; color: #fff; font-family: Tahoma, sans-serif; margin: 0; padding: 15px; box-sizing: border-box; display: flex; justify-content: center; align-items: center; min-height: 100vh; flex-direction: column; }
         .top-nav { width: 100%; max-width: 380px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .notif-bell-btn { background: #131d31; color: #f59e0b; border: 1px solid #1e293b; padding: 6px 10px; border-radius: 8px; font-size: 12px; cursor: pointer; position: relative; }
@@ -447,16 +455,38 @@ function submitAgelRequest() {
 
     let selectedPkg = document.getElementById('agelPkgSelect').value;
     let selectedPrice = document.getElementById('agelPriceInput').value;
+    let ticketNum = `#AGEL-${Math.floor(1000 + Math.random() * 9000)}`;
+    let msgContent = `طلب تفعيل مؤجل (أجل) - الباقة: ${selectedPkg} - المبلغ: ${selectedPrice} د.ع`;
 
     let notifText = `${new Date().toLocaleTimeString()} - ⏳ طلب تفعيل مؤجل (أجل) جديد من المشترك: ${foundSubscriber.name} | يوزر: ${foundSubscriber.username} | الباقة: ${selectedPkg} | المبلغ: ${selectedPrice} د.ع`;
     
-    let notifs = JSON.parse(localStorage.getItem('ali_admin_notifications')) || [];
-    notifs.push(notifText);
-    localStorage.setItem('ali_admin_notifications', JSON.stringify(notifs));
+    // 1. إرسال الإشعار سحابياً إلى جدول الإشعارات العامة
+    let newNotifRef = db.ref('ali_admin_notifications_cloud').push();
+    newNotifRef.set({
+        text: notifText,
+        timestamp: Date.now()
+    });
+
+    // 2. إرسال الطلب كـ تكت سحابي ليظهر في قائمة التكتات بالبرنامج مع جرس التنبيه
+    let newTicketRef = db.ref('ali_isp_tickets').push();
+    newTicketRef.set({
+        subName: foundSubscriber.name,
+        ticketNum: ticketNum,
+        message: msgContent,
+        timestamp: Date.now()
+    });
+
+    // 3. حفظ الرسالة في شات المشترك السحابي لكي تظهر له في سجله
+    let safeKey = foundSubscriber.name.replace(/[.#$\[\]]/g, "_");
+    db.ref('ali_cloud_chats/' + safeKey).once('value', (snapshot) => {
+        let chats = snapshot.val() || [];
+        chats.push({ sender: foundSubscriber.name, text: `[${ticketNum}] ${msgContent}` });
+        db.ref('ali_cloud_chats/' + safeKey).set(chats);
+    });
 
     playNotificationSound();
     closeAgelModal();
-    alert("✅ تم إرسال طلب التفعيل المؤجل (الأجل) وإشعار الإدارة داخل البرنامج بنجاح!");
+    alert("✅ تم إرسال طلب التفعيل المؤجل (الأجل) سحابياً إلى الإدارة وتنبيه التطبيق بنجاح!");
 
     let agelMsg = `⏳ طلب تفعيل مؤجل (أجل) جديد 📡\n\n- اسم المشترك: ${foundSubscriber.name}\n- يوزر الاشتراك: ${foundSubscriber.username}\n- رقم الهاتف: ${foundSubscriber.phone}\n- نوع الاشتراك المطلوب: ${selectedPkg}\n- مبلغ الاشتراك: ${selectedPrice} د.ع\n- تاريخ الانتهاء الحالي: ${foundSubscriber.endDate || 'غير محدد'}\n\nيرجى التفضل بالموافقة وتفعيل الحساب. شكراً لكم.`;
     
