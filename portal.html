@@ -371,7 +371,6 @@ function showSubscriberDashboard() {
     let cleanPkgKey = rawPkg.toLowerCase().trim();
     document.getElementById('cPkg').innerText = pkgMap[cleanPkgKey] || rawPkg;
     
-    // ضبط القائمة والأسعار الافتراضية
     if(['economy', 'plus', 'standard', 'turbo'].includes(cleanPkgKey)) {
         document.getElementById('agelPkgSelect').value = cleanPkgKey.charAt(0).toUpperCase() + cleanPkgKey.slice(1);
         document.getElementById('agelPriceInput').value = packagePrices[cleanPkgKey] || 50000;
@@ -444,24 +443,28 @@ function closeAgelModal() {
     document.getElementById('agelModal').style.display = 'none';
 }
 
+// تعديل دالة طلب الأجل لترسل إشعاراً داخل البرنامج + رسالة واتساب
 function submitAgelRequest() {
     if(!foundSubscriber) return;
 
     let selectedPkg = document.getElementById('agelPkgSelect').value;
     let selectedPrice = document.getElementById('agelPriceInput').value;
 
-    // ملاحظة: لا يتم تغيير حالة الدفع (payStatus) في السيرفر هنا، تبقى كما هي لحين تفعيلها من لوحة الأدمن الرئيسية.
-
-    // إرسال إشعار فوري للوحة الأدمن الرئيسية عبر تخزين محلي وتنبيهات
+    // 1. إنشاء نص التنبيه وإضافته لمركز إشعارات البرنامج لتظهر داخل التطبيق وتصدر صوت تنبيه
+    let notifText = `${new Date().toLocaleTimeString()} - ⏳ طلب تفعيل مؤجل (أجل) جديد من المشترك: ${foundSubscriber.name} | يوزر: ${foundSubscriber.username} | الباقة: ${selectedPkg} | المبلغ: ${selectedPrice} د.ع`;
+    
     let notifs = JSON.parse(localStorage.getItem('ali_admin_notifications')) || [];
-    notifs.push(`${new Date().toLocaleTimeString()} - ⏳ طلب تفعيل مؤجل (أجل) جديد من المشترك: ${foundSubscriber.name} | يوزر: ${foundSubscriber.username} | الباقة: ${selectedPkg} | المبلغ: ${selectedPrice} د.ع`);
+    notifs.push(notifText);
     localStorage.setItem('ali_admin_notifications', JSON.stringify(notifs));
 
+    // تشغيل صوت التنبيه وتأكيد الطلب
+    playNotificationSound();
     closeAgelModal();
-    alert("✅ تم إرسال طلب التفعيل المؤجل (الأجل) وإشعار الإدارة بنجاح!");
+    alert("✅ تم إرسال طلب التفعيل المؤجل (الأجل) وإشعار الإدارة داخل البرنامج بنجاح!");
 
-    // توجيه المشترك إلى الواتساب على الرقم 07818627764 مع كافة التفاصيل
+    // 2. إرسال الرسالة التفصيلية عبر الواتساب إلى رقم المكتب
     let agelMsg = `⏳ طلب تفعيل مؤجل (أجل) جديد 📡\n\n- اسم المشترك: ${foundSubscriber.name}\n- يوزر الاشتراك: ${foundSubscriber.username}\n- رقم الهاتف: ${foundSubscriber.phone}\n- نوع الاشتراك المطلوب: ${selectedPkg}\n- مبلغ الاشتراك: ${selectedPrice} د.ع\n- تاريخ الانتهاء الحالي: ${foundSubscriber.endDate || 'غير محدد'}\n\nيرجى التفضل بالموافقة وتفعيل الحساب. شكراً لكم.`;
+    
     window.open(`https://api.whatsapp.com/send?phone=${whatsappTargetPhone}&text=${encodeURIComponent(agelMsg)}`, '_blank');
 }
 
