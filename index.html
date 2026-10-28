@@ -312,11 +312,11 @@
     </div>
 </div>
 
-<!-- نافذة إدارة التكتات والردود -->
+<!-- نافذة إدارة التكتات السحابية والردود -->
 <div id="ticketsManagerModal" class="modal">
     <div class="modal-content" style="border-color: #ec4899; max-width: 420px;">
-        <h3 style="margin-top:0; color:#ec4899; text-align:center;">🎫 إدارة تكتات المشتركين والرد عليها</h3>
-        <div id="ticketsListContainer" style="max-height: 250px; overflow-y: auto; margin-bottom: 10px; background:#0d1526; padding:8px; border-radius:6px; font-size:11px;">جاري التحميل...</div>
+        <h3 style="margin-top:0; color:#ec4899; text-align:center;">🎫 إدارة تكتات المشتركين والرد عليها (سحابي)</h3>
+        <div id="ticketsListContainer" style="max-height: 250px; overflow-y: auto; margin-bottom: 10px; background:#0d1526; padding:8px; border-radius:6px; font-size:11px;">جاري سحب التكتات السحابية...</div>
         <button class="cancel-btn" onclick="closeTicketsManagerModal()" style="background:#ec4899; color:#fff; font-weight:bold;">إغلاق</button>
     </div>
 </div>
@@ -637,6 +637,25 @@ db.ref('ali_isp_deleted_subs').on('value', (snapshot) => {
     const data = snapshot.val();
     deletedSubs = data ? Object.values(data) : [];
     document.getElementById('deletedCount').innerText = deletedSubs.length;
+});
+
+// 🌐 الاستماع السحابي المباشر للتكتات وإصدار التنبيه الصوتي فور وصول رسالة المشترك
+db.ref('ali_isp_tickets').on('value', (snapshot) => {
+    let ticketsData = snapshot.val() || {};
+    let ticketsArray = Object.values(ticketsData);
+    
+    if(ticketsArray.length > lastTicketCount) {
+        if(lastTicketCount > 0) {
+            playAdminSound();
+            addAdminNotification("🎫 وصل تكت جديد من أحد المشتركين عبر السيرفر!");
+        }
+        lastTicketCount = ticketsArray.length;
+        document.getElementById('ticketBadgeCount').innerHTML = `<span class="badge-alert">${ticketsArray.length}</span>`;
+    }
+    
+    if(document.getElementById('ticketsManagerModal').style.display === 'flex') {
+        renderTicketsManagerListFromCloud(ticketsData);
+    }
 });
 
 db.ref('ali_network_towers_clean').on('value', (snapshot) => {
@@ -1099,23 +1118,6 @@ function sendBatchExpiringTomorrowAlerts() {
     }
 }
 
-// 🔔 مراقبة التكتات والرسائل الواردة من تطبيق المشترك بشكل فوري وتفعيل التنبيه الصوتي
-setInterval(() => {
-    let allTickets = JSON.parse(localStorage.getItem('all_client_tickets')) || [];
-    if(allTickets.length > lastTicketCount) {
-        lastTicketCount = allTickets.length;
-        playAdminSound();
-        document.getElementById('ticketBadgeCount').innerHTML = `<span class="badge-alert">${allTickets.length}</span>`;
-        addAdminNotification("🎫 وصل تكت أو رسالة جديدة من أحد المشتركين عبر التطبيق!");
-    }
-    if(document.getElementById('ticketsManagerModal').style.display === 'flex') {
-        renderTicketsManagerList();
-    }
-    if(document.getElementById('replyTicketModal').style.display === 'flex' && activeTargetTicketSubName) {
-        refreshAdminChat(activeTargetTicketSubName);
-    }
-}, 2000);
-
 function playAdminSound() {
     let sound = document.getElementById('adminNotifSound');
     if(sound) {
@@ -1190,20 +1192,24 @@ function sendBroadcastToAll() {
 }
 
 function openTicketsManagerModal() {
-    renderTicketsManagerList();
+    db.ref('ali_isp_tickets').once('value', (snapshot) => {
+        renderTicketsManagerListFromCloud(snapshot.val() || {});
+    });
+    document.getElementById('ticketBadgeCount').innerHTML = '';
     document.getElementById('ticketsManagerModal').style.display = 'flex';
 }
 function closeTicketsManagerModal() { document.getElementById('ticketsManagerModal').style.display = 'none'; }
 
-function renderTicketsManagerList() {
+function renderTicketsManagerListFromCloud(ticketsData) {
     let container = document.getElementById('ticketsListContainer');
-    let allTickets = JSON.parse(localStorage.getItem('all_client_tickets')) || [];
+    let keys = Object.keys(ticketsData || {});
 
-    if(allTickets.length === 0) {
+    if(keys.length === 0) {
         container.innerHTML = '<div style="text-align:center; color:#64748b; padding:20px;">لا توجد تكتات أو رسائل جديدة من المشتركين.</div>';
     } else {
         let html = '';
-        allTickets.slice().reverse().forEach((t, idx) => {
+        keys.reverse().forEach(k => {
+            let t = ticketsData[k];
             html += `
                 <div style="background:#0d1526; border:1px solid #1e293b; padding:8px; border-radius:6px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
                     <div>
@@ -1230,16 +1236,19 @@ function closeReplyModal() {
 }
 
 function refreshAdminChat(subName) {
-    let chats = JSON.parse(localStorage.getItem(`ticket_chat_${subName}`)) || [];
-    let chatHtml = chats.length === 0 ? "لا توجد رسائل سابقة في هذا التكت." : chats.map(c => `
-        <div style="margin-bottom:6px; border-bottom:1px solid #1e293b; padding-bottom:4px;">
-            <b style="color:${c.sender === subName ? '#38bdf8' : '#ec4899'}">${c.sender}:</b> ${c.text}
-        </div>
-    `).join('');
-    
-    let box = document.getElementById('replyChatBox');
-    box.innerHTML = chatHtml;
-    box.scrollTop = box.scrollHeight;
+    let safeKey = subName.replace(/[.#$\[\]]/g, "_");
+    db.ref('ali_cloud_chats/' + safeKey).on('value', (snapshot) => {
+        let chats = snapshot.val() || [];
+        let chatHtml = chats.length === 0 ? "لا توجد رسائل سابقة في هذا التكت." : chats.map(c => `
+            <div style="margin-bottom:6px; border-bottom:1px solid #1e293b; padding-bottom:4px;">
+                <b style="color:${c.sender === subName ? '#38bdf8' : '#ec4899'}">${c.sender}:</b> ${c.text}
+            </div>
+        `).join('');
+        
+        let box = document.getElementById('replyChatBox');
+        box.innerHTML = chatHtml;
+        box.scrollTop = box.scrollHeight;
+    });
 }
 
 function sendAdminReply() {
@@ -1247,12 +1256,15 @@ function sendAdminReply() {
     let replyText = document.getElementById('adminReplyText').value.trim();
     if(!replyText) { alert("يرجى كتابة نص الرد"); return; }
 
-    let chats = JSON.parse(localStorage.getItem(`ticket_chat_${activeTargetTicketSubName}`)) || [];
-    chats.push({ sender: "مهندس علي (الدعم)", text: replyText });
-    localStorage.setItem(`ticket_chat_${activeTargetTicketSubName}`, JSON.stringify(chats));
+    let safeKey = activeTargetTicketSubName.replace(/[.#$\[\]]/g, "_");
+    
+    db.ref('ali_cloud_chats/' + safeKey).once('value', (snapshot) => {
+        let chats = snapshot.val() || [];
+        chats.push({ sender: "مهندس علي (الدعم)", text: replyText });
+        db.ref('ali_cloud_chats/' + safeKey).set(chats);
+    });
 
     document.getElementById('adminReplyText').value = '';
-    refreshAdminChat(activeTargetTicketSubName);
     alert("✅ تم إرسال الرد إلى تطبيق المشترك بنجاح!");
 }
 
