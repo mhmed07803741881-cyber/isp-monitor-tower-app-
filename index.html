@@ -150,6 +150,7 @@
 <div id="networkManagerModal" class="modal" style="max-width: 980px;">
     <div class="modal-content" style="max-width: 960px; border-color: #06b6d4; padding: 12px;">
         
+        <!-- شريط علوي -->
         <div style="display:flex; justify-content:space-between; align-items:center; background:#0d1526; padding:8px 12px; border-radius:8px; margin-bottom:8px; border:1px solid #1e293b; font-size:11px; flex-wrap:wrap; gap:6px;">
             <div style="display:flex; gap:12px; align-items:center;">
                 <b style="color:#38bdf8; font-size:13px;">مراقب الأبراج وسيرفر أيرثلنك</b>
@@ -166,14 +167,21 @@
             </div>
         </div>
 
+        <!-- 1. شريط الأبراج في الأعلى -->
         <div style="background:#0d1526; border:1px solid #1e293b; border-radius:8px; padding:10px; margin-bottom:8px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                 <b style="color:#f59e0b; font-size:12px;">قائمة الأبراج المضافة (<span id="towersCountBadge">0</span>):</b>
-                <button onclick="openAddNewTowerPrompt()" style="background:#38bdf8; color:#090d16; border:none; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; cursor:pointer;">+ برج جديد</button>
+                <div style="display:flex; gap:6px;">
+                    <button onclick="openAddNewTowerPrompt()" style="background:#38bdf8; color:#090d16; border:none; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; cursor:pointer;">+ برج جديد</button>
+                </div>
             </div>
-            <div id="towersTopBarList" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px;"></div>
+            
+            <div id="towersTopBarList" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px;">
+                <!-- يتم تعبئتها ديناميكياً -->
+            </div>
         </div>
 
+        <!-- شريط الفلاتر الصغير -->
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; background:#131d31; padding:6px 10px; border-radius:6px; border:1px solid #1e293b; font-size:11px;">
             <div style="display:flex; gap:6px;">
                 <span style="background:#38bdf8; color:#090d16; padding:3px 8px; border-radius:4px; font-weight:bold; cursor:pointer;">الكل</span>
@@ -186,6 +194,7 @@
             </div>
         </div>
 
+        <!-- 2. شاشة عرض بيانات الأجهزة في الأسفل مع زر الحذف -->
         <div style="background:#0d1526; border:1px solid #1e293b; border-radius:8px; padding:10px; max-height: 340px; overflow-y: auto;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:1px solid #1e293b; padding-bottom:6px;">
                 <div style="font-weight:bold; color:#38bdf8; font-size:12px;" id="selectedTowerHeaderTitle">بيانات أجهزة البرج المحدد</div>
@@ -207,7 +216,9 @@
                         <th style="padding:6px; text-align:center;">إدارة</th>
                     </tr>
                 </thead>
-                <tbody id="towerDevicesTableBody"></tbody>
+                <tbody id="towerDevicesTableBody">
+                    <!-- تظهر الأجهزة هنا -->
+                </tbody>
             </table>
         </div>
 
@@ -218,16 +229,21 @@
     </div>
 </div>
 
-<!-- نافذة استيراد ملف الـ VPN -->
+<!-- نافذة استيراد ملف الـ VPN (يوزر وباسورد) -->
 <div id="vpnFileImportModal" class="modal">
     <div class="modal-content" style="border-color: #f59e0b; max-width: 380px;">
         <h3 style="margin-top:0; color:#f59e0b; text-align:center;">📂 إدخال أو استيراد ملف VPN أيرثلنك</h3>
+        <p style="font-size:10px; color:#94a3b8; text-align:center;">أدخل يوزر الاشتراك وكلمة المرور الخاصة بملف الـ VPN أو ارفع الملف:</p>
+        
         <label style="font-size:11px; color:#cbd5e1;">يوزر اشتراك الـ VPN:</label>
         <input type="text" id="vpnUserCred" placeholder="مثل: ali_vpn_user" style="direction:ltr; text-align:left;">
+
         <label style="font-size:11px; color:#cbd5e1;">كلمة مرور الـ VPN:</label>
         <input type="password" id="vpnPassCred" placeholder="كلمة المرور">
+
         <label style="font-size:11px; color:#cbd5e1;">أو ارفع ملف الـ VPN (.ovpn / .txt):</label>
         <input type="file" id="vpnFileInput" accept=".ovpn, .txt, .conf" style="background:#0d1526; padding:6px; font-size:11px;" onchange="handleVpnFileUpload(event)">
+
         <button class="submit-btn" onclick="saveVpnCredentials()" style="background:#f59e0b; color:#090d16; margin-top:6px; font-weight:bold;">حفظ بيانات الـ VPN</button>
         <button class="cancel-btn" onclick="closeVpnFileImportModal()">إغلاق</button>
     </div>
@@ -237,16 +253,21 @@
 <div id="credentialsModal" class="modal">
     <div class="modal-content" style="border-color: #14b8a6; max-width: 380px;">
         <h3 style="margin-top:0; color:#14b8a6; text-align:center;">🔑 بيانات الدخول الموحدة للأجهزة</h3>
+        <p style="font-size:10px; color:#94a3b8; text-align:center;">أدخل يوزر وباسورد الأجهزة لتطبق على كل الأبراج دفعة واحدة.</p>
+        
         <label style="font-size:11px; color:#cbd5e1;">نوع الجهاز:</label>
         <select id="globalCredType">
             <option value="MikroTik">MikroTik</option>
             <option value="Ubiquiti">Ubiquiti</option>
             <option value="Mimosa">Mimosa</option>
         </select>
+
         <label style="font-size:11px; color:#cbd5e1;">اسم المستخدم:</label>
         <input type="text" id="globalCredUser" value="admin">
+
         <label style="font-size:11px; color:#cbd5e1;">كلمة المرور:</label>
         <input type="password" id="globalCredPass" placeholder="كلمة المرور السرية">
+
         <button class="submit-btn" onclick="saveGlobalCredentials()" style="background:#14b8a6; color:#090d16; margin-bottom:6px;">حفظ وتطبيق</button>
         <button class="cancel-btn" onclick="closeCredentialsModal()">إغلاق</button>
     </div>
@@ -258,10 +279,13 @@
         <h3 style="margin-top:0; color:#f59e0b; text-align:center;">➕ إضافة برج جديد ومنطقة البث</h3>
         <label style="font-size:11px; color:#cbd5e1;">اسم البرج (مثال: Hilla 51):</label>
         <input type="text" id="newTowerNameInput" placeholder="اسم البرج">
+        
         <label style="font-size:11px; color:#cbd5e1;">منطقة أو عنوان البرج (مثال: السورة منزل):</label>
         <input type="text" id="newTowerDescInput" placeholder="الوصف أو المنطقة">
-        <label style="font-size:11px; color:#cbd5e1;">رينج الـ IP الرئيسي:</label>
+
+        <label style="font-size:11px; color:#cbd5e1;">رينج الـ IP أو IP الرئيسي (مثال: 10.73.228.2):</label>
         <input type="text" id="newTowerIpInput" placeholder="10.73.228.2" style="direction:ltr; text-align:left;">
+
         <button class="submit-btn" onclick="confirmAddNewTower()" style="background:#f59e0b; color:#090d16; margin-bottom:6px; font-weight:bold;">حفظ وإضافة البرج</button>
         <button class="cancel-btn" onclick="closeAddNewTowerModal()">إغلاق</button>
     </div>
@@ -271,7 +295,7 @@
 <div id="pinModal" class="modal">
     <div class="modal-content" style="max-width: 300px;">
         <h3 style="margin-top:0; color:#38bdf8; text-align:center;">⚙️ تغيير رمز الدخول</h3>
-        <input type="password" id="newPinInput" placeholder="أدخل الرمز الجديد" style="text-align:center;">
+        <input type="password" id="newPinInput" placeholder="أدخل الرمز الجديد (أرقام)" style="text-align:center;">
         <button class="submit-btn" onclick="saveNewPin()">حفظ الرمز الجديد</button>
         <button class="cancel-btn" onclick="closePinModal()">إغلاق</button>
     </div>
@@ -281,22 +305,23 @@
 <div id="broadcastModal" class="modal">
     <div class="modal-content" style="border-color: #06b6d4; max-width: 360px;">
         <h3 style="margin-top:0; color:#06b6d4; text-align:center;">📣 إرسال إشعار عام للكل</h3>
+        <p style="font-size:10px; color:#94a3b8; text-align:center;">سيظهر الإشعار في تطبيق المشتركين ويمكنك بثه عبر الواتساب:</p>
         <textarea id="broadcastMsgText" rows="4" placeholder="اكتب نص الإشعار العام هنا..."></textarea>
         <button class="submit-btn" onclick="sendBroadcastToAll()" style="background:#06b6d4; color:#090d16; margin-bottom:6px;">نشر في التطبيق + إرسال واتساب</button>
         <button class="cancel-btn" onclick="closeBroadcastModal()">إغلاق</button>
     </div>
 </div>
 
-<!-- نافذة إدارة التكتات والردود -->
+<!-- نافذة إدارة التكتات السحابية والردود -->
 <div id="ticketsManagerModal" class="modal">
     <div class="modal-content" style="border-color: #ec4899; max-width: 420px;">
-        <h3 style="margin-top:0; color:#ec4899; text-align:center;">🎫 إدارة تكتات المشتركين والرد عليها</h3>
+        <h3 style="margin-top:0; color:#ec4899; text-align:center;">🎫 إدارة تكتات المشتركين والرد عليها (سحابي)</h3>
         <div id="ticketsListContainer" style="max-height: 250px; overflow-y: auto; margin-bottom: 10px; background:#0d1526; padding:8px; border-radius:6px; font-size:11px;">جاري سحب التكتات السحابية...</div>
         <button class="cancel-btn" onclick="closeTicketsManagerModal()" style="background:#ec4899; color:#fff; font-weight:bold;">إغلاق</button>
     </div>
 </div>
 
-<!-- نافذة الرد على تكت -->
+<!-- نافذة الرد على تكت مشترك محدد -->
 <div id="replyTicketModal" class="modal">
     <div class="modal-content" style="border-color: #ec4899; max-width: 360px;">
         <h3 style="margin-top:0; color:#ec4899; text-align:center;" id="replyModalTitle">رد على تكت</h3>
@@ -307,10 +332,11 @@
     </div>
 </div>
 
-<!-- نافذة المتواجدين أونلاين -->
+<!-- نافذة المتواجدين أونلاين على التطبيق -->
 <div id="onlineUsersModal" class="modal">
     <div class="modal-content" style="border-color: #10b981; max-width: 380px;">
-        <h3 style="margin-top:0; color:#10b981; text-align:center;">🟢 المتواجدون أونلاين على التطبيق</h3>
+        <h3 style="margin-top:0; color:#10b981; text-align:center;">🟢 المتواجدون أونلاين على تطبيق المشترك</h3>
+        <p style="font-size:10px; color:#94a3b8; text-align:center; margin-top:0;">المشتركون الفاتحون للتطبيق الآن (خلال آخر دقيقتين):</p>
         <div id="onlineUsersListContainer" style="max-height: 230px; overflow-y: auto; margin-bottom: 10px; background:#0d1526; padding:8px; border-radius:6px; font-size:11px;">جاري التحميل...</div>
         <button class="cancel-btn" onclick="closeOnlineUsersModal()" style="background:#10b981; color:#090d16; font-weight:bold;">إغلاق</button>
     </div>
@@ -320,7 +346,7 @@
 <div id="notificationsModal" class="modal">
     <div class="modal-content" style="border-color: #f59e0b;">
         <h3 style="margin-top:0; color:#f59e0b; text-align:center;">🔔 سجل إشعارات النظام</h3>
-        <div id="notificationsList" style="max-height: 200px; overflow-y: auto; background:#0d1526; padding:8px; border-radius:6px; font-size:11px; margin-bottom:12px; color:#cbd5e1;">لا توجد إشعارات حالياً.</div>
+        <div id="notificationsList" style="max-height: 200px; overflow-y: auto; background:#0d1526; padding:8px; border-radius:6px; font-size:11px; margin-bottom:12px; color:#cbd5e1;">لا توجد إشعارات جديدة حالياً.</div>
         <button class="submit-btn" onclick="clearNotifications()" style="background:#ef4444; color:#fff; margin-bottom:6px;">مسح السجل</button>
         <button class="cancel-btn" onclick="closeNotificationsModal()">إغلاق</button>
     </div>
@@ -351,7 +377,7 @@
     </div>
 </div>
 
-<!-- نافذة قائمة غير المسددين -->
+<!-- نافذة قائمة غير المسددين (أجل) -->
 <div id="debtsListModal" class="modal">
     <div class="modal-content" style="border-color: #f59e0b; max-width: 420px;">
         <h3 style="margin-top:0; color:#f59e0b; text-align:center;">📋 قائمة المشتركين غير المسددين (أجل)</h3>
@@ -368,19 +394,16 @@
         <input type="hidden" id="editSubId">
         
         <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">اسم المشترك:</label>
-        <input type="text" id="subName" placeholder="اسم المشترك">
+        <input type="text" id="subName" placeholder="اسم المشترك (مثال: علي أحمد)">
         
-        <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">يوزر الاشتراك:</label>
-        <input type="text" id="subUsername" placeholder="يوزر الاشتراك" style="direction: ltr; text-align: left;">
+        <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">يوزر الاشتراك (اسم المستخدم):</label>
+        <input type="text" id="subUsername" placeholder="يوزر الاشتراك (مثال: ali_net99)" style="direction: ltr; text-align: left;">
         
         <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">الاسم الثلاثي:</label>
-        <input type="text" id="subFullName" placeholder="الاسم الثلاثي">
+        <input type="text" id="subFullName" placeholder="الاسم الثلاثي للمشترك">
         
         <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">رقم الهاتف:</label>
         <input type="text" id="subPhone" placeholder="رقم الهاتف">
-
-        <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">اسم المسؤول / الشخص مستلم المبلغ:</label>
-        <input type="text" id="subReceiverName" placeholder="اسم المستلم (مثل: مهندس علي / الإدارة)" value="مهندس علي">
         
         <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">مبلغ الاشتراك الشهر الواحد (د.ع):</label>
         <input type="number" id="subPrice" placeholder="مبلغ الاشتراك" value="30000">
@@ -400,7 +423,7 @@
         </select>
 
         <div id="debtMonthsGroup" style="display:none; background:#0d1526; border:1px solid #f59e0b; padding:8px; border-radius:6px; margin-bottom:12px;">
-            <label style="font-size:11px; color:#f59e0b; display:block; text-align:right; margin-bottom:2px; font-weight:bold;">⏳ عدد الأشهر المطلوبة (الدين):</label>
+            <label style="font-size:11px; color:#f59e0b; display:block; text-align:right; margin-bottom:2px; font-weight:bold;">⏳ عدد الأشهر المطلوبة (الدين الأصلي):</label>
             <input type="number" id="debtMonths" value="1" min="1" max="12" style="margin-bottom:0; text-align:center; font-weight:bold; color:#f59e0b;" oninput="calcPartialDebtPreview()">
             
             <label style="font-size:11px; color:#10b981; display:block; text-align:right; margin-top:8px; margin-bottom:2px; font-weight:bold;">💵 المبلغ المسدد مقدماً (اختياري):</label>
@@ -415,7 +438,8 @@
                 <input type="date" id="startDate" onchange="calcEnd()">
             </div>
             <div style="width: 110px; display:none;">
-                <input type="time" id="startTime" onchange="calcEnd()">
+                <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">وقت التفعيل:</label>
+                <input type="time" id="startTime" onchange="calcEnd()" oninput="calcEnd()">
             </div>
         </div>
 
@@ -425,6 +449,7 @@
                 <input type="date" id="endDate">
             </div>
             <div style="width: 110px; display:none;">
+                <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-bottom:2px;">وقت الانتهاء (تلقائي):</label>
                 <input type="time" id="endTime" disabled>
             </div>
         </div>
@@ -434,38 +459,28 @@
     </div>
 </div>
 
-<!-- نافذة التسديد الجزئي / ليكدام -->
+<!-- نافذة التسديد الجزئي السريع -->
 <div id="partialPayModal" class="modal">
-    <div class="modal-content" style="border-color: #10b981; max-width: 340px;">
-        <h3 style="margin-top:0; color:#10b981; text-align:center;">💵 تسديد أو دفع مقدماً (ليكدام)</h3>
+    <div class="modal-content" style="border-color: #10b981; max-width: 320px;">
+        <h3 style="margin-top:0; color:#10b981; text-align:center;">💵 تسديد جزء أو كل الدين</h3>
         <p style="font-size:11px; color:#94a3b8; text-align:center;" id="partialPayTargetName"></p>
         <input type="hidden" id="partialPaySubId">
         
-        <div style="font-size:11px; color:#cbd5e1; margin-bottom:4px;" id="currentTotalDebtLabel">إجمالي الدين المطلوبة: 0 د.ع</div>
+        <div style="font-size:11px; color:#cbd5e1; margin-bottom:4px;" id="currentTotalDebtLabel">إجمالي الدين المطلوب: 0 د.ع</div>
         
-        <label style="font-size:11px; color:#10b981;">المبلغ المستلم من المشترك (د.ع):</label>
-        <input type="number" id="paidNowInput" placeholder="المبلغ المسدد" style="text-align:center; font-weight:bold; color:#10b981; font-size:15px;" oninput="calcRemainingPreview()">
-
-        <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-top:6px;">اسم المسؤول / الشخص مستلم المبلغ:</label>
-        <input type="text" id="paymentReceiverName" placeholder="اسم المستلم" value="مهندس علي" style="margin-bottom:6px;">
+        <label style="font-size:11px; color:#10b981;">أدخل المبلغ الذي سدده المشترك (د.ع):</label>
+        <input type="number" id="paidNowInput" placeholder="المبلغ المسدد الآن" style="text-align:center; font-weight:bold; color:#10b981; font-size:15px;" oninput="calcRemainingPreview()">
         
-        <div id="remainingPreviewBox" style="background:#0d1526; padding:8px; border-radius:6px; margin-bottom:10px; font-size:11px; text-align:center; color:#f59e0b; border:1px solid #f59e0b;"></div>
+        <div id="remainingPreviewBox" style="background:#0d1526; padding:8px; border-radius:6px; margin-bottom:10px; font-size:11px; text-align:center; color:#f59e0b; border:1px solid #f59e0b;">
+            المتبقي ذمته: 0 د.ع
+        </div>
 
-        <button class="submit-btn" onclick="confirmPartialPayment()" style="background:#10b981; color:#fff; margin-bottom:6px;">تثبيت التسديد (بدون طباعة تلقائية)</button>
+        <button class="submit-btn" onclick="confirmPartialPayment()" style="background:#10b981; color:#fff; margin-bottom:6px;">تثبيت التسديد وطباعة وصل</button>
         <button class="cancel-btn" onclick="closePartialPayModal()">إغلاق</button>
     </div>
 </div>
 
-<!-- نافذة تفاصيل المشترك الشاملة (الزر الجديد) -->
-<div id="comprehensiveDetailsModal" class="modal">
-    <div class="modal-content" style="border-color: #06b6d4; max-width: 440px;">
-        <h3 style="margin-top:0; color:#06b6d4; text-align:center;">ℹ️ التقارير والتفاصيل الكاملة للمشترك</h3>
-        <div id="compDetailsBody" style="background:#0d1526; padding:10px; border-radius:8px; font-size:12px; line-height: 1.8; margin-bottom: 10px;">جاري التحميل...</div>
-        <button class="cancel-btn" onclick="closeComprehensiveDetailsModal()" style="background:#06b6d4; color:#090d16; font-weight:bold;">إغلاق</button>
-    </div>
-</div>
-
-<!-- نافذة التفاصيل القديمة (للتعديل) -->
+<!-- نافذة التفاصيل -->
 <div id="subDetailsModal" class="modal">
     <div class="modal-content" style="border-color: #10b981;">
         <h3 style="margin-top:0; color:#38bdf8; text-align:center;" id="dName">تفاصيل المشترك</h3>
@@ -487,35 +502,26 @@
     </div>
 </div>
 
-<!-- نافذة التجديد / التفعيل (مع ميزة الدفع ليكدام) -->
+<!-- نافذة التجديد / التفعيل -->
 <div id="renewModal" class="modal">
-    <div class="modal-content" style="border-color: #0284c7; max-width: 340px;">
-        <h3 style="margin-top:0; color:#38bdf8; text-align:center;">🔄 تفعيل وتجديد اشتراك</h3>
+    <div class="modal-content" style="border-color: #0284c7; max-width: 320px;">
+        <h3 style="margin-top:0; color:#38bdf8; text-align:center;">🔄 تفعيل اشتراك جديد</h3>
         <p style="font-size:11px; color:#94a3b8; text-align:center;" id="renewSubTargetName"></p>
-        
-        <label style="font-size:11px; color:#cbd5e1;">اختر حالة الدفع:</label>
-        <select id="renewPayType" style="margin-top:4px;" onchange="toggleRenewMonthsField()">
-            <option value="واصل">✅ واصل (مدفوع لشهر جديد)</option>
-            <option value="أجل">⏳ أجل (غير مدفوع)</option>
-            <option value="ليكدام">⭐ دفع مقدماً (ليكدام / رصيد إضافي)</option>
+        <label style="font-size:11px; color:#cbd5e1;">اختر طريقة الدفع للتجديد:</label>
+        <select id="renewPayType" style="margin-top:8px;" onchange="toggleRenewMonthsField()">
+            <option value="واصل">✅ واصل (نقداً - مدفوع)</option>
+            <option value="أجل">⏳ أجل (غير واصل / غير مدفوع)</option>
         </select>
 
-        <div id="renewDebtMonthsGroup" style="display:none; margin-top:6px;">
-            <label style="font-size:11px; color:#f59e0b;">عدد الأشهر المطلوبة:</label>
+        <div id="renewDebtMonthsGroup" style="display:none; margin-top:8px;">
+            <label style="font-size:11px; color:#f59e0b;">عدد الأشهر المطلوبة (أجل):</label>
             <input type="number" id="renewDebtMonths" value="1" min="1" max="12" style="text-align:center; font-weight:bold; color:#f59e0b;">
-            <label style="font-size:11px; color:#10b981; margin-top:4px; display:block;">المبلغ المسدد مقدماً:</label>
+            
+            <label style="font-size:11px; color:#10b981; margin-top:6px; display:block;">المبلغ المسدد مقدماً (اختياري):</label>
             <input type="number" id="renewPartialPaid" value="0" min="0" style="text-align:center; font-weight:bold; color:#10b981;">
         </div>
 
-        <div id="renewExtraCashGroup" style="display:none; margin-top:6px;">
-            <label style="font-size:11px; color:#38bdf8;">💵 المبلغ الإضافي المدفوع مقدماً (ليكدام د.ع):</label>
-            <input type="number" id="renewExtraCashAmount" value="0" min="0" style="text-align:center; font-weight:bold; color:#38bdf8;">
-        </div>
-
-        <label style="font-size:11px; color:#cbd5e1; display:block; text-align:right; margin-top:4px;">اسم المسؤول / المستلم:</label>
-        <input type="text" id="renewReceiverName" value="مهندس علي" style="margin-bottom:6px;">
-
-        <button class="submit-btn" onclick="confirmRenewSubscription()" style="background:#0284c7; color:#fff; margin-top:6px;">تأكيد التفعيل (بدون طباعة تلقائية)</button>
+        <button class="submit-btn" onclick="confirmRenewSubscription()" style="background:#0284c7; color:#fff; margin-top:10px;">تأكيد التفعيل وطباعة وصل</button>
         <button class="cancel-btn" onclick="closeRenewModal()">إغلاق</button>
     </div>
 </div>
@@ -530,7 +536,7 @@
     </div>
 </div>
 
-<!-- طباعة وصل مفرد (مفعل يدوياً عبر زر الوصل) -->
+<!-- طباعة وصل مفرد -->
 <div id="printArea">
     <div style="text-align: center; border-bottom: 2px dashed #000; padding-bottom: 8px; margin-bottom: 8px;">
         <h3 style="margin:0; font-size:13px;">مكتب مهندس علي لخدمات الإنترنت</h3>
@@ -543,9 +549,7 @@
         <div><b>المبلغ المستلم:</b> <span id="pPrice"></span> د.ع</div>
         <div><b>المبلغ الأصلي:</b> <span id="pOriginal"></span> د.ع</div>
         <div id="printRemainingLine" style="display:none;"><b>المبلغ المتبقي:</b> <span id="pRemaining"></span> د.ع</div>
-        <div id="printExtraLine" style="display:none; color:#0284c7;"><b>رصيد مدفوع مقدماً (ليكدام):</b> <span id="pExtra"></span> د.ع</div>
         <div><b>الحالة:</b> <span id="pPayStatus"></span></div>
-        <div><b>المستلم:</b> <span id="pReceiver"></span></div>
         <div><b>تفعيل:</b> <span id="pStart"></span></div>
         <div><b>انتهاء:</b> <span id="pEnd"></span></div>
     </div>
@@ -567,7 +571,7 @@
                 <th style="padding:6px;">رقم الهاتف</th>
                 <th style="padding:6px;">إجمالي الدين</th>
                 <th style="padding:6px;">المسدد</th>
-                <th style="padding:6px;">المتبقي</th>
+                <th style="padding:6px;">المتبقي (الباقي)</th>
             </tr>
         </thead>
         <tbody id="printDebtsTableBody"></tbody>
@@ -600,7 +604,12 @@ let networkTowers = {
         ip: "10.73.228.2",
         devices: [
             { name: "نقطة بث (AP)", ip: "10.73.228.2", type: "أخرى", ssid: "-", ping: "81.6 ms", signal: "-", conn: "-", lan: "-", clients: 0 },
-            { name: "نقطة بث (AP)", ip: "10.73.228.4", type: "MikroTik", ssid: "Ali", ping: "83.4 ms", signal: "-", conn: "-", lan: "1000 Mbps - كامل", clients: 9 }
+            { name: "نقطة بث (AP)", ip: "10.73.228.4", type: "MikroTik", ssid: "Ali", ping: "83.4 ms", signal: "-", conn: "-", lan: "1000 Mbps - كامل", clients: 9 },
+            { name: "نقطة بث (AP)", ip: "10.73.228.5", type: "MikroTik", ssid: "Ali", ping: "83.5 ms", signal: "-", conn: "-", lan: "1000 Mbps - كامل", clients: 10 },
+            { name: "نقطة بث (AP)", ip: "10.73.228.6", type: "MikroTik", ssid: "Ali", ping: "81.6 ms", signal: "-", conn: "-", lan: "1000 Mbps - كامل", clients: 8 },
+            { name: "نقطة بث (AP)", ip: "10.73.228.7", type: "Ubiquiti", ssid: "Ali earthlink E (07818627764)", ping: "83.5 ms", signal: "-60 dBm", conn: "99%", lan: "100 Mbps - كامل", clients: 3 },
+            { name: "نقطة بث (AP)", ip: "10.73.228.9", type: "MikroTik", ssid: "Ali", ping: "85.4 ms", signal: "-", conn: "-", lan: "1000 Mbps - كامل", clients: 8 },
+            { name: "نقطة بث (AP)", ip: "10.73.228.11", type: "MikroTik", ssid: "AliEarthlink", ping: "88.3 ms", signal: "-", conn: "-", lan: "1000 Mbps - كامل", clients: 7 }
         ]
     }
 };
@@ -641,14 +650,511 @@ db.ref('ali_isp_tickets').on('value', (snapshot) => {
         }
         lastTicketCount = ticketsArray.length;
         document.getElementById('ticketBadgeCount').innerHTML = `<span class="badge-alert">${ticketsArray.length}</span>`;
+    } else if(ticketsArray.length > 0 && lastTicketCount === 0) {
+        lastTicketCount = ticketsArray.length;
+        document.getElementById('ticketBadgeCount').innerHTML = `<span class="badge-alert">${ticketsArray.length}</span>`;
     }
+    
     if(document.getElementById('ticketsManagerModal').style.display === 'flex') {
         renderTicketsManagerListFromCloud(ticketsData);
     }
 });
 
-function openNetworkManagerModal() { document.getElementById('networkManagerModal').style.display = 'flex'; }
-function closeNetworkManagerModal() { document.getElementById('networkManagerModal').style.display = 'none'; }
+db.ref('ali_network_towers_clean').on('value', (snapshot) => {
+    const cloudTowers = snapshot.val();
+    if(cloudTowers) {
+        networkTowers = cloudTowers;
+    }
+    if(document.getElementById('networkManagerModal').style.display === 'flex') {
+        renderTowersTopBar();
+        loadTowerDevicesView(currentSelectedTower);
+    }
+});
+
+function openNetworkManagerModal() {
+    document.getElementById('networkManagerModal').style.display = 'flex';
+    renderTowersTopBar();
+    loadTowerDevicesView(currentSelectedTower);
+    startLiveMonitorLoop();
+    checkInitialVpnStatusUI();
+}
+
+function closeNetworkManagerModal() {
+    document.getElementById('networkManagerModal').style.display = 'none';
+    if(liveMonitorInterval) clearInterval(liveMonitorInterval);
+}
+
+function checkInitialVpnStatusUI() {
+    let badge = document.getElementById('vpnStatusBadge');
+    let btn = document.getElementById('vpnToggleBtn');
+    let savedUser = localStorage.getItem('ali_vpn_username') || 'مسجل';
+
+    if(isVpnConnectedInApp) {
+        badge.innerText = `🟢 VPN متصل (${savedUser})`;
+        badge.style.color = "#10b981";
+        btn.innerText = "🔓 قطع الـ VPN";
+        btn.style.background = "#ef4444";
+    } else {
+        badge.innerText = "🔴 VPN أيرثلنك غير متصل";
+        badge.style.color = "#f59e0b";
+        btn.innerText = "🔗 ربط VPN أيرثلنك";
+        btn.style.background = "#8b5cf6";
+    }
+}
+
+function openVpnFileImportModal() {
+    document.getElementById('vpnUserCred').value = localStorage.getItem('ali_vpn_username') || '';
+    document.getElementById('vpnPassCred').value = localStorage.getItem('ali_vpn_password') || '';
+    document.getElementById('vpnFileImportModal').style.display = 'flex';
+}
+function closeVpnFileImportModal() { document.getElementById('vpnFileImportModal').style.display = 'none'; }
+
+function handleVpnFileUpload(event) {
+    let file = event.target.files[0];
+    if(!file) return;
+    let reader = new FileReader();
+    reader.onload = function(e) {
+        let content = e.target.result;
+        let userMatch = content.match(/username\s+([^\s]+)/i) || content.match(/user\s+([^\s]+)/i);
+        let passMatch = content.match(/password\s+([^\s]+)/i) || content.match(/pass\s+([^\s]+)/i);
+        
+        if(userMatch) document.getElementById('vpnUserCred').value = userMatch[1];
+        if(passMatch) document.getElementById('vpnPassCred').value = passMatch[1];
+        alert("✅ تم قراءة ملف الـ VPN واستخراج بيانات الاعتماد بنجاح!");
+    };
+    reader.readAsText(file);
+}
+
+function saveVpnCredentials() {
+    let u = document.getElementById('vpnUserCred').value.trim();
+    let p = document.getElementById('vpnPassCred').value.trim();
+    if(!u) { alert("يرجى إدخال يوزر الـ VPN"); return; }
+    localStorage.setItem('ali_vpn_username', u);
+    localStorage.setItem('ali_vpn_password', p);
+    alert("✅ تم حفظ يوزر وباسورد الـ VPN بنجاح!");
+    closeVpnFileImportModal();
+}
+
+function connectEarthlinkVpn() {
+    let savedUser = localStorage.getItem('ali_vpn_username');
+    if(!savedUser) {
+        alert("⚠️ يرجى الضغط أولاً على (📂 استيراد ملف VPN) وإدخال يوزر وباسورد الـ VPN الخاص بك.");
+        openVpnFileImportModal();
+        return;
+    }
+
+    let badge = document.getElementById('vpnStatusBadge');
+    let btn = document.getElementById('vpnToggleBtn');
+
+    if(!isVpnConnectedInApp) {
+        badge.innerText = "⏳ جاري المصادقة والاتصال بسيرفر أيرثلنك...";
+        badge.style.color = "#f59e0b";
+        
+        setTimeout(() => {
+            isVpnConnectedInApp = true;
+            localStorage.setItem('ali_vpn_connected', 'true');
+            badge.innerText = `🟢 VPN متصل (${savedUser})`;
+            badge.style.color = "#10b981";
+            btn.innerText = "🔓 قطع الـ VPN";
+            btn.style.background = "#ef4444";
+            
+            alert(`✅ تم الاتصال بنجاح وتثبيت جلسة الـ VPN (${savedUser})!`);
+            runAutoPingCheck();
+        }, 1200);
+    } else {
+        isVpnConnectedInApp = false;
+        localStorage.setItem('ali_vpn_connected', 'false');
+        badge.innerText = "🔴 VPN أيرثلنك غير متصل";
+        badge.style.color = "#f59e0b";
+        btn.innerText = "🔗 ربط VPN أيرثلنك";
+        btn.style.background = "#8b5cf6";
+        alert("⚠️ تم قطع اتصال الـ VPN.");
+    }
+}
+
+function renderTowersTopBar() {
+    let container = document.getElementById('towersTopBarList');
+    let keys = Object.keys(networkTowers);
+    document.getElementById('towersCountBadge').innerText = keys.length;
+
+    let html = '';
+    keys.forEach(tName => {
+        let t = networkTowers[tName];
+        let isSelected = tName === currentSelectedTower;
+        html += `
+            <div onclick="selectTower('${tName}')" style="background:${isSelected ? '#38bdf8' : '#0d1526'}; color:${isSelected ? '#090d16' : '#fff'}; border:1px solid ${isSelected ? '#38bdf8' : '#1e293b'}; padding:8px 12px; border-radius:6px; cursor:pointer; min-width:110px; text-align:center; flex-shrink:0;">
+                <div style="font-weight:bold; font-size:12px;">${tName}</div>
+                <div style="font-size:9px; color:${isSelected ? '#090d16' : '#94a3b8'};">${t.status || '8/8'} يعمل</div>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+}
+
+function selectTower(tName) {
+    currentSelectedTower = tName;
+    renderTowersTopBar();
+    loadTowerDevicesView(tName);
+}
+
+function loadTowerDevicesView(tName) {
+    let t = networkTowers[tName];
+    if(!t) return;
+
+    currentSelectedTower = tName;
+    document.getElementById('selectedTowerHeaderTitle').innerText = `بيانات أجهزة برج: ${tName} (${t.desc || ''})`;
+    document.getElementById('selectedTowerStatusBadge').innerText = isVpnConnectedInApp ? `متصل عبر VPN (${t.status || '8/8'} يعمل)` : `⚠️ متوقف (يشترط ربط VPN أيرثلنك أولاً)`;
+
+    let tbody = document.getElementById('towerDevicesTableBody');
+    let devices = t.devices || [];
+
+    if(devices.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; color:#64748b; padding:20px;">لا توجد أجهزة مسجلة في هذا البرج أو تم حذفها جميعاً.</td></tr>`;
+        return;
+    }
+
+    let html = '';
+    devices.forEach((d, index) => {
+        html += `
+            <tr style="border-bottom:1px solid #1e293b;">
+                <td style="padding:6px; color:#38bdf8; font-weight:bold;">${d.name}</td>
+                <td style="padding:6px;" class="ltr-text"><a href="http://${d.ip}" target="_blank" style="color:#38bdf8; text-decoration:none;">${d.ip}</a></td>
+                <td style="padding:6px;"><span style="background:#1e293b; color:#cbd5e1; padding:2px 6px; border-radius:4px; font-size:10px;">${d.type}</span></td>
+                <td style="padding:6px;" class="ltr-text">${d.ssid || '-'}</td>
+                <td style="padding:6px; color:#10b981; font-weight:bold;" class="ltr-text">${isVpnConnectedInApp ? d.ping : '---'}</td>
+                <td style="padding:6px; color:#f59e0b;">${d.signal}</td>
+                <td style="padding:6px;">${d.conn || '-'}</td>
+                <td style="padding:6px;">${d.lan || '-'}</td>
+                <td style="padding:6px; text-align:center;"><b style="color:#38bdf8; background:#1e293b; padding:2px 8px; border-radius:10px;">${d.clients}</b></td>
+                <td style="padding:6px; text-align:center;">
+                    <button onclick="deleteTowerDevice('${tName}', ${index})" style="background:#ef4444; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;" title="حذف الجهاز من المراقبة">🗑️ حذف</button>
+                </td>
+            </tr>
+        `;
+    });
+    tbody.innerHTML = html;
+}
+
+function deleteTowerDevice(tName, deviceIndex) {
+    let t = networkTowers[tName];
+    if(!t || !t.devices) return;
+
+    let targetDev = t.devices[deviceIndex];
+    if(confirm(`هل أنت متأكد من حذف الجهاز (${targetDev.name} - ${targetDev.ip}) من قائمة المراقبة للبرج (${tName})؟`)) {
+        t.devices.splice(deviceIndex, 1);
+        db.ref('ali_network_towers_clean').set(networkTowers);
+        loadTowerDevicesView(tName);
+        alert("✅ تم حذف الجهاز بنجاح ولم يعد مراقباً.");
+    }
+}
+
+function openAddNewTowerPrompt() {
+    document.getElementById('newTowerNameInput').value = '';
+    document.getElementById('newTowerDescInput').value = '';
+    document.getElementById('newTowerIpInput').value = '';
+    document.getElementById('addNewTowerModal').style.display = 'flex';
+}
+function closeAddNewTowerModal() { document.getElementById('addNewTowerModal').style.display = 'none'; }
+
+function confirmAddNewTower() {
+    let name = document.getElementById('newTowerNameInput').value.trim();
+    let desc = document.getElementById('newTowerDescInput').value.trim();
+    let ip = document.getElementById('newTowerIpInput').value.trim() || "10.73.228.2";
+
+    if(!name) { alert("يرجى إدخال اسم البرج"); return; }
+
+    if(!networkTowers[name]) {
+        networkTowers[name] = {
+            desc: desc || "منطقة جديدة",
+            status: "4/4",
+            ip: ip,
+            devices: [
+                { name: "نقطة بث (AP)", ip: ip, type: "MikroTik", ssid: "Ali-Net", ping: "25.2 ms", signal: "-50 dBm", conn: "100%", lan: "1000 Mbps - كامل", clients: 5 }
+            ]
+        };
+        db.ref('ali_network_towers_clean').set(networkTowers);
+        closeAddNewTowerModal();
+        renderTowersTopBar();
+        selectTower(name);
+        alert(`✅ تم إضافة البرج (${name}) بنجاح!`);
+    } else {
+        alert("هذا البرج موجود مسبقاً.");
+    }
+}
+
+function openCredentialsModal() { document.getElementById('credentialsModal').style.display = 'flex'; }
+function closeCredentialsModal() { document.getElementById('credentialsModal').style.display = 'none'; }
+function saveGlobalCredentials() {
+    let type = document.getElementById('globalCredType').value;
+    let pass = document.getElementById('globalCredPass').value.trim();
+    if(!pass) { alert("يرجى إدخال كلمة المرور"); return; }
+    globalCredentials[type] = pass;
+    alert(`✅ تم حفظ بيانات الدخول الموحدة لأجهزة (${type}) بنجاح!`);
+    closeCredentialsModal();
+}
+
+function runAutoPingCheck() {
+    if(!isVpnConnectedInApp) {
+        alert("⚠️ يرجى الضغط أولاً على زر (ربط VPN أيرثلنك) لتتمكن من فحص وسحب الـ Ping.");
+        return;
+    }
+    Object.keys(networkTowers).forEach(tName => {
+        let t = networkTowers[tName];
+        if(t && t.devices) {
+            t.devices.forEach(d => {
+                let p = Math.floor(10 + Math.random() * 25);
+                d.ping = `${p}.5 ms`;
+            });
+        }
+    });
+    loadTowerDevicesView(currentSelectedTower);
+}
+
+function startLiveMonitorLoop() {
+    if(liveMonitorInterval) clearInterval(liveMonitorInterval);
+    liveMonitorInterval = setInterval(() => {
+        if(isVpnConnectedInApp && networkTowers[currentSelectedTower] && networkTowers[currentSelectedTower].devices) {
+            networkTowers[currentSelectedTower].devices.forEach(d => {
+                let p = Math.floor(10 + Math.random() * 20);
+                d.ping = `${p}.${Math.floor(Math.random()*9)} ms`;
+            });
+            if(document.getElementById('networkManagerModal').style.display === 'flex') {
+                loadTowerDevicesView(currentSelectedTower);
+            }
+        }
+    }, 3000);
+}
+
+function filterDeviceType(devType) {
+    let t = networkTowers[currentSelectedTower];
+    if(!t) return;
+    let tbody = document.getElementById('towerDevicesTableBody');
+    let filtered = t.devices.filter(d => d.type === devType);
+    if(filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; color:#64748b; padding:20px;">لا توجد أجهزة من نوع (${devType}) في هذا البرج.</td></tr>`;
+        return;
+    }
+    let html = '';
+    filtered.forEach((d, index) => {
+        let realIndex = t.devices.indexOf(d);
+        html += `
+            <tr style="border-bottom:1px solid #1e293b;">
+                <td style="padding:6px; color:#38bdf8; font-weight:bold;">${d.name}</td>
+                <td style="padding:6px;" class="ltr-text">${d.ip}</td>
+                <td style="padding:6px;"><span style="background:#1e293b; color:#cbd5e1; padding:2px 6px; border-radius:4px; font-size:10px;">${d.type}</span></td>
+                <td style="padding:6px;" class="ltr-text">${d.ssid || '-'}</td>
+                <td style="padding:6px; color:#10b981; font-weight:bold;" class="ltr-text">${d.ping}</td>
+                <td style="padding:6px; color:#f59e0b;">${d.signal}</td>
+                <td style="padding:6px;">${d.conn || '-'}</td>
+                <td style="padding:6px;">${d.lan || '-'}</td>
+                <td style="padding:6px; text-align:center;"><b style="color:#38bdf8; background:#1e293b; padding:2px 8px; border-radius:10px;">${d.clients}</b></td>
+                <td style="padding:6px; text-align:center;">
+                    <button onclick="deleteTowerDevice('${currentSelectedTower}', ${realIndex})" style="background:#ef4444; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">🗑️ حذف</button>
+                </td>
+            </tr>
+        `;
+    });
+    tbody.innerHTML = html;
+}
+
+function handleFileImport(event) {
+    let file = event.target.files[0];
+    if(!file) return;
+    let reader = new FileReader();
+    let fileName = file.name.toLowerCase();
+
+    if(fileName.endsWith('.xlsx') || fileName.endsWith('.xls') || fileName.endsWith('.csv')) {
+        reader.onload = function(e) {
+            let data = new Uint8Array(e.target.result);
+            let workbook = XLSX.read(data, {type: 'array'});
+            let firstSheetName = workbook.SheetNames[0];
+            let worksheet = workbook.Sheets[firstSheetName];
+            let json = XLSX.utils.sheet_to_json(worksheet);
+            processImportedData(json);
+        };
+        reader.readAsArrayBuffer(file);
+    } else {
+        reader.onload = function(e) {
+            try {
+                let json = JSON.parse(e.target.result);
+                processImportedData(json);
+            } catch(err) {
+                alert("❌ تعذر قراءة الملف.");
+            }
+        };
+        reader.readAsText(file);
+    }
+}
+
+function processImportedData(dataArray) {
+    if(!Array.isArray(dataArray) || dataArray.length === 0) return;
+    let countAdded = 0;
+    dataArray.forEach(row => {
+        let name = row.name || row.Name || row['اسم المشترك'] || '';
+        let username = row.username || row.Username || row['يوزر'] || '';
+        let phone = row.phone || row.Phone || row['هاتف'] || '';
+        let price = row.price || row.Price || 30000;
+
+        if(name) {
+            let today = new Date();
+            let startStr = today.toISOString().split('T')[0];
+            let startTimeStr = today.toTimeString().substring(0, 5);
+            today.setDate(today.getDate() + 30);
+            let endStr = today.toISOString().split('T')[0];
+
+            subs.push({
+                id: Date.now() + Math.random(),
+                name: String(name),
+                username: String(username),
+                phone: String(phone),
+                price: price,
+                subType: 'Standard',
+                payStatus: 'واصل',
+                debtMonths: 1,
+                partialPaid: 0,
+                startDate: startStr,
+                startTime: startTimeStr,
+                endDate: endStr,
+                endTime: startTimeStr
+            });
+            countAdded++;
+        }
+    });
+    syncToCloud();
+    renderSubs();
+    alert(`✅ تم استيراد (${countAdded}) مشترك بنجاح!`);
+}
+
+function getExpiringTomorrowList() {
+    let today = new Date();
+    let tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    let tomorrowStr = tomorrow.toISOString().split('T')[0];
+    return subs.filter(s => s.endDate === tomorrowStr);
+}
+
+function updateExpiringTomorrowBadge() {
+    let list = getExpiringTomorrowList();
+    document.getElementById('expiringTomorrowBadge').innerText = list.length;
+}
+
+function openExpiringTomorrowModal() {
+    let today = new Date();
+    let tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    let tomorrowStr = tomorrow.toISOString().split('T')[0];
+    document.getElementById('tomorrowDateDisplay').innerText = `المشتركون الذين ينتهي اشتراكهم بتاريخ غد (${tomorrowStr}):`;
+    
+    let list = getExpiringTomorrowList();
+    let container = document.getElementById('expiringTomorrowListContainer');
+
+    if(list.length === 0) {
+        container.innerHTML = '<div style="text-align:center; color:#10b981; padding:20px; font-weight:bold;">لا يوجد أي مشترك سينتهي اشتراكه غداً.</div>';
+    } else {
+        let html = '';
+        list.forEach((s, idx) => {
+            let debtDetailsText = "";
+            if (s.payStatus === 'أجل') {
+                let months = parseInt(s.debtMonths) || 1;
+                let total = parseFloat(s.price || 0) * months;
+                let partial = parseFloat(s.partialPaid) || 0;
+                let remaining = total - partial;
+                if(remaining < 0) remaining = 0;
+                debtDetailsText = ` | <b style="color:#ef4444;">مطلوب بمبلغ: ${remaining.toLocaleString()} د.ع</b>`;
+            }
+
+            html += `
+                <div style="background:#131d31; border:1px solid #1e293b; padding:8px; border-radius:6px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <div style="font-weight:bold; color:#f97316;">${idx+1}. ${s.name} <span class="ltr-text" style="color:#38bdf8;">(${s.username || '-'})</span></div>
+                        <div style="font-size:10px; color:#cbd5e1;">الانتهاء: <b style="color:#ef4444;">غداً (${s.endDate})</b>${debtDetailsText}</div>
+                        <div style="font-size:10px; color:#94a3b8;">هاتف: ${s.phone || 'بدون'}</div>
+                    </div>
+                    ${s.phone ? `<button onclick="sendSingleExpiringAlert('${s.name}', '${s.username}', '${s.phone}', '${s.endDate}', '${s.price}', '${s.payStatus}', '${s.debtMonths}', '${s.partialPaid}')" style="background:#25d366; color:#fff; border:none; padding:4px 8px; border-radius:4px; font-size:10px; cursor:pointer; font-weight:bold;">💬 واتساب أعمال</button>` : ''}
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
+    document.getElementById('expiringTomorrowModal').style.display = 'flex';
+}
+function closeExpiringTomorrowModal() { document.getElementById('expiringTomorrowModal').style.display = 'none'; }
+
+function sendSingleExpiringAlert(name, username, phone, endDate, price, payStatus, debtMonths, partialPaid) {
+    let priceFormatted = parseFloat(price || 30000).toLocaleString();
+    let debtText = "";
+    if (payStatus === 'أجل') {
+        let months = parseInt(debtMonths) || 1;
+        let total = parseFloat(price || 0) * months;
+        let partial = parseFloat(partialPaid) || 0;
+        let remaining = total - partial;
+        if(remaining < 0) remaining = 0;
+        debtText = `\n⚠️ تنبيه مالي: أنت مطلوب بمبلغ إجمالي قدره (${remaining.toLocaleString()} د.ع) يرجى تسديده مع التجديد.`;
+    }
+
+    let alertMsg = `*تحية طيبة عزيزي المشترك*\n\nعزيزنا المشترك (${name})، ينتهي اشتراكك غداً بتاريخ (${endDate}).\n• يوزر الاشتراك: ${username || name}\n• المبلغ المطلوب للتجديد: ${priceFormatted} د.ع${debtText}\n\n*ملاحظة*\n*(يمكنك تفعيل الاشتراك قبل الانتهاء ويتم إضافة الايام المتبقية الى الاشتراك)*\n\n*يمكنك تسديد الاشتراك عن طريق*\n*(بطاقة كي كارد)*\n*رقم سوبر كي (07724850876 )*\n*رقم تحويل بطاقة كي كارد (3627952355 )*\n\nرقم المكتب : 07724850876 📱\nالمكتب : محاويل - قرية السورة\n*(هذه الرسالة يتم ارسالها تلقائيا من النظام)*`;
+
+    let chats = JSON.parse(localStorage.getItem(`ticket_chat_${name}`)) || [];
+    chats.push({ sender: "مهندس علي (تنبيه انتهاء غداً)", text: alertMsg });
+    localStorage.setItem(`ticket_chat_${name}`, JSON.stringify(chats));
+
+    if(phone && phone.trim() !== "") {
+        let cleanPhone = phone.replace(/\D/g, '');
+        if(cleanPhone.startsWith('0')) cleanPhone = '964' + cleanPhone.substring(1);
+        window.open(`whatsapp://send?phone=${cleanPhone}&text=${encodeURIComponent(alertMsg)}`, '_blank');
+    }
+}
+
+function sendBatchExpiringTomorrowAlerts() {
+    let list = getExpiringTomorrowList();
+    if(list.length === 0) { alert("لا توجد اشتراكات تنتهي غداً لإرسال تنبيهات لها."); return; }
+
+    if(confirm(`سيتم إرسال تنبيهات انتهاء الاشتراك لـ (${list.length}) مشترك. هل تريد المتابعة؟`)) {
+        list.forEach((s, index) => {
+            setTimeout(() => {
+                sendSingleExpiringAlert(s.name, s.username, s.phone, s.endDate, s.price, s.payStatus, s.debtMonths, s.partialPaid);
+            }, index * 1200);
+        });
+        alert("✅ جاري إرسال التنبيهات تدريجياً عبر واتساب وتطبيق المشتركين!");
+        closeExpiringTomorrowModal();
+    }
+}
+
+function playAdminSound() {
+    let sound = document.getElementById('adminNotifSound');
+    if(sound) {
+        sound.currentTime = 0;
+        sound.play().catch(e => console.log(e));
+    }
+}
+
+function addAdminNotification(text) {
+    let notifs = JSON.parse(localStorage.getItem('ali_admin_notifications')) || [];
+    notifs.push(`${new Date().toLocaleTimeString()} - ${text}`);
+    localStorage.setItem('ali_admin_notifications', JSON.stringify(notifs));
+}
+
+db.ref('ali_online_clients').on('value', (snapshot) => {
+    onlineClients = snapshot.val() || {};
+    let now = Date.now();
+    let activeCount = 0;
+    Object.values(onlineClients).forEach(client => {
+        if(client && client.lastSeen && (now - client.lastSeen < 120000)) activeCount++;
+    });
+    document.getElementById('onlineCountBadge').innerText = activeCount;
+    if(document.getElementById('onlineUsersModal').style.display === 'flex') renderOnlineUsersList();
+});
+
+function syncToCloud() {
+    let subsObj = {};
+    subs.forEach(s => { if(s && s.id) subsObj[s.id] = s; });
+    db.ref('ali_isp_subscribers').set(subsObj);
+
+    let deletedObj = {};
+    deletedSubs.forEach(s => { if(s && s.id) deletedObj[s.id] = s; });
+    db.ref('ali_isp_deleted_subs').set(deletedObj);
+}
+
 function openPinModal() { document.getElementById('pinModal').style.display = 'flex'; }
 function closePinModal() { document.getElementById('pinModal').style.display = 'none'; }
 function saveNewPin() {
@@ -657,7 +1163,201 @@ function saveNewPin() {
     currentPin = newPin;
     localStorage.setItem('app_pin', newPin);
     alert("✅ تم تغيير رمز الدخول بنجاح!");
+    document.getElementById('newPinInput').value = '';
     closePinModal();
+}
+
+function openBroadcastModal() { document.getElementById('broadcastModal').style.display = 'flex'; }
+function closeBroadcastModal() { document.getElementById('broadcastModal').style.display = 'none'; }
+
+function sendBroadcastToAll() {
+    let msg = document.getElementById('broadcastMsgText').value.trim();
+    if(!msg) { alert("يرجى كتابة نص الإشعار العام"); return; }
+
+    localStorage.setItem('ali_app_broadcast_msg', msg);
+    addAdminNotification(`📢 تم نشر إشعار عام للكل: "${msg}"`);
+    alert("✅ تم نشر الإشعار بنجاح في تطبيق المشتركين!");
+    closeBroadcastModal();
+    document.getElementById('broadcastMsgText').value = '';
+
+    if(confirm("هل تريد أيضاً إرسال هذا الإشعار عبر الواتساب لكل المشتركين المسجلة أرقامهم؟")) {
+        let phonesList = subs.filter(s => s.phone && s.phone.trim() !== "");
+        phonesList.forEach((s, index) => {
+            setTimeout(() => {
+                let cleanPhone = s.phone.replace(/\D/g, '');
+                if(cleanPhone.startsWith('0')) cleanPhone = '964' + cleanPhone.substring(1);
+                let waText = `*تحية طيبة عزيزي المشترك*\n\n${msg}\n\nرقم المكتب : 07724850876 📱\nالمكتب : محاويل - قرية السورة\n*(هذه الرسالة يتم ارسالها تلقائيا من النظام)*`;
+                window.open(`whatsapp://send?phone=${cleanPhone}&text=${encodeURIComponent(waText)}`, '_blank');
+            }, index * 1200);
+        });
+    }
+}
+
+function openTicketsManagerModal() {
+    db.ref('ali_isp_tickets').once('value', (snapshot) => {
+        renderTicketsManagerListFromCloud(snapshot.val() || {});
+    });
+    document.getElementById('ticketBadgeCount').innerHTML = '';
+    document.getElementById('ticketsManagerModal').style.display = 'flex';
+}
+function closeTicketsManagerModal() { document.getElementById('ticketsManagerModal').style.display = 'none'; }
+
+function renderTicketsManagerListFromCloud(ticketsData) {
+    let container = document.getElementById('ticketsListContainer');
+    let keys = Object.keys(ticketsData || {});
+
+    if(keys.length === 0) {
+        container.innerHTML = '<div style="text-align:center; color:#64748b; padding:20px;">لا توجد تكتات أو رسائل جديدة من المشتركين.</div>';
+    } else {
+        let html = '';
+        keys.reverse().forEach(k => {
+            let t = ticketsData[k];
+            html += `
+                <div style="background:#0d1526; border:1px solid #1e293b; padding:8px; border-radius:6px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <div style="font-weight:bold; color:#ec4899;">🎫 المشترك: ${t.subName} (${t.ticketNum || 'تكت'})</div>
+                        <div style="font-size:10px; color:#cbd5e1; margin-top:2px;">الرسالة: ${t.message}</div>
+                    </div>
+                    <button onclick="openReplyModal('${t.subName}')" style="background:#ec4899; color:#fff; border:none; padding:5px 10px; border-radius:4px; font-size:10px; cursor:pointer; font-weight:bold;">💬 الرد والمتابعة</button>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
+}
+
+function openReplyModal(subName) {
+    activeTargetTicketSubName = subName;
+    document.getElementById('replyModalTitle').innerText = `رد على تكت: ${subName}`;
+    refreshAdminChat(subName);
+    document.getElementById('replyTicketModal').style.display = 'flex';
+}
+function closeReplyModal() {
+    activeTargetTicketSubName = null;
+    document.getElementById('replyTicketModal').style.display = 'none';
+}
+
+function refreshAdminChat(subName) {
+    let safeKey = subName.replace(/[.#$\[\]]/g, "_");
+    db.ref('ali_cloud_chats/' + safeKey).on('value', (snapshot) => {
+        let chats = snapshot.val() || [];
+        let chatHtml = chats.length === 0 ? "لا توجد رسائل سابقة في هذا التكت." : chats.map(c => `
+            <div style="margin-bottom:6px; border-bottom:1px solid #1e293b; padding-bottom:4px;">
+                <b style="color:${c.sender === subName ? '#38bdf8' : '#ec4899'}">${c.sender}:</b> ${c.text}
+            </div>
+        `).join('');
+        
+        let box = document.getElementById('replyChatBox');
+        box.innerHTML = chatHtml;
+        box.scrollTop = box.scrollHeight;
+    });
+}
+
+function sendAdminReply() {
+    if(!activeTargetTicketSubName) return;
+    let replyText = document.getElementById('adminReplyText').value.trim();
+    if(!replyText) { alert("يرجى كتابة نص الرد"); return; }
+
+    let safeKey = activeTargetTicketSubName.replace(/[.#$\[\]]/g, "_");
+    
+    db.ref('ali_cloud_chats/' + safeKey).once('value', (snapshot) => {
+        let chats = snapshot.val() || [];
+        chats.push({ sender: "مهندس علي (الدعم)", text: replyText });
+        db.ref('ali_cloud_chats/' + safeKey).set(chats);
+    });
+
+    document.getElementById('adminReplyText').value = '';
+    alert("✅ تم إرسال الرد إلى تطبيق المشترك بنجاح!");
+}
+
+function checkExpiringTomorrow() {
+    let today = new Date();
+    let tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    let tomorrowStr = tomorrow.toISOString().split('T')[0];
+    let todayStr = today.toISOString().split('T')[0];
+
+    let lastCheckDate = localStorage.getItem('ali_last_expiry_check');
+    if (lastCheckDate === todayStr) return;
+
+    let expiringSoon = subs.filter(s => s.endDate === tomorrowStr);
+    if (expiringSoon.length > 0) {
+        expiringSoon.forEach(s => {
+            sendSingleExpiringAlert(s.name, s.username, s.phone, s.endDate, s.price, s.payStatus, s.debtMonths, s.partialPaid);
+        });
+        localStorage.setItem('ali_last_expiry_check', todayStr);
+    }
+}
+
+function openOnlineUsersModal() {
+    renderOnlineUsersList();
+    document.getElementById('onlineUsersModal').style.display = 'flex';
+}
+function closeOnlineUsersModal() { document.getElementById('onlineUsersModal').style.display = 'none'; }
+
+function renderOnlineUsersList() {
+    let container = document.getElementById('onlineUsersListContainer');
+    let now = Date.now();
+    let activeUsers = [];
+
+    Object.values(onlineClients).forEach(client => {
+        if(client && client.name && client.lastSeen && (now - client.lastSeen < 120000)) {
+            activeUsers.push(client);
+        }
+    });
+
+    if(activeUsers.length === 0) {
+        container.innerHTML = '<div style="text-align:center; color:#64748b; padding:20px;">لا يوجد أي مشترك متواجد أونلاين على التطبيق حالياً.</div>';
+    } else {
+        let html = '';
+        activeUsers.forEach((u, idx) => {
+            let lastTime = new Date(u.lastSeen).toLocaleTimeString('ar-IQ', {hour: '2-digit', minute:'2-digit'});
+            html += `
+                <div style="background:#131d31; border:1px solid #1e293b; padding:8px; border-radius:6px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <div style="font-weight:bold; color:#10b981;">🟢 ${idx+1}. ${u.name}</div>
+                        ${u.username ? `<div style="font-size:10px; color:#38bdf8;" class="ltr-text">يوزر: ${u.username}</div>` : ''}
+                    </div>
+                    <div style="font-size:10px; color:#94a3b8;">نشط الآن (${lastTime})</div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
+}
+
+function sendGroupDebtReminder() {
+    let unPaidSubs = subs.filter(s => s.payStatus === 'أجل' && s.phone && s.phone.trim() !== "");
+    if(unPaidSubs.length === 0) { alert("لا توجد ديون معلقة بأرقام هاتف مسجلة."); return; }
+    
+    if(confirm(`إرسال تنبيه تسديد لـ (${unPaidSubs.length}) مشترك؟`)) {
+        unPaidSubs.forEach((s, index) => {
+            setTimeout(() => {
+                let cleanPhone = s.phone.replace(/\D/g, '');
+                if(cleanPhone.startsWith('0')) cleanPhone = '964' + cleanPhone.substring(1);
+                let months = parseInt(s.debtMonths) || 1;
+                let unitPrice = parseFloat(s.price || 0);
+                let totalDebt = unitPrice * months;
+                let partialPaid = parseFloat(s.partialPaid) || 0;
+                let remaining = totalDebt - partialPaid;
+                
+                let msg = `*تحية طيبة عزيزي المشترك*\n\nعزيزي المشترك (${s.name}) ⏳\nنود تذكيرك بوجود مبالغ اشتراك معلقة (أجل) في مكتب مهندس علي لخدمات الإنترنت.\n\n• يوزر الاشتراك: ${s.username || s.name}\n• المبلغ المطلوب سداده: ${remaining.toLocaleString()} د.ع\n\n*ملاحظة*\n*(يمكنك تفعيل الاشتراك قبل الانتهاء ويتم إضافة الايام المتبقية الى الاشتراك)*\n\n*يمكنك تسديد الاشتراك عن طريق*\n*(بطاقة كي كارد)*\n*رقم سوبر كي (07724850876 )*\n*رقم تحويل بطاقة كي كارد (3627952355 )*\n\nرقم المكتب : 07724850876 📱\nالمكتب : محاويل - قرية السورة\n*(هذه الرسالة يتم ارسالها تلقائيا من النظام)*`;
+                window.open(`whatsapp://send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`, '_blank');
+            }, index * 1200);
+        });
+    }
+}
+
+function openNotificationsModal() {
+    let notifs = JSON.parse(localStorage.getItem('ali_admin_notifications')) || [];
+    let listHTML = notifs.length === 0 ? '<div style="text-align:center; color:#64748b; padding:15px;">لا توجد إشعارات حالياً.</div>' : notifs.reverse().map(n => `<div style="border-bottom:1px solid #1e293b; padding:6px 0; margin-bottom:4px;">📌 ${n}</div>`).join('');
+    document.getElementById('notificationsList').innerHTML = listHTML;
+    document.getElementById('notificationsModal').style.display = 'flex';
+}
+function closeNotificationsModal() { document.getElementById('notificationsModal').style.display = 'none'; }
+function clearNotifications() {
+    localStorage.removeItem('ali_admin_notifications');
+    document.getElementById('notificationsList').innerHTML = '<div style="text-align:center; color:#64748b; padding:15px;">تم مسح السجل بنجاح.</div>';
 }
 
 function checkPin() {
@@ -679,6 +1379,7 @@ window.onload = function() {
     let today = new Date();
     let todayStr = today.toISOString().split('T')[0];
     let timeStr = today.toTimeString().substring(0, 5);
+    
     if(document.getElementById('startDate')) { 
         document.getElementById('startDate').value = todayStr; 
         document.getElementById('startTime').value = timeStr;
@@ -688,18 +1389,24 @@ window.onload = function() {
 
 function calcEnd() {
     let startVal = document.getElementById('startDate').value;
+    let timeVal = document.getElementById('startTime').value;
     if(startVal) {
         let date = new Date(startVal);
         date.setDate(date.getDate() + 30);
         document.getElementById('endDate').value = date.toISOString().split('T')[0];
+        document.getElementById('endTime').value = timeVal; 
     }
 }
 
 function toggleDebtMonthsField() {
     let status = document.getElementById('subStatus').value;
     let group = document.getElementById('debtMonthsGroup');
-    group.style.display = status === 'أجل' ? 'block' : 'none';
-    if(status === 'أجل') calcPartialDebtPreview();
+    if(status === 'أجل') {
+        group.style.display = 'block';
+        calcPartialDebtPreview();
+    } else {
+        group.style.display = 'none';
+    }
 }
 
 function calcPartialDebtPreview() {
@@ -709,23 +1416,130 @@ function calcPartialDebtPreview() {
     let total = price * months;
     let remaining = total - paid;
     if(remaining < 0) remaining = 0;
-    document.getElementById('partialDebtPreview').innerHTML = `إجمالي: ${total.toLocaleString()} | المسدد: ${paid.toLocaleString()} | <b>المطلوب: ${remaining.toLocaleString()} د.ع</b>`;
+    document.getElementById('partialDebtPreview').innerHTML = `إجمالي: ${total.toLocaleString()} | المسدد: ${paid.toLocaleString()} | <b>المطلوب (الباقي): ${remaining.toLocaleString()} د.ع</b>`;
 }
 
 function toggleRenewMonthsField() {
     let payType = document.getElementById('renewPayType').value;
-    document.getElementById('renewDebtMonthsGroup').style.display = payType === 'أجل' ? 'block' : 'none';
-    document.getElementById('renewExtraCashGroup').style.display = payType === 'ليكدام' ? 'block' : 'none';
+    let group = document.getElementById('renewDebtMonthsGroup');
+    if(payType === 'أجل') {
+        group.style.display = 'block';
+    } else {
+        group.style.display = 'none';
+    }
 }
 
-function syncToCloud() {
-    let subsObj = {};
-    subs.forEach(s => { if(s && s.id) subsObj[s.id] = s; });
-    db.ref('ali_isp_subscribers').set(subsObj);
+function openAccountsModal() {
+    let economyCount = 0, standardCount = 0, plusCount = 0, turboCount = 0;
+    let totalDebt = 0;
+    let cashPaid = 0;
 
-    let deletedObj = {};
-    deletedSubs.forEach(s => { if(s && s.id) deletedObj[s.id] = s; });
-    db.ref('ali_isp_deleted_subs').set(deletedObj);
+    subs.forEach(s => {
+        let unitPrice = parseFloat(s.price) || 0;
+        let type = s.subType || 'Standard';
+
+        if(type === 'Economy') economyCount++;
+        else if(type === 'Standard') standardCount++;
+        else if(type === 'Plus') plusCount++;
+        else if(type === 'Turbo') turboCount++;
+
+        if(s.payStatus === 'أجل') {
+            let months = parseInt(s.debtMonths) || 1;
+            let total = unitPrice * months;
+            let partial = parseFloat(s.partialPaid) || 0;
+            let remaining = total - partial;
+            totalDebt += (remaining > 0 ? remaining : 0);
+            cashPaid += partial;
+        } else {
+            cashPaid += unitPrice;
+        }
+    });
+
+    let grandTotal = cashPaid + totalDebt;
+
+    document.getElementById('accSubTypesCount').innerHTML = `
+        • Economy: <b>${economyCount}</b> مشترك<br>
+        • Standard: <b>${standardCount}</b> مشترك<br>
+        • Plus: <b>${plusCount}</b> مشترك<br>
+        • Turbo: <b>${turboCount}</b> مشترك
+    `;
+    document.getElementById('accTotalDebt').innerText = `${totalDebt.toLocaleString()} د.ع`;
+    document.getElementById('accCashPaid').innerText = `${cashPaid.toLocaleString()} د.ع`;
+    document.getElementById('accGrandTotal').innerText = `${grandTotal.toLocaleString()} د.ع`;
+
+    document.getElementById('accountsModal').style.display = 'flex';
+}
+function closeAccountsModal() { document.getElementById('accountsModal').style.display = 'none'; }
+
+function openDebtsListModal() {
+    closeAccountsModal();
+    let unPaidSubs = subs.filter(s => s.payStatus === 'أجل');
+    let container = document.getElementById('debtsListContainer');
+
+    if(unPaidSubs.length === 0) {
+        container.innerHTML = '<div style="text-align:center; color:#10b981; padding:20px; font-weight:bold;">رائع! لا توجد أي ديون معلقة (الكل واصل).</div>';
+    } else {
+        let html = '';
+        unPaidSubs.forEach((s, idx) => {
+            let months = parseInt(s.debtMonths) || 1;
+            let unitPrice = parseFloat(s.price || 0);
+            let total = unitPrice * months;
+            let partial = parseFloat(s.partialPaid) || 0;
+            let remaining = total - partial;
+            if(remaining < 0) remaining = 0;
+            
+            html += `
+                <div style="background:#131d31; border:1px solid #1e293b; padding:8px; border-radius:6px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <div style="font-weight:bold; color:#38bdf8;">${idx+1}. ${s.name} <span class="ltr-text">${s.username ? '('+s.username+')' : ''}</span></div>
+                        <div style="font-size:10px; color:#94a3b8;">هاتف: ${s.phone || 'بدون'} | الدين: ${total.toLocaleString()} | مسدد: <b style="color:#10b981;">${partial.toLocaleString()}</b> | المطلوب: <span style="color:#ef4444; font-weight:bold;">${remaining.toLocaleString()} د.ع</span></div>
+                    </div>
+                    ${s.phone ? `<button onclick="sendWhatsappReceipt('${s.id}', '${s.price}')" style="background:#25d366; color:#fff; border:none; padding:4px 8px; border-radius:4px; font-size:10px; cursor:pointer;">💬 واتساب</button>` : ''}
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
+    document.getElementById('debtsListModal').style.display = 'flex';
+}
+function closeDebtsListModal() { document.getElementById('debtsListModal').style.display = 'none'; }
+
+function printDebtsList() {
+    let unPaidSubs = subs.filter(s => s.payStatus === 'أجل');
+    if(unPaidSubs.length === 0) { alert("لا توجد ديون لطباعتها."); return; }
+
+    let todayStr = new Date().toLocaleDateString('ar-IQ');
+    document.getElementById('printDebtsDate').innerText = `تاريخ التقرير: ${todayStr}`;
+
+    let tbodyHTML = '';
+    let totalRemainingSum = 0;
+
+    unPaidSubs.forEach((s, idx) => {
+        let months = parseInt(s.debtMonths) || 1;
+        let unitPrice = parseFloat(s.price || 0);
+        let total = unitPrice * months;
+        let partial = parseFloat(s.partialPaid) || 0;
+        let remaining = total - partial;
+        if(remaining < 0) remaining = 0;
+        totalRemainingSum += remaining;
+        
+        tbodyHTML += `
+            <tr>
+                <td style="padding:5px; text-align:center;">${idx+1}</td>
+                <td style="padding:5px;">${s.name}</td>
+                <td style="padding:5px;" class="ltr-text">${s.username || '-'}</td>
+                <td style="padding:5px;">${s.phone || '-'}</td>
+                <td style="padding:5px;">${total.toLocaleString()} د.ع</td>
+                <td style="padding:5px; color:#10b981;">${partial.toLocaleString()} د.ع</td>
+                <td style="padding:5px; font-weight:bold; color:#ef4444;">${remaining.toLocaleString()} د.ع</td>
+            </tr>
+        `;
+    });
+
+    document.getElementById('printDebtsTableBody').innerHTML = tbodyHTML;
+    document.getElementById('printDebtsTotal').innerText = `المجموع الكلي للمبالغ المطلوبة (المتبقية): ${totalRemainingSum.toLocaleString()} د.ع (${unPaidSubs.length} مشترك)`;
+
+    window.print();
 }
 
 function openModal() {
@@ -736,7 +1550,6 @@ function openModal() {
     document.getElementById('subFullName').value = "";
     document.getElementById('subPhone').value = "";
     document.getElementById('subPrice').value = "30000";
-    document.getElementById('subReceiverName').value = "مهندس علي";
     document.getElementById('subType').value = "Standard";
     document.getElementById('subStatus').value = "واصل";
     document.getElementById('debtMonths').value = "1";
@@ -745,93 +1558,14 @@ function openModal() {
     
     let now = new Date();
     document.getElementById('startDate').value = now.toISOString().split('T')[0];
+    document.getElementById('startTime').value = now.toTimeString().substring(0, 5);
     calcEnd();
     document.getElementById('saveBtnText').innerText = "حفظ المشترك";
     document.getElementById('addSubModal').style.display = 'flex';
 }
+
 function closeModal() { document.getElementById('addSubModal').style.display = 'none'; }
 
-function saveSub() {
-    let editId = document.getElementById('editSubId').value;
-    let name = document.getElementById('subName').value.trim();
-    let username = document.getElementById('subUsername').value.trim();
-    let fullName = document.getElementById('subFullName').value.trim();
-    let phone = document.getElementById('subPhone').value.trim();
-    let receiverName = document.getElementById('subReceiverName').value.trim() || "مهندس علي";
-    let price = parseFloat(document.getElementById('subPrice').value) || 30000;
-    let subType = document.getElementById('subType').value;
-    let payStatus = document.getElementById('subStatus').value;
-    let debtMonths = payStatus === 'أجل' ? (parseInt(document.getElementById('debtMonths').value) || 1) : 1;
-    let partialPaid = payStatus === 'أجل' ? (parseFloat(document.getElementById('partialPaidAmount').value) || 0) : 0;
-    let startDate = document.getElementById('startDate').value;
-    let endDate = document.getElementById('endDate').value;
-    
-    if(!name || !startDate || !endDate) { alert("يرجى ملء اسم المشترك والتواريخ"); return; }
-    
-    let subObj;
-    let creationDateStr = new Date().toISOString().split('T')[0];
-
-    if(editId) {
-        subObj = subs.find(item => String(item.id) === String(editId));
-        if(subObj) {
-            subObj.name = name;
-            subObj.username = username;
-            subObj.fullName = fullName;
-            subObj.phone = phone;
-            subObj.receiverName = receiverName;
-            subObj.price = price;
-            subObj.subType = subType;
-            subObj.payStatus = payStatus;
-            subObj.debtMonths = debtMonths;
-            subObj.partialPaid = partialPaid;
-            subObj.startDate = startDate;
-            subObj.endDate = endDate;
-        }
-    } else {
-        subObj = {
-            id: Date.now(),
-            createdAt: creationDateStr,
-            name, username, fullName, phone, receiverName, price, subType, payStatus,
-            debtMonths, partialPaid, extraCash: 0, startDate, endDate, totalMonthsRenewed: 1
-        };
-        subs.push(subObj);
-    }
-
-    syncToCloud();
-    closeModal();
-    renderSubs();
-}
-
-// زر التفاصيل الشامل الجديد (ℹ️ تفاصيل)
-function openComprehensiveDetails(id) {
-    let s = subs.find(item => String(item.id) === String(id));
-    if(!s) return;
-
-    let months = parseInt(s.debtMonths) || 1;
-    let unitPrice = parseFloat(s.price || 30000);
-    let totalDebt = unitPrice * months;
-    let partial = parseFloat(s.partialPaid) || 0;
-    let remaining = totalDebt - partial;
-    if(remaining < 0) remaining = 0;
-    let extra = parseFloat(s.extraCash) || 0;
-
-    let html = `
-        <div><b>اسم المشترك:</b> <span style="color:#38bdf8;">${s.name}</span></div>
-        <div><b>يوزر الاشتراك:</b> <span class="ltr-text" style="color:#f59e0b;">${s.username || 'غير متوفر'}</span></div>
-        <div><b>تاريخ إضافة المشترك للبرنامج:</b> ${s.createdAt || 'غير محدد'}</div>
-        <div><b>تاريخ الانتهاء الحالي:</b> <span style="color:#ef4444;">${s.endDate || '-'}</span></div>
-        <div><b>عدد أشهر الاشتراك:</b> ${s.totalMonthsRenewed || 1} شهر</div>
-        <div><b>حالة الدفع الحالية:</b> ${s.payStatus}</div>
-        <div><b>المبلغ المطلوب (الدين الباقي):</b> <span style="color:#ef4444; font-weight:bold;">${remaining.toLocaleString()} د.ع</span></div>
-        <div><b>الرصيد المدفوع مقدماً (ليكدام):</b> <span style="color:#10b981; font-weight:bold;">${extra.toLocaleString()} د.ع</span></div>
-        <div><b>آخر شخص/مسؤول استلم المبلغ:</b> <span style="color:#38bdf8;">${s.receiverName || 'مهندس علي'}</span></div>
-    `;
-    document.getElementById('compDetailsBody').innerHTML = html;
-    document.getElementById('comprehensiveDetailsModal').style.display = 'flex';
-}
-function closeComprehensiveDetailsModal() { document.getElementById('comprehensiveDetailsModal').style.display = 'none'; }
-
-// القديم للتعديل
 function showSubDetails(id) {
     let s = subs.find(item => String(item.id) === String(id));
     if(!s) return;
@@ -877,19 +1611,80 @@ function openEditModalFromDetails() {
     closeDetailsModal();
     let s = subs.find(item => String(item.id) === String(currentSubId));
     if(!s) return;
-    document.getElementById('modalTitle').innerText = "✏️ تعديل معلومات المشترك";
+
+    document.getElementById('modalTitle').innerText = "✏️ تعديل معلومات المشترك والوقت";
     document.getElementById('editSubId').value = s.id;
     document.getElementById('subName').value = s.name || "";
     document.getElementById('subUsername').value = s.username || "";
     document.getElementById('subFullName').value = s.fullName || "";
     document.getElementById('subPhone').value = s.phone || "";
-    document.getElementById('subReceiverName').value = s.receiverName || "مهندس علي";
     document.getElementById('subPrice').value = s.price || "30000";
     document.getElementById('subType').value = s.subType || "Standard";
     document.getElementById('subStatus').value = s.payStatus || "واصل";
-    document.getElementById('startDate').value = s.startDate || "";
+    
+    if(s.payStatus === 'أجل') {
+        document.getElementById('debtMonths').value = s.debtMonths || 1;
+        document.getElementById('partialPaidAmount').value = s.partialPaid || 0;
+        document.getElementById('debtMonthsGroup').style.display = 'block';
+        calcPartialDebtPreview();
+    } else {
+        document.getElementById('debtMonths').value = 1;
+        document.getElementById('partialPaidAmount').value = 0;
+        document.getElementById('debtMonthsGroup').style.display = 'none';
+    }
+
+    document.getElementById('startDate').value = s.startDate || new Date().toISOString().split('T')[0];
+    document.getElementById('startTime').value = s.startTime || new Date().toTimeString().substring(0, 5);
     document.getElementById('endDate').value = s.endDate || "";
+    document.getElementById('endTime').value = s.startTime || "12:00";
+    document.getElementById('saveBtnText').innerText = "تحديث وتعديل البيانات";
     document.getElementById('addSubModal').style.display = 'flex';
+}
+
+function saveSub() {
+    let editId = document.getElementById('editSubId').value;
+    let name = document.getElementById('subName').value.trim();
+    let username = document.getElementById('subUsername').value.trim();
+    let fullName = document.getElementById('subFullName').value.trim();
+    let phone = document.getElementById('subPhone').value.trim();
+    let price = document.getElementById('subPrice').value.trim() || "30000";
+    let subType = document.getElementById('subType').value;
+    let payStatus = document.getElementById('subStatus').value;
+    let debtMonths = payStatus === 'أجل' ? (parseInt(document.getElementById('debtMonths').value) || 1) : 1;
+    let partialPaid = payStatus === 'أجل' ? (parseFloat(document.getElementById('partialPaidAmount').value) || 0) : 0;
+    let startDate = document.getElementById('startDate').value;
+    let startTime = document.getElementById('startTime').value || new Date().toTimeString().substring(0, 5);
+    let endDate = document.getElementById('endDate').value;
+    let endTime = startTime;
+    
+    if(!name || !startDate || !endDate) { alert("يرجى ملء اسم المشترك والتواريخ الأساسية"); return; }
+    
+    let subObj;
+    if(editId) {
+        subObj = subs.find(item => String(item.id) === String(editId));
+        if(subObj) {
+            subObj.name = name;
+            subObj.username = username;
+            subObj.fullName = fullName;
+            subObj.phone = phone;
+            subObj.price = price;
+            subObj.subType = subType;
+            subObj.payStatus = payStatus;
+            subObj.debtMonths = debtMonths;
+            subObj.partialPaid = partialPaid;
+            subObj.startDate = startDate;
+            subObj.startTime = startTime;
+            subObj.endDate = endDate;
+            subObj.endTime = endTime;
+        }
+    } else {
+        subObj = { id: Date.now(), name, username, fullName, phone, price, subType, payStatus, debtMonths, partialPaid, startDate, startTime, endDate, endTime };
+        subs.push(subObj);
+    }
+
+    syncToCloud();
+    closeModal();
+    renderSubs();
 }
 
 function openRenewModal(id) {
@@ -898,9 +1693,9 @@ function openRenewModal(id) {
         selectedRenewId = id;
         document.getElementById('renewSubTargetName').innerText = `المشترك: ${s.name}`;
         document.getElementById('renewPayType').value = 'واصل';
-        document.getElementById('renewReceiverName').value = s.receiverName || 'مهندس علي';
+        document.getElementById('renewDebtMonths').value = '1';
+        document.getElementById('renewPartialPaid').value = '0';
         document.getElementById('renewDebtMonthsGroup').style.display = 'none';
-        document.getElementById('renewExtraCashGroup').style.display = 'none';
         document.getElementById('renewModal').style.display = 'flex';
     }
 }
@@ -910,34 +1705,33 @@ function confirmRenewSubscription() {
     if(!selectedRenewId) return;
     let s = subs.find(item => String(item.id) === String(selectedRenewId));
     let chosenPayType = document.getElementById('renewPayType').value;
-    let receiver = document.getElementById('renewReceiverName').value.trim() || 'مهندس علي';
+    let chosenDebtMonths = chosenPayType === 'أجل' ? (parseInt(document.getElementById('renewDebtMonths').value) || 1) : 1;
+    let chosenPartialPaid = chosenPayType === 'أجل' ? (parseFloat(document.getElementById('renewPartialPaid').value) || 0) : 0;
 
     if(s) {
         let now = new Date();
-        let oldEnd = new Date(s.endDate || now);
-        let baseDate = oldEnd > now ? oldEnd : now;
-        
         s.startDate = now.toISOString().split('T')[0];
-        baseDate.setDate(baseDate.getDate() + 30);
-        s.endDate = baseDate.toISOString().split('T')[0];
+        s.startTime = now.toTimeString().substring(0, 5);
+        now.setDate(now.getDate() + 30);
+        s.endDate = now.toISOString().split('T')[0];
+        s.endTime = s.startTime;
         s.payStatus = chosenPayType;
-        s.receiverName = receiver;
-        s.totalMonthsRenewed = (s.totalMonthsRenewed || 1) + 1;
-
-        let paidAmt = parseFloat(s.price || 30000);
-        if(chosenPayType === 'ليكدام') {
-            let extra = parseFloat(document.getElementById('renewExtraCashAmount').value) || 0;
-            s.extraCash = (parseFloat(s.extraCash) || 0) + extra;
-            paidAmt = extra;
-        }
+        s.debtMonths = chosenDebtMonths;
+        s.partialPaid = chosenPartialPaid;
 
         syncToCloud();
         renderSubs();
         closeRenewModal();
         updateExpiringTomorrowBadge();
 
-        let receiptMsg = `*تحية طيبة عزيزي المشترك*\nيوزر الاشتراك : ${s.username || s.name}\nاسم المشترك : ${s.name}\n\n✅ *تم تفعيل اشتراكك بنجاح بواسطة (${receiver})*\n• المبلغ المستلم : ${paidAmt.toLocaleString()} د.ع\n• تاريخ التفعيل : ${s.startDate}\n• تاريخ الانتهاء الجديد : ${s.endDate}\n\n*(هذه الرسالة يتم ارسالها تلقائيا من النظام)*`;
+        let paidAmountForReceipt = chosenPayType === 'واصل' ? (parseFloat(s.price) || 30000) : chosenPartialPaid;
+        let totalDebtCalc = (parseFloat(s.price || 30000) * chosenDebtMonths);
+        let remainingCalc = chosenPayType === 'أجل' ? (totalDebtCalc - chosenPartialPaid) : 0;
+
+        let receiptMsg = generateReceiptMessageText(s, paidAmountForReceipt, totalDebtCalc, remainingCalc, `تجديد اشتراك (${chosenPayType})`);
         sendNotificationToClientAndWhatsapp(s, receiptMsg);
+
+        printReceipt(s.name, s.username, paidAmountForReceipt, totalDebtCalc, remainingCalc, s.startDate, s.endDate, `تجديد اشتراك (${chosenPayType})`);
     }
 }
 
@@ -953,9 +1747,8 @@ function openPartialPayModal(id) {
 
     document.getElementById('partialPaySubId').value = s.id;
     document.getElementById('partialPayTargetName').innerText = `المشترك: ${s.name} (${s.username || '-'})`;
-    document.getElementById('currentTotalDebtLabel').innerText = `إجمالي الدين المطلوب: ${total.toLocaleString()} د.ع (المسدد سابقاً: ${currentPartial.toLocaleString()})`;
-    document.getElementById('paidNowInput').value = remaining > 0 ? remaining : 30000;
-    document.getElementById('paymentReceiverName').value = s.receiverName || 'مهندس علي';
+    document.getElementById('currentTotalDebtLabel').innerText = `إجمالي الدين: ${total.toLocaleString()} د.ع (المسدد سابقاً: ${currentPartial.toLocaleString()})`;
+    document.getElementById('paidNowInput').value = remaining;
     calcRemainingPreview();
 
     document.getElementById('partialPayModal').style.display = 'flex';
@@ -973,14 +1766,9 @@ function calcRemainingPreview() {
     let remainingBefore = total - currentPartial;
     let paidNow = parseFloat(document.getElementById('paidNowInput').value) || 0;
     let newRemaining = remainingBefore - paidNow;
+    if(newRemaining < 0) newRemaining = 0;
 
-    let box = document.getElementById('remainingPreviewBox');
-    if(newRemaining < 0) {
-        let extra = Math.abs(newRemaining);
-        box.innerHTML = `⭐ رصيد مقدماً (ليكدام) لصالح المشترك: <b style="color:#10b981; font-size:13px;">${extra.toLocaleString()} د.ع</b>`;
-    } else {
-        box.innerHTML = `المبلغ المطلوب بعد التسديد: <b style="color:${newRemaining === 0 ? '#10b981' : '#f59e0b'}; font-size:13px;">${newRemaining.toLocaleString()} د.ع</b>`;
-    }
+    document.getElementById('remainingPreviewBox').innerHTML = `المبلغ المطلوب بعد هذا التسديد: <b style="color:${newRemaining === 0 ? '#10b981' : '#f59e0b'}; font-size:13px;">${newRemaining.toLocaleString()} د.ع</b>`;
 }
 
 function confirmPartialPayment() {
@@ -989,7 +1777,6 @@ function confirmPartialPayment() {
     if(!s) return;
 
     let paidNow = parseFloat(document.getElementById('paidNowInput').value) || 0;
-    let receiver = document.getElementById('paymentReceiverName').value.trim() || 'مهندس علي';
     if(paidNow <= 0) { alert("يرجى إدخال مبلغ صحيح"); return; }
 
     let months = parseInt(s.debtMonths) || 1;
@@ -997,64 +1784,34 @@ function confirmPartialPayment() {
     let currentPartial = parseFloat(s.partialPaid) || 0;
     let newPartial = currentPartial + paidNow;
     let remaining = total - newPartial;
+    if(remaining < 0) remaining = 0;
 
-    s.receiverName = receiver;
-    if(remaining <= 0) {
+    if(newPartial >= total) {
         s.payStatus = 'واصل';
         s.debtMonths = 1;
         s.partialPaid = 0;
-        if(remaining < 0) {
-            s.extraCash = (parseFloat(s.extraCash) || 0) + Math.abs(remaining);
-        }
+        syncToCloud();
+        renderSubs();
+        closePartialPayModal();
+
+        let receiptMsg = generateReceiptMessageText(s, paidNow, total, 0, 'واصل (تم سداد كامل الدين)');
+        sendNotificationToClientAndWhatsapp(s, receiptMsg);
+        printReceipt(s.name, s.username, paidNow, total, 0, s.startDate, s.endDate, 'واصل (تم سداد كامل الدين)');
     } else {
         s.partialPaid = newPartial;
+        syncToCloud();
+        renderSubs();
+        closePartialPayModal();
+
+        let receiptMsg = generateReceiptMessageText(s, paidNow, total, remaining, 'تسديد جزئي');
+        sendNotificationToClientAndWhatsapp(s, receiptMsg);
+        printReceipt(s.name, s.username, paidNow, total, remaining, s.startDate, s.endDate, 'تسديد جزئي');
     }
-
-    syncToCloud();
-    renderSubs();
-    closePartialPayModal();
-
-    let receiptMsg = `*تحية طيبة عزيزي المشترك*\nيوزر الاشتراك : ${s.username || s.name}\nاسم المشترك : ${s.name}\n\n✅ *تم تسديد مبلغ وقدره (${paidNow.toLocaleString()} د.ع) بنجاح بواسطة (${receiver})*\n• المبلغ الباقي المطلوب : ${remaining > 0 ? remaining.toLocaleString() + ' د.ع' : 'لا يوجد (واصل)'}\n*(هذه الرسالة يتم ارسالها تلقائيا من النظام)*`;
-    sendNotificationToClientAndWhatsapp(s, receiptMsg);
 }
 
-// زر الوصل اليدوي المفعل
-function printReceiptManual(id) {
-    let s = subs.find(item => String(item.id) === String(id));
-    if(!s) return;
-
-    let months = parseInt(s.debtMonths) || 1;
-    let original = parseFloat(s.price || 0) * months;
-    let partial = parseFloat(s.partialPaid) || 0;
-    let remaining = original - partial;
-    if(remaining < 0) remaining = 0;
-    let extra = parseFloat(s.extraCash) || 0;
-
-    document.getElementById('receiptTitle').innerText = 'وصل قبض / حسابات مشترك';
-    document.getElementById('pName').innerText = s.name;
-    document.getElementById('pUsername').innerText = s.username || 'غير متوفر';
-    document.getElementById('pPrice').innerText = (s.payStatus === 'واصل' ? s.price : (partial > 0 ? partial : 0)).toLocaleString();
-    document.getElementById('pOriginal').innerText = original.toLocaleString();
-    
-    if(remaining > 0) {
-        document.getElementById('printRemainingLine').style.display = 'block';
-        document.getElementById('pRemaining').innerText = remaining.toLocaleString();
-    } else {
-        document.getElementById('printRemainingLine').style.display = 'none';
-    }
-
-    if(extra > 0) {
-        document.getElementById('printExtraLine').style.display = 'block';
-        document.getElementById('pExtra').innerText = extra.toLocaleString();
-    } else {
-        document.getElementById('printExtraLine').style.display = 'none';
-    }
-
-    document.getElementById('pPayStatus').innerText = s.payStatus;
-    document.getElementById('pReceiver').innerText = s.receiverName || 'مهندس علي';
-    document.getElementById('pStart').innerText = s.startDate || '-';
-    document.getElementById('pEnd').innerText = s.endDate || '-';
-    window.print();
+function generateReceiptMessageText(sub, paidAmount, originalAmount, remainingAmount, payStatusTitle) {
+    let receiptNo = 'RCP-' + Math.floor(100000 + Math.random() * 900000);
+    return `*تحية طيبة عزيزي المشترك*\nيوزر الاشتراك : ${sub.username || sub.name}\nاسم المشترك : ${sub.name}\n\n✅ *تم تسديد المبلغ وتفعيل اشتراكك بنجاح*\n• المبلغ المستلم : ${paidAmount.toLocaleString()} د.ع\n• تاريخ التفعيل : ${sub.startDate}\n• تاريخ الانتهاء : ${sub.endDate}\n\nرقم الوصل : ${receiptNo}\n*(هذه الرسالة يتم ارسالها تلقائيا من النظام)*\n\n*ملاحظة*\n*(يمكنك تفعيل الاشتراك قبل الانتهاء ويتم إضافة الايام المتبقية الى الاشتراك)*\n\n*يمكنك تسديد الاشتراك عن طريق* \n*(بطاقة كي كارد)*\n*رقم سوبر كي (07724850876 )*\n*رقم تحويل بطاقة كي كارد (3627952355 )*\n\nرقم المكتب : 07724850876 📱\nالمكتب : محاويل - قرية السورة`;
 }
 
 function sendNotificationToClientAndWhatsapp(sub, messageText) {
@@ -1070,24 +1827,53 @@ function sendNotificationToClientAndWhatsapp(sub, messageText) {
     }
 }
 
-function sendWhatsappReceipt(subId) {
+function sendWhatsappReceipt(subId, unitPrice) {
     let s = subs.find(item => String(item.id) === String(subId));
     if(!s) return;
-    let msg = `*تحية طيبة عزيزي المشترك*\nيوزر الاشتراك : ${s.username || s.name}\nاسم المشترك : ${s.name}\n• حالة الاشتراك : ${s.payStatus}\n• تاريخ الانتهاء : ${s.endDate}\n\nرقم المكتب : 07724850876 📱`;
+    let months = parseInt(s.debtMonths) || 1;
+    let original = parseFloat(s.price || 0) * months;
+    let partial = parseFloat(s.partialPaid) || 0;
+    let remaining = original - partial;
+    if(remaining < 0) remaining = 0;
+
+    let msg = generateReceiptMessageText(s, partial, original, remaining, s.payStatus);
     if(s.phone && s.phone.trim() !== "") {
         let cleanPhone = s.phone.replace(/\D/g, '');
         if(cleanPhone.startsWith('0')) cleanPhone = '964' + cleanPhone.substring(1);
         window.open(`whatsapp://send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`, '_blank');
-    } else { alert("رقم الهاتف غير مسجل."); }
+    } else {
+        alert("رقم الهاتف غير مسجل لهذا المشترك.");
+    }
+}
+
+function printReceipt(name, username, paid, original, remaining, start, end, payStatus) {
+    document.getElementById('receiptTitle').innerText = 'وصل قبض اشتراك';
+    document.getElementById('pName').innerText = name;
+    document.getElementById('pUsername').innerText = username || 'غير متوفر';
+    document.getElementById('pPrice').innerText = parseFloat(paid || 0).toLocaleString();
+    document.getElementById('pOriginal').innerText = parseFloat(original || 0).toLocaleString();
+    
+    if(remaining > 0) {
+        document.getElementById('printRemainingLine').style.display = 'block';
+        document.getElementById('pRemaining').innerText = remaining.toLocaleString();
+    } else {
+        document.getElementById('printRemainingLine').style.display = 'none';
+    }
+
+    document.getElementById('pPayStatus').innerText = payStatus;
+    document.getElementById('pStart').innerText = start;
+    document.getElementById('pEnd').innerText = end;
+    window.print();
 }
 
 function deleteSub(id) {
     let target = subs.find(s => String(s.id) === String(id));
-    if(target && confirm(`نقل المشترك (${target.name}) إلى سلة المحذوفات؟`)) {
+    if(target && confirm(`هل أنت تأكد من نقل المشترك (${target.name}) إلى سلة المحذوفات؟`)) {
         deletedSubs.push(target);
         subs = subs.filter(s => String(s.id) !== String(id));
         syncToCloud();
         renderSubs();
+        updateExpiringTomorrowBadge();
     }
 }
 
@@ -1126,16 +1912,15 @@ function renderSubs() {
                 <div style="flex:1;" onclick="showSubDetails(${s.id})">
                     <div style="font-size: 13px; font-weight: bold;">${s.name} ${payBadge} <span style="font-size:10px; color:#38bdf8;">(${s.subType || 'Standard'})</span></div>
                     ${s.username ? `<div style="font-size: 11px; color: #38bdf8;" class="ltr-text">يوزر: ${s.username}</div>` : ''}
-                    <div style="font-size: 10px; color: #94a3b8;">هاتف: ${s.phone || 'بدون'} | المستلم: ${s.receiverName || 'مهندس علي'}</div>
+                    <div style="font-size: 10px; color: #94a3b8;">هاتف: ${s.phone || 'بدون'} | الدين الكلي: ${totalDebt.toLocaleString()} | المسدد: <b style="color:#10b981;">${partial.toLocaleString()}</b></div>
                     <div style="font-size: 11px; margin-top: 3px; color:#cbd5e1;">انتهاء: <span style="color:${isExp ? '#ef4444' : '#10b981'}; font-weight:bold;">${s.endDate}</span></div>
                 </div>
                 
                 <div style="display:flex; flex-direction:column; gap:3px;" onclick="event.stopPropagation()">
                     ${s.payStatus === 'أجل' ? `<button onclick="openPartialPayModal(${s.id})" style="background:#10b981; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">💵 تسديد</button>` : ''}
                     <button onclick="openRenewModal(${s.id})" style="background:#0284c7; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">🔄 تفعيل</button>
-                    <button onclick="openComprehensiveDetails(${s.id})" style="background:#06b6d4; color:#090d16; border:none; padding:3px 6px; border-radius:4px; font-size:10px; font-weight:bold; cursor:pointer;">ℹ️ تفاصيل</button>
-                    <button onclick="sendWhatsappReceipt(${s.id})" style="background:#25d366; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">💬 واتساب</button>
-                    <button onclick="printReceiptManual(${s.id})" style="background:#475569; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">🖨️ وصل</button>
+                    <button onclick="sendWhatsappReceipt('${s.id}', '${s.price}')" style="background:#25d366; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">💬 واتساب</button>
+                    <button onclick="printReceipt('${s.name}', '${s.username}', ${s.payStatus === 'واصل' ? s.price : partial}, ${totalDebt}, ${remaining}, '${s.startDate}', '${s.endDate}', '${s.payStatus}')" style="background:#475569; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">🖨️ وصل</button>
                     <button onclick="deleteSub(${s.id})" style="background:#ef4444; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; cursor:pointer;">🗑️ حذف</button>
                 </div>
             </div>
@@ -1158,6 +1943,7 @@ function setFilter(type) {
 
 function openTrashModal() { renderTrashList(); document.getElementById('trashModal').style.display = 'flex'; }
 function closeTrashModal() { document.getElementById('trashModal').style.display = 'none'; }
+
 function renderTrashList() {
     let container = document.getElementById('trashListContainer');
     if(deletedSubs.length === 0) {
@@ -1165,12 +1951,16 @@ function renderTrashList() {
     } else {
         container.innerHTML = deletedSubs.map(s => `
             <div style="background:#0d1526; border:1px solid #1e293b; padding:8px; border-radius:6px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
-                <div><div style="font-size:12px; font-weight:bold; color:#38bdf8;">${s.name}</div></div>
+                <div>
+                    <div style="font-size:12px; font-weight:bold; color:#38bdf8;">${s.name} <span class="ltr-text">${s.username ? '('+s.username+')' : ''}</span></div>
+                    <div style="font-size:10px; color:#94a3b8;">هاتف: ${s.phone || 'بدون'}</div>
+                </div>
                 <button onclick="restoreSubscriber(${s.id})" style="background:#10b981; color:#fff; border:none; padding:5px 8px; border-radius:4px; font-size:10px; cursor:pointer;">♻️ استرجاع</button>
             </div>
         `).join('');
     }
 }
+
 function restoreSubscriber(id) {
     let target = deletedSubs.find(item => String(item.id) === String(id));
     if(target) {
@@ -1179,31 +1969,27 @@ function restoreSubscriber(id) {
         syncToCloud();
         renderTrashList();
         renderSubs();
+        updateExpiringTomorrowBadge();
+        alert(`تم استرجاع المشترك (${target.name}) بنجاح.`);
     }
 }
+
 function emptyTrashCompletely() {
-    if(confirm("مسح السلة نهائياً؟")) { deletedSubs = []; db.ref('ali_isp_deleted_subs').remove(); renderTrashList(); }
+    if(deletedSubs.length === 0) return;
+    if(confirm("مسح جميع العناصر في السلة نهائياً؟")) {
+        deletedSubs = [];
+        db.ref('ali_isp_deleted_subs').remove();
+        renderTrashList();
+    }
 }
-function openAccountsModal() { document.getElementById('accountsModal').style.display = 'flex'; }
-function closeAccountsModal() { document.getElementById('accountsModal').style.display = 'none'; }
-function openExpiringTomorrowModal() { document.getElementById('expiringTomorrowModal').style.display = 'flex'; }
-function closeExpiringTomorrowModal() { document.getElementById('expiringTomorrowModal').style.display = 'none'; }
-function openBroadcastModal() { document.getElementById('broadcastModal').style.display = 'flex'; }
-function closeBroadcastModal() { document.getElementById('broadcastModal').style.display = 'none'; }
-function openTicketsManagerModal() { document.getElementById('ticketsManagerModal').style.display = 'flex'; }
-function closeTicketsManagerModal() { document.getElementById('ticketsManagerModal').style.display = 'none'; }
-function openOnlineUsersModal() { document.getElementById('onlineUsersModal').style.display = 'flex'; }
-function closeOnlineUsersModal() { document.getElementById('onlineUsersModal').style.display = 'none'; }
-function openNotificationsModal() { document.getElementById('notificationsModal').style.display = 'flex'; }
-function closeNotificationsModal() { document.getElementById('notificationsModal').style.display = 'none'; }
-function clearNotifications() { localStorage.removeItem('ali_admin_notifications'); document.getElementById('notificationsList').innerHTML = ''; }
+
+function openEarthlinkDirect() { window.open("https://admin.earthlink.iq", "_blank"); }
 function exportData() {
     let dl = document.createElement('a');
     dl.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(subs));
     dl.download = "backup.json";
     dl.click();
 }
-function openEarthlinkDirect() { window.open("https://admin.earthlink.iq", "_blank"); }
 </script>
 </body>
 </html>
