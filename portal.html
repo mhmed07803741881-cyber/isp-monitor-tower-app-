@@ -393,10 +393,15 @@ function showSubscriberDashboard() {
     document.getElementById('cStart').innerText = foundSubscriber.startDate || "غير محدد";
     document.getElementById('cEnd').innerText = foundSubscriber.endDate || "غير محدد";
 
-    if(foundSubscriber.endDate) {
+    // حساب الأيام المتبقية بدقة بناءً على 30 يوماً من تاريخ التفعيل
+    if(foundSubscriber.startDate) {
+        let startDate = new Date(foundSubscriber.startDate + "T00:00:00");
+        let expiryDate = new Date(startDate.getTime());
+        expiryDate.setDate(startDate.getDate() + 30); // إضافة 30 يوماً بالضبط من تاريخ التفعيل
+
         let now = new Date();
-        let endDate = new Date(foundSubscriber.endDate + "T23:59:59");
-        let diffDays = Math.ceil((endDate - now) / (1000 * 60 * 60 * 24));
+        let diffTime = expiryDate - now;
+        let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         let remEl = document.getElementById('cRemainingDays');
         
         if(diffDays > 0) {
@@ -551,14 +556,17 @@ function renderUnifiedNotifications() {
         htmlContent += `<div style="margin-bottom:8px; border-bottom:1px solid #1e293b; padding-bottom:6px;"><b style="color:#06b6d4;">📢 إعلان الشبكة العام:</b> ${savedBroadcast}</div>`;
     }
 
-    if(foundSubscriber.endDate) {
+    if(foundSubscriber.startDate) {
+        let startDate = new Date(foundSubscriber.startDate + "T00:00:00");
+        let expiryDate = new Date(startDate.getTime());
+        expiryDate.setDate(startDate.getDate() + 30);
         let now = new Date();
-        let endDate = new Date(foundSubscriber.endDate + "T23:59:59");
-        let diffHours = (endDate - now) / (1000 * 60 * 60);
+        let diffHours = (expiryDate - now) / (1000 * 60 * 60);
+
         if(diffHours > 0 && diffHours <= 24) {
-            htmlContent += `<div style="margin-bottom:8px; border-bottom:1px solid #1e293b; padding-bottom:6px;"><b style="color:#f59e0b;">⏳ تنبيه انتهاء الاشتراك:</b> اشتراكك سينتهي غداً (${foundSubscriber.endDate}). يرجى المبادرة بالتسديد.</div>`;
+            htmlContent += `<div style="margin-bottom:8px; border-bottom:1px solid #1e293b; padding-bottom:6px;"><b style="color:#f59e0b;">⏳ تنبيه انتهاء الاشتراك:</b> اشتراكك سينتهي خلال أقل من 24 ساعة. يرجى المبادرة بالتسديد.</div>`;
         } else if(diffHours <= 0) {
-            htmlContent += `<div style="margin-bottom:8px; border-bottom:1px solid #1e293b; padding-bottom:6px;"><b style="color:#ef4444;">🚨 تنبيه عاجل:</b> اشتراكك منتهي حالياً (${foundSubscriber.endDate}).</div>`;
+            htmlContent += `<div style="margin-bottom:8px; border-bottom:1px solid #1e293b; padding-bottom:6px;"><b style="color:#ef4444;">🚨 تنبيه عاجل:</b> اشتراكك منتهي حالياً.</div>`;
         }
     }
 
@@ -585,13 +593,16 @@ function clearUnifiedNotifications() {
 }
 
 function checkExpiryAlerts() {
-    if(!foundSubscriber || !foundSubscriber.endDate) return;
+    if(!foundSubscriber || !foundSubscriber.startDate) return;
+    let startDate = new Date(foundSubscriber.startDate + "T00:00:00");
+    let expiryDate = new Date(startDate.getTime());
+    expiryDate.setDate(startDate.getDate() + 30);
+
     let now = new Date();
-    let endDate = new Date(foundSubscriber.endDate + "T23:59:59");
-    let diffHours = (endDate - now) / (1000 * 60 * 60);
+    let diffHours = (expiryDate - now) / (1000 * 60 * 60);
     let warningBanner = document.getElementById('expiryWarningBanner');
 
-    let notifKey = `expiry_alert_played_${foundSubscriber.username}_${foundSubscriber.endDate}`;
+    let notifKey = `expiry_alert_played_${foundSubscriber.username}_${foundSubscriber.startDate}`;
     let alreadyAlerted = localStorage.getItem(notifKey);
 
     if(diffHours > 0 && diffHours <= 24) {
