@@ -294,7 +294,20 @@ db.ref('ali_isp_subscribers').on('value', (snapshot) => {
     }
 });
 
+// الاستماع السحابي الفوري لإشعارات البرنامج العام (Broadcast)
 window.onload = function() {
+    db.ref('ali_app_broadcast_msg').on('value', (snapshot) => {
+        let cloudMsg = snapshot.val();
+        if(cloudMsg) {
+            localStorage.setItem('ali_app_broadcast_msg', cloudMsg);
+            document.getElementById('broadcastTextContent').innerText = cloudMsg;
+            document.getElementById('broadcastBanner').style.display = 'block';
+            
+            playNotificationSound();
+            document.getElementById('bellBadgeArea').innerHTML = '<span class="msg-badge">!</span>';
+        }
+    });
+
     let savedMsg = localStorage.getItem('ali_app_broadcast_msg');
     if(savedMsg) {
         document.getElementById('broadcastTextContent').innerText = savedMsg;
@@ -393,11 +406,10 @@ function showSubscriberDashboard() {
     document.getElementById('cStart').innerText = foundSubscriber.startDate || "غير محدد";
     document.getElementById('cEnd').innerText = foundSubscriber.endDate || "غير محدد";
 
-    // حساب الأيام المتبقية بدقة بناءً على 30 يوماً من تاريخ التفعيل
     if(foundSubscriber.startDate) {
         let startDate = new Date(foundSubscriber.startDate + "T00:00:00");
         let expiryDate = new Date(startDate.getTime());
-        expiryDate.setDate(startDate.getDate() + 30); // إضافة 30 يوماً بالضبط من تاريخ التفعيل
+        expiryDate.setDate(startDate.getDate() + 30);
 
         let now = new Date();
         let diffTime = expiryDate - now;
@@ -465,14 +477,12 @@ function submitAgelRequest() {
 
     let notifText = `${new Date().toLocaleTimeString()} - ⏳ طلب تفعيل مؤجل (أجل) جديد من المشترك: ${foundSubscriber.name} | يوزر: ${foundSubscriber.username} | الباقة: ${selectedPkg} | المبلغ: ${selectedPrice} د.ع`;
     
-    // 1. إرسال الإشعار سحابياً إلى جدول الإشعارات العامة
     let newNotifRef = db.ref('ali_admin_notifications_cloud').push();
     newNotifRef.set({
         text: notifText,
         timestamp: Date.now()
     });
 
-    // 2. إرسال الطلب كـ تكت سحابي ليظهر في قائمة التكتات بالبرنامج مع جرس التنبيه
     let newTicketRef = db.ref('ali_isp_tickets').push();
     newTicketRef.set({
         subName: foundSubscriber.name,
@@ -481,7 +491,6 @@ function submitAgelRequest() {
         timestamp: Date.now()
     });
 
-    // 3. حفظ الرسالة في شات المشترك السحابي لكي تظهر له في سجله
     let safeKey = foundSubscriber.name.replace(/[.#$\[\]]/g, "_");
     db.ref('ali_cloud_chats/' + safeKey).once('value', (snapshot) => {
         let chats = snapshot.val() || [];
