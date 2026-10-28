@@ -2,11 +2,11 @@
   "background_color": "#ffffff",
   "dir": "ltr",
   "display": "standalone",
-  "name": "Eng.ali.abbas",
+  "name": "تطبيق المشترك",
   "orientation": "any",
   "scope": "/",
-  "short_name": "mhmed07803741881-cyber.github",
+  "short_name": "المشترك",
   "start_url": "/",
   "theme_color": "#ffffff",
-  "description": "تطبيق خاص بالمشتركين"
+  "description": "Ali ISP Client App"
 }
