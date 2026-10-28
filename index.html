@@ -639,7 +639,6 @@ db.ref('ali_isp_deleted_subs').on('value', (snapshot) => {
     document.getElementById('deletedCount').innerText = deletedSubs.length;
 });
 
-// 🌐 الاستماع السحابي المباشر للتكتات وإصدار التنبيه الصوتي فور وصول رسالة المشترك
 db.ref('ali_isp_tickets').on('value', (snapshot) => {
     let ticketsData = snapshot.val() || {};
     let ticketsArray = Object.values(ticketsData);
